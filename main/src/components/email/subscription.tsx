@@ -1,5 +1,6 @@
-import { LibraryIcon } from "lucide-react";
 import * as React from "react";
+
+import { LibraryIcon } from "lucide-react";
 
 interface SubscriptionTemplateProps {
   email: string;
@@ -72,7 +73,7 @@ export const SubscriptionTemplate: React.FC<Readonly<SubscriptionTemplateProps>>
                 margin: "0 0 24px 0",
               }}
             >
-              Thanks for joining the waitlist! As a member, you'll get early access to explore our blockchain-powered library platform and enjoy all the exclusive features we’re offering. Stay tuned for updates!
+              Thanks for joining the waitlist! As a member, you&apos;ll get early access to explore our blockchain-powered library platform and enjoy all the exclusive features we’re offering. Stay tuned for updates!
             </p>
 
           <div>
@@ -107,7 +108,7 @@ export const SubscriptionTemplate: React.FC<Readonly<SubscriptionTemplateProps>>
               © 2025 Library Protocol. All rights reserved.
             </p>
             <p style={{ margin: "0" }}>
-              If you didn't sign up for this newsletter, you can safely ignore
+              If you didn&apos;t sign up for this newsletter, you can safely ignore
               this email.
             </p>
           </div>

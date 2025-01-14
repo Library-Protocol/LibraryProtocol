@@ -115,12 +115,12 @@ const ComingSoon = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('🟢 Form submitted with email:', email);
 
     if (email) {
       setIsLoading(true); // Start loading
+
       try {
-        console.log('🟡 Sending request to /api/send');
+
         const response = await fetch('/api/send', {
           method: 'POST',
           headers: {
@@ -130,7 +130,6 @@ const ComingSoon = () => {
         });
 
         const data = await response.json();
-        console.log('🔵 Response received:', { status: response.status, data });
 
         if (response.ok) {
           console.log('✅ Subscription successful');
@@ -148,7 +147,6 @@ const ComingSoon = () => {
       }
     }
   };
-  ;
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-[#1C0F0A] to-[#2B1810] text-[#F8F2EB] flex items-center justify-center p-4 relative overflow-hidden'>
