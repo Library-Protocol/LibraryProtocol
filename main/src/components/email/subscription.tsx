@@ -73,7 +73,7 @@ export const SubscriptionTemplate: React.FC<Readonly<SubscriptionTemplateProps>>
                 margin: "0 0 24px 0",
               }}
             >
-              Thanks for joining the waitlist! As a member, you&apos;ll get early access to explore our blockchain-powered library platform and enjoy all the exclusive features we’re offering. Stay tuned for updates!
+              You&apos;re one step closer to unlocking a decentralized future for libraries—where knowledge is borderless, transparent, and accessible to all. Stay tuned for updates, exclusive early access, and the chance to shape the future of learning.
             </p>
 
           <div>
@@ -94,6 +94,17 @@ export const SubscriptionTemplate: React.FC<Readonly<SubscriptionTemplateProps>>
               X Updates
             </a>
           </div>
+
+          <p
+              style={{
+                color: "rgba(248, 242, 235, 0.8)",
+                fontSize: "16px",
+                lineHeight: "1.6",
+                margin: "0 0 24px 0",
+              }}
+            >
+              📚The future of libraries is onchain, and it starts with you.
+            </p>
 
           <div
             style={{
