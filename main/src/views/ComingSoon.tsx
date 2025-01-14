@@ -108,17 +108,47 @@ const Feature = ({
 )
 
 const ComingSoon = () => {
-  const [email, setEmail] = React.useState<string>('')
-  const [isSubscribed, setIsSubscribed] = React.useState<boolean>(false)
+  // Remove generic type arguments
+  const [email, setEmail] = React.useState('');
+  const [isSubscribed, setIsSubscribed] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log('🟢 Form submitted with email:', email);
 
     if (email) {
-      setIsSubscribed(true)
-      setEmail('')
+      setIsLoading(true); // Start loading
+      try {
+        console.log('🟡 Sending request to /api/send');
+        const response = await fetch('/api/send', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email }),
+        });
+
+        const data = await response.json();
+        console.log('🔵 Response received:', { status: response.status, data });
+
+        if (response.ok) {
+          console.log('✅ Subscription successful');
+          setIsSubscribed(true);
+          setEmail('');
+        } else {
+          console.error('❌ Subscription failed:', data.error);
+          alert(`Failed to subscribe: ${data.error}`);
+        }
+      } catch (error) {
+        console.error('❌ Request error:', error);
+        alert('An error occurred. Please try again.');
+      } finally {
+        setIsLoading(false); // Stop loading
+      }
     }
-  }
+  };
+  ;
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-[#1C0F0A] to-[#2B1810] text-[#F8F2EB] flex items-center justify-center p-4 relative overflow-hidden'>
@@ -179,30 +209,58 @@ const ComingSoon = () => {
 
 
             {/* Subscribe Form */}
-            <div className='w-full max-w-md relative'>
-              <div className='absolute -inset-1 bg-gradient-to-r from-[#B45F06] to-[#783F04] rounded-lg blur-xl' />
+            <div className="w-full max-w-md relative">
+              <div className="absolute -inset-1 bg-gradient-to-r from-[#B45F06] to-[#783F04] rounded-lg blur-xl" />
               {isSubscribed ? (
-                <div className='relative bg-[#2B5215]/20 rounded-lg p-6 backdrop-blur-sm border border-[#4C8527]/30 transform transition-all duration-500'>
-                  <p className='text-[#98FB98] text-center text-base font-medium'>
+                <div className="relative bg-[#2B5215]/20 rounded-lg p-6 backdrop-blur-sm border border-[#4C8527]/30 transform transition-all duration-500">
+                  <p className="text-[#98FB98] text-center text-base font-medium">
                     Welcome to the future of libraries! We&apos;ll keep you updated on our progress.
                   </p>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className='relative'>
-                  <div className='relative'>
+                <form onSubmit={handleSubmit} className="relative">
+                  <div className="relative">
                     <input
-                      type='email'
+                      type="email"
                       value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder='Enter your email'
-                      className='w-full px-6 py-3 bg-[#F8F2EB]/5 border border-[#783F04]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B45F06] backdrop-blur-sm text-[#F8F2EB] placeholder-[#F8F2EB]/50 text-base transition-all duration-300'
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Enter your email"
+                      className="w-full px-6 py-3 bg-[#F8F2EB]/5 border border-[#783F04]/30 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#B45F06] backdrop-blur-sm text-[#F8F2EB] placeholder-[#F8F2EB]/50 text-base transition-all duration-300"
                       required
                     />
                     <button
-                      type='submit'
-                      className='absolute right-2 top-1.5 px-6 py-2 bg-gradient-to-r from-[#B45F06] to-[#783F04] rounded-md hover:opacity-90 transition-all duration-300 transform hover:scale-105 text-base font-medium'
+                      type="submit"
+                      disabled={isLoading}
+                      className={`absolute right-2 top-1.5 px-6 py-2 rounded-md text-base font-medium transition-all duration-300 transform ${
+                        isLoading
+                          ? 'bg-[#783F04]/50 cursor-not-allowed'
+                          : 'bg-gradient-to-r from-[#B45F06] to-[#783F04] hover:opacity-90 hover:scale-105'
+                      }`}
                     >
-                      Join Waitlist
+                      {isLoading ? (
+                        <svg
+                          className="animate-spin h-5 w-5 text-[#F8F2EB] mx-auto"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                      ) : (
+                        'Join Waitlist'
+                      )}
                     </button>
                   </div>
                 </form>
@@ -216,3 +274,4 @@ const ComingSoon = () => {
 }
 
 export default ComingSoon
+
