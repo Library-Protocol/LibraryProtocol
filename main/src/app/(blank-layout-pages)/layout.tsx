@@ -7,6 +7,7 @@ import BlankLayout from '@layouts/BlankLayout'
 
 // Util Imports
 import { getSystemMode } from '@core/utils/serverHelpers'
+import PrivyProviderWrapper from '@/components/wallet/PrivyProviderWrapper'
 
 type Props = ChildrenType
 
@@ -19,7 +20,11 @@ const Layout = async (props: Props) => {
 
   return (
     <Providers direction={direction}>
-      <BlankLayout systemMode={systemMode}>{children}</BlankLayout>
+      <BlankLayout systemMode={systemMode}>
+        <PrivyProviderWrapper>
+         {children}
+        </PrivyProviderWrapper>
+      </BlankLayout>
     </Providers>
   )
 }

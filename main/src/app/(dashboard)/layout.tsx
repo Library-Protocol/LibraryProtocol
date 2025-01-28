@@ -20,6 +20,7 @@ import ScrollToTop from '@core/components/scroll-to-top'
 
 // Util Imports
 import { getMode, getSystemMode } from '@core/utils/serverHelpers'
+import PrivyProviderWrapper from '@/components/wallet/PrivyProviderWrapper'
 
 const Layout = async (props: ChildrenType) => {
   const { children } = props
@@ -31,6 +32,7 @@ const Layout = async (props: ChildrenType) => {
 
   return (
     <Providers direction={direction}>
+      <PrivyProviderWrapper>
       <LayoutWrapper
         systemMode={systemMode}
         verticalLayout={
@@ -49,6 +51,7 @@ const Layout = async (props: ChildrenType) => {
           <i className='tabler-arrow-up' />
         </Button>
       </ScrollToTop>
+      </PrivyProviderWrapper>
     </Providers>
   )
 }

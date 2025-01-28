@@ -50,7 +50,7 @@ const Navigation = () => {
         className: classnames(horizontalLayoutClasses.navigation, 'relative flex border-bs')
       })}
     >
-      <StyledDiv
+      {/* <StyledDiv
         isContentCompact={headerContentCompact}
         isBreakpointReached={isBreakpointReached}
         {...(!isBreakpointReached && {
@@ -58,7 +58,7 @@ const Navigation = () => {
         })}
       >
         <HorizontalMenu />
-      </StyledDiv>
+      </StyledDiv> */}
     </div>
   )
 }
