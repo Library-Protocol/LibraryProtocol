@@ -1,11 +1,13 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, Button, LinearProgress, Typography, Box, IconButton, TextField, CircularProgress, MenuItem, ListItemText } from '@mui/material';
 import { ArrowLeft, Camera } from 'lucide-react';
 import Radar from 'radar-sdk-js';
 import debounce from 'lodash/debounce';
 import CustomizableCover from '@/components/effects/CoverImageCustomization';
+import { usePrivy } from '@privy-io/react-auth';
 
 // Define interfaces
 interface RadarAutocompleteAddress {
@@ -24,20 +26,13 @@ interface RadarAutocompleteAddress {
   longitude: number;
 }
 
-interface RadarLocation {
-  country?: string;
-  city?: string;
-  state?: string;
-  latitude: number;
-  longitude: number;
-}
-
 interface RadarMap {
   setCenter: (center: [number, number]) => void;
 }
 
 interface RadarMarker {
   setLngLat: (lngLat: [number, number]) => void;
+  getLngLat: () => { lat: number; lng: number };
 }
 
 const CreatorOnboarding = () => {
@@ -48,11 +43,17 @@ const CreatorOnboarding = () => {
   const [state, setState] = useState('');
   const [locationError, setLocationError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<RadarAutocompleteAddress[]>([]);
   const [map, setMap] = useState<RadarMap | null>(null);
   const [marker, setMarker] = useState<RadarMarker | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [walletAddress, setWalletAddress] = useState('');
+  const [isWalletFetched, setIsWalletFetched] = useState(false);
+
+  const { user } = usePrivy();
 
   useEffect(() => {
     Radar.initialize('prj_live_pk_8412164f073994dfe5cc9afa035e667bdc6370d0');
@@ -72,6 +73,81 @@ const CreatorOnboarding = () => {
     setMarker(newMarker);
   }, []);
 
+  useEffect(() => {
+    const fetchWalletAddress = async () => {
+      try {
+        setIsLoading(true);
+        setSubmitError('');
+
+        if (user && user.wallet) {
+          setWalletAddress(user.wallet.address);
+          setIsWalletFetched(true); // Mark wallet as fetched
+        }
+      } catch (err) {
+        setSubmitError((err as Error).message || 'Failed to fetch wallet address');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchWalletAddress();
+  }, [user]);
+
+  const handleSubmit = async () => {
+    // Wait for wallet address to be fetched
+    if (!isWalletFetched) {
+      setSubmitError('Please wait while we fetch your wallet address.');
+      return;
+    }
+
+    // Validate required fields
+    if (!libraryName || !country || !city || !state) {
+      setSubmitError('Please fill in all required fields');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setSubmitError('');
+
+    const payload = {
+      wallet: walletAddress, // Ensure this is populated
+      name: libraryName,
+      country,
+      city,
+      state,
+    };
+
+    console.log('Sending payload to backend:', payload);
+
+    try {
+      const response = await fetch('/api/library/curator/onboarding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
+      console.log('API Response:', data);
+
+      if (!response.ok) {
+        setSubmitError(data.error || 'Failed to create library');
+        return;
+      }
+
+      // If successful, move to next step
+      setStep(step + 1);
+    } catch (error) {
+      console.error('Failed to create library:', error);
+      setSubmitError(
+        error instanceof Error ? error.message : 'Failed to create library. Please try again.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSearchLocation = async (query: string) => {
     if (!query) {
       setSearchResults([]);
@@ -80,6 +156,7 @@ const CreatorOnboarding = () => {
     }
 
     setIsSearching(true);
+
     try {
       const result = await Radar.autocomplete({
         query,
@@ -114,39 +191,6 @@ const CreatorOnboarding = () => {
     debouncedSearch(query);
   };
 
-  const fetchCurrentLocation = async () => {
-    setIsLoading(true);
-    try {
-      // Get the user's geolocation from the browser
-      const position: GeolocationPosition = await new Promise((resolve, reject) =>
-        navigator.geolocation.getCurrentPosition(resolve, reject)
-      );
-
-      // If geolocation data is available
-      const { latitude, longitude } = position.coords;
-
-      // Assuming Radar.getLocation() returns a reverse geocoded address
-      const result: RadarLocation = await Radar.getLocation();
-      console.log(result);
-
-      if (result) {
-        // Update the UI with the fetched address and location
-        setCountry(result.country || '');
-        setCity(result.city || '');
-        setState(result.state || '');
-        setLocationError('');
-
-        // Update the map with the fetched location's latitude and longitude
-        updateMap(latitude, longitude);
-      }
-    } catch (err) {
-      setLocationError('Failed to fetch location. Please enable location services.');
-      console.error(err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const updateMap = (latitude: number, longitude: number) => {
     if (map && marker) {
       map.setCenter([longitude, latitude]);
@@ -165,14 +209,14 @@ const CreatorOnboarding = () => {
 
   const SuccessStep = () => (
     <>
-      <Typography variant='body1' className='text-center mb-6'>
+      <Typography variant="body1" className="text-center mb-6">
         All set! Head over to{' '}
-        <a href='/creator/home' className='text-blue-500'>
+        <Link href="/creator/home" className="text-[#2B1810] hover:text-[#F8F2EB]">
           Creators Dashboard
-        </a>{' '}
+        </Link>
         .
       </Typography>
-      <Typography variant='body1' className='text-center mb-6'>
+      <Typography variant="body1" className="text-center mb-6">
         Let&apos;s do this!
       </Typography>
     </>
@@ -260,7 +304,7 @@ const CreatorOnboarding = () => {
                     <div className='relative'>
                       <TextField
                         fullWidth
-                        label='Search Location'
+                        label='Search Location For The Library...'
                         value={searchQuery}
                         onChange={handleSearchInputChange}
                         InputProps={{
@@ -299,24 +343,6 @@ const CreatorOnboarding = () => {
                       )}
                     </div>
 
-                    <Button
-                      variant='outlined'
-                      fullWidth
-                      onClick={fetchCurrentLocation}
-                      sx={{
-                        backgroundColor: 'black',
-                        color: 'white',
-                        borderColor: 'white',
-                        '&:hover': {
-                          backgroundColor: 'black',
-                          borderColor: 'white'
-                        }
-                      }}
-                      disabled={isLoading}
-                    >
-                      {isLoading ? <CircularProgress size={24} color="inherit" /> : 'Fetch Library Location'}
-                    </Button>
-
                     {locationError && (
                       <Typography variant='body2' color='error' className='mt-2'>
                         {locationError}
@@ -325,24 +351,30 @@ const CreatorOnboarding = () => {
 
                     <TextField
                       fullWidth
-                      label='Country'
+                      label="Country"
                       value={country}
-                      onChange={(e) => setCountry(e.target.value)}
-                      className='mb-4'
+                      InputProps={{
+                        readOnly: true,
+                      }}
+                      className="mb-4"
                     />
                     <TextField
                       fullWidth
-                      label='City'
+                      label="City"
                       value={city}
-                      onChange={(e) => setCity(e.target.value)}
-                      className='mb-4'
+                      InputProps={{
+                        readOnly: true,
+                      }}
+                      className="mb-4"
                     />
                     <TextField
                       fullWidth
-                      label='State'
+                      label="State"
                       value={state}
-                      onChange={(e) => setState(e.target.value)}
-                      className='mb-4'
+                      InputProps={{
+                        readOnly: true,
+                      }}
+                      className="mb-4"
                     />
 
                     <div className='mt-6'>
@@ -376,23 +408,35 @@ const CreatorOnboarding = () => {
                     </Button>
                   ) : (
                     <>
-                      <div className='flex justify-end'>
+                      <div className='flex flex-col space-y-2'>
                         <Button
                           variant='outlined'
-                          onClick={() => setStep(step + 1)}
+                          onClick={handleSubmit}
+                          disabled={isSubmitting}
                           sx={{
                             backgroundColor: 'black',
                             color: 'white',
                             borderColor: 'white',
                             width: 'auto',
+                            alignSelf: 'flex-end',
                             '&:hover': {
                               backgroundColor: 'black',
                               borderColor: 'white'
                             }
                           }}
                         >
-                          Continue
+                          {isSubmitting ? (
+                            <CircularProgress size={24} color="inherit" />
+                          ) : (
+                            'Continue'
+                          )}
                         </Button>
+
+                        {submitError && (
+                          <Typography variant='body2' color='error'>
+                            {submitError}
+                          </Typography>
+                        )}
                       </div>
 
                       {step !== 1 && (

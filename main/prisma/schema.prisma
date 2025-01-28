@@ -1,0 +1,31 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL") // Ensure DATABASE_URL points to your SQLite file
+}
+
+model Book {
+  id          String   @id @default(uuid()) // Complex ID with UUID
+  title       String
+  author      String
+  isbn        String   @unique
+  availability Boolean  @default(true) // Book availability
+  image       String?  // Path or URL to the book cover image
+  curatorId   String   // Foreign key for the curator
+  curator     Curator  @relation(fields: [curatorId], references: [id])
+  createdAt   DateTime @default(now())
+}
+
+model Curator {
+  id          String   @id @default(uuid()) // Complex ID with UUID
+  wallet      String   @unique // Wallet address
+  name        String
+  country     String
+  city        String
+  state       String
+  coverImage  String?  // Optional path or URL to the curator's cover image
+  books       Book[]   // Relation to books curated by this curator
+}

@@ -1,6 +1,9 @@
 'use client'
 
 import React, { useState } from 'react';
+
+import Link from 'next/link';
+
 import {
   Card,
   CardContent,
@@ -16,6 +19,7 @@ import {
   Typography,
   Box,
 } from '@mui/material';
+
 import { Camera, Plus, ArrowLeft } from 'lucide-react';
 
 const interests = [
@@ -50,7 +54,6 @@ const interests = [
 const OnboardingPage = () => {
   const [step, setStep] = useState(1);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
-  const [selectedNewsletters, setSelectedNewsletters] = useState<number[]>([]);
   const [showAllInterests, setShowAllInterests] = useState(false);
 
   const handleInterestToggle = (interest: string) => {
@@ -58,14 +61,6 @@ const OnboardingPage = () => {
       setSelectedInterests(selectedInterests.filter((i) => i !== interest));
     } else {
       setSelectedInterests([...selectedInterests, interest]);
-    }
-  };
-
-  const handleNewsletterToggle = (index: number) => {
-    if (selectedNewsletters.includes(index)) {
-      setSelectedNewsletters(selectedNewsletters.filter((i) => i !== index));
-    } else {
-      setSelectedNewsletters([...selectedNewsletters, index]);
     }
   };
 
@@ -339,9 +334,11 @@ const OnboardingPage = () => {
     <>
       <Typography variant="body1" className="text-center mb-6 text-[#F8F2EB]">
         All set! Head over to{' '}
-        <a href="/creator/home" className="text-[#2B1810] hover:text-[#F8F2EB]">
-          Creators Dashboard
-        </a>{' '}
+        <Link href="/creator/home" passHref>
+          <a className="text-[#2B1810] hover:text-[#F8F2EB]">
+            Creators Dashboard
+          </a>
+        </Link>
         .
       </Typography>
       <Typography variant="body1" className="text-center mb-6 text-[#F8F2EB]">

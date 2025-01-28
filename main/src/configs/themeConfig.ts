@@ -51,7 +51,6 @@ export type Config = {
 
 const themeConfig: Config = {
   templateName: 'LibraryProtocol',
-  // homePageUrl: process.env.ENV === 'development' ? '/home' : '/',
   homePageUrl: '/',
   settingsCookieName: 'library-protocol',
   mode: 'light', // 'system', 'light', 'dark'

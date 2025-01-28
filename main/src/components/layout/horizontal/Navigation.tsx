@@ -2,9 +2,6 @@
 import styled from '@emotion/styled'
 import classnames from 'classnames'
 
-// Component Imports
-import HorizontalMenu from './HorizontalMenu'
-
 // Config Imports
 import themeConfig from '@configs/themeConfig'
 
@@ -50,15 +47,15 @@ const Navigation = () => {
         className: classnames(horizontalLayoutClasses.navigation, 'relative flex border-bs')
       })}
     >
-      {/* <StyledDiv
+      <StyledDiv
         isContentCompact={headerContentCompact}
         isBreakpointReached={isBreakpointReached}
         {...(!isBreakpointReached && {
           className: classnames(horizontalLayoutClasses.navigationContentWrapper, 'flex items-center is-full plb-2')
         })}
       >
-        <HorizontalMenu />
-      </StyledDiv> */}
+        {/* <HorizontalMenu /> */}
+      </StyledDiv>
     </div>
   )
 }
