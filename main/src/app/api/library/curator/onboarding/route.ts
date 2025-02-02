@@ -1,102 +1,60 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient, Prisma } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-interface CuratorOnboardingPayload {
-  wallet: string;
-  name: string;
-  country: string;
-  city: string;
-  state: string;
-}
-
 export async function POST(request: Request) {
   try {
-    const rawBody = await request.text();
-    console.log('Raw request body:', rawBody);
+    const { wallet, name, country, city, state, coverImage } = await request.json();
 
-    // Validate request body
-    if (!rawBody) {
-      return NextResponse.json(
-        { error: 'Request body is empty' },
-        { status: 400 }
-      );
+    if (!coverImage) {
+      return NextResponse.json({ error: 'Cover image is required' }, { status: 400 });
     }
 
-    let parsedBody: CuratorOnboardingPayload;
+    // Generate the filename from the name
+    const fileName = name.replace(/\s+/g, '_').toLowerCase() + '.png'; // Replace spaces with underscores and convert to lowercase
 
-    try {
-      parsedBody = JSON.parse(rawBody);
-    } catch (parseError) {
-      console.error('JSON Parse Error:', parseError);
-      return NextResponse.json(
-        { error: 'Invalid JSON format', details: parseError instanceof Error ? parseError.message : 'JSON parsing failed' },
-        { status: 400 }
-      );
+    const base64Data = coverImage.replace(/^data:image\/\w+;base64,/, ''); // Remove base64 metadata
+    const buffer = Buffer.from(base64Data, 'base64'); // Convert to buffer
+    const blob = new Blob([buffer], { type: 'image/png' });
+    const file = new File([blob], fileName, { type: 'image/png' });
+
+    const data = new FormData();
+    data.append('file', file);
+
+    const upload = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
+      method: "POST",
+      headers: {
+         Authorization: `Bearer ${process.env.PINATA_JWT}`
+      },
+      body: data,
+    });
+
+    const uploadRes = await upload.json();
+
+    if (!uploadRes || !uploadRes.IpfsHash) {
+      return NextResponse.json({ error: 'Failed to upload image to Pinata' }, { status: 500 });
     }
 
-    // Validate required fields
-    const { wallet, name, country, city, state } = parsedBody;
+    const imageUrl = `${uploadRes.IpfsHash}`;
 
-    const missingFields = [];
-    if (!wallet) missingFields.push('wallet');
-    if (!name) missingFields.push('name');
-    if (!country) missingFields.push('country');
-    if (!city) missingFields.push('city');
-    if (!state) missingFields.push('state');
-
-    if (missingFields.length > 0) {
-      return NextResponse.json(
-        { error: 'Missing required fields', missingFields },
-        { status: 400 }
-      );
-    }
-
-    // Create curator in database
     const curator = await prisma.curator.create({
       data: {
-        wallet,
         name,
         country,
         city,
         state,
+        wallet: wallet,
+        coverImage: imageUrl,
       },
     });
 
-    // Return success response with created curator data
-    return NextResponse.json({
-      success: true,
-      data: curator,
-    });
-
+    return NextResponse.json({ success: true, curator });
   } catch (error) {
-    // Handle Prisma errors
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === 'P2002') {
-        return NextResponse.json(
-          {
-            error: 'A curator with this wallet address already exists',
-            details: error.message
-          },
-          { status: 409 }
-        );
-      }
-    }
-
-    // Log the error for debugging
-    console.error('Server Error:', error);
-
-    // Return generic error response
+    console.error('Error in onboarding:', error);
     return NextResponse.json(
-      {
-        error: 'Failed to create curator',
-        details: error instanceof Error ? error.message : 'Unknown error occurred'
-      },
+      { error: 'Failed to create library' },
       { status: 500 }
     );
-  } finally {
-    // Disconnect from Prisma client
-    await prisma.$disconnect();
   }
 }

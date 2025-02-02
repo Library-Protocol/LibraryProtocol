@@ -52,6 +52,7 @@ const CreatorOnboarding = () => {
   const [submitError, setSubmitError] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
   const [isWalletFetched, setIsWalletFetched] = useState(false);
+  const [coverImage, setCoverImage] = useState<string | null>(null);
 
   const { user } = usePrivy();
 
@@ -94,15 +95,13 @@ const CreatorOnboarding = () => {
   }, [user]);
 
   const handleSubmit = async () => {
-    // Wait for wallet address to be fetched
     if (!isWalletFetched) {
       setSubmitError('Please wait while we fetch your wallet address.');
       return;
     }
 
-    // Validate required fields
-    if (!libraryName || !country || !city || !state) {
-      setSubmitError('Please fill in all required fields');
+    if (!libraryName || !country || !city || !state || !coverImage) {
+      setSubmitError('Please fill in all required fields and customize your cover');
       return;
     }
 
@@ -110,14 +109,13 @@ const CreatorOnboarding = () => {
     setSubmitError('');
 
     const payload = {
-      wallet: walletAddress, // Ensure this is populated
+      wallet: walletAddress,
       name: libraryName,
       country,
       city,
       state,
+      coverImage // Include the cover image in the payload
     };
-
-    console.log('Sending payload to backend:', payload);
 
     try {
       const response = await fetch('/api/library/curator/onboarding', {
@@ -129,14 +127,12 @@ const CreatorOnboarding = () => {
       });
 
       const data = await response.json();
-      console.log('API Response:', data);
 
       if (!response.ok) {
         setSubmitError(data.error || 'Failed to create library');
         return;
       }
 
-      // If successful, move to next step
       setStep(step + 1);
     } catch (error) {
       console.error('Failed to create library:', error);
@@ -209,15 +205,8 @@ const CreatorOnboarding = () => {
 
   const SuccessStep = () => (
     <>
-      <Typography variant="body1" className="text-center mb-6">
-        All set! Head over to{' '}
-        <Link href="/creator/home" className="text-[#2B1810] hover:text-[#F8F2EB]">
-          Creators Dashboard
-        </Link>
-        .
-      </Typography>
-      <Typography variant="body1" className="text-center mb-6">
-        Let&apos;s do this!
+     <Typography variant="body1" className="text-center mb-6">
+        Congratulations! You’ve successfully onboarded as a <strong>curator of knowledge</strong>. Start adding your books to share with the community, or borrow from other curators !
       </Typography>
     </>
   );
@@ -304,7 +293,7 @@ const CreatorOnboarding = () => {
                     <div className='relative'>
                       <TextField
                         fullWidth
-                        label='Search Location For The Library...'
+                        label='Add Location For Your Library...'
                         value={searchQuery}
                         onChange={handleSearchInputChange}
                         InputProps={{
@@ -393,7 +382,7 @@ const CreatorOnboarding = () => {
                     <Button
                       variant='outlined'
                       fullWidth
-                      onClick={() => window.location.href = '/creator/home'}
+                      onClick={() => window.location.href = '/'}
                       sx={{
                         backgroundColor: 'black',
                         color: 'white',
@@ -404,7 +393,7 @@ const CreatorOnboarding = () => {
                         }
                       }}
                     >
-                      Let&apos;s do this
+                      Return Home
                     </Button>
                   ) : (
                     <>
@@ -459,9 +448,16 @@ const CreatorOnboarding = () => {
           </div>
         </div>
 
-        <div className='flex-1 flex items-center justify-center p-4 lg:p-8 bg-gray-200'>
-          <CustomizableCover libraryName={libraryName} />
-        </div>
+        {/* Conditionally render CustomizableCover */}
+        {step === 1 && (
+          <div className='flex-1 flex items-center justify-center p-4 lg:p-8 bg-gray-200'>
+            <CustomizableCover
+              libraryName={libraryName}
+              onImageChange={(imageData) => setCoverImage(imageData)}
+              showCustomization={true} // This hides the customization controls
+            />
+          </div>
+        )}
       </div>
     </>
   );

@@ -11,6 +11,10 @@ model Book {
   id          String   @id @default(uuid()) // Complex ID with UUID
   title       String
   author      String
+  publisher   String
+  publishDate String
+  pagination  Int
+  additionalNotes String?
   isbn        String   @unique
   availability Boolean  @default(true) // Book availability
   image       String?  // Path or URL to the book cover image
@@ -26,6 +30,18 @@ model Curator {
   country     String
   city        String
   state       String
+  publicNotice
   coverImage  String?  // Optional path or URL to the curator's cover image
+  isVerified  Boolean @default(false)
   books       Book[]   // Relation to books curated by this curator
+  BookRequests BookRequests[]
+}
+
+model BookRequests {
+  id          String   @id @default(uuid()) // Complex ID with UUID
+  title       String
+  author      String
+  additionalNotes String?
+  curatorId   String   // Foreign key for the curator
+  curator     Curator  @relation(fields: [curatorId], references: [id])
 }

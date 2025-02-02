@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "@privy-io/react-auth": "^2.0.9",
+    "maplibre-gl": "^4.7.1",
+    "pinata-web3": "^0.5.4",
+    "radar-sdk-js": "^4.4.10"
+  }
+}
