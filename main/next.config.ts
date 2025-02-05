@@ -11,7 +11,7 @@ const nextConfig: NextConfig = {
       //   locale: false
       // }
     ]
-  }
+  },
 }
 
 export default nextConfig

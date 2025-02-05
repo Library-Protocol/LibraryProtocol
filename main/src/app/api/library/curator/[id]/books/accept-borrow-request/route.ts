@@ -4,15 +4,15 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function POST(request: Request, context: { params: { id: string } }) {
+export async function POST(request: Request) {
   try {
-    const { id: curatorId } = context.params;
 
     const {
       wallet,
       bookId,
       borrowingId,
       note,
+      curatorId,
       status, // Optional status field
     } = await request.json();
 
@@ -26,7 +26,7 @@ export async function POST(request: Request, context: { params: { id: string } }
         borrowingId,
         curatorId,
         message: note || 'Borrowing Request Accepted',
-        status: status || 'pending', // Default to 'pending' if not provided
+        status: status || 'Pending', // Default to 'pending' if not provided
       },
     });
 

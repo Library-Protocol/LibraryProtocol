@@ -191,6 +191,7 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
         wallet: walletAddress,
         note: newLogMessage.trim(),
         borrowingId: selectedRequest?.id,
+        curatorId: Curator.id,
         bookId: selectedRequest?.book.id
       };
 

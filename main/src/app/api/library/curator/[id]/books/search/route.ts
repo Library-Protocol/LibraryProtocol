@@ -4,13 +4,16 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
-export async function GET(request: Request, context: { params: { id: string } }) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
-    // Destructuring curatorId directly from context.params and awaiting
-    const { id: curatorId } = await context.params;
+    // Await the params to get the curatorId
+    const { id: curatorId } = await params;
 
     const { searchParams } = new URL(request.url);
-    const isbn = searchParams.get('isbn'); // Retrieve ISBN from the query parameter
+    const isbn = searchParams.get('isbn');
 
     if (!curatorId || !isbn) {
       return NextResponse.json(
@@ -36,7 +39,6 @@ export async function GET(request: Request, context: { params: { id: string } })
 
     return NextResponse.json({ books }, { status: 200 });
   } catch (error) {
-
     return NextResponse.json(
       { error: 'Failed to fetch books' },
       { status: 500 }
