@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { ExternalLink } from 'lucide-react';
+
 import Link from 'next/link';
+
+import { ExternalLink } from 'lucide-react';
+
 import { usePrivy } from '@privy-io/react-auth';
 
 const CuratorDashboardButton = () => {
-  const [submitError, setSubmitError] = useState('');
+  const [, setSubmitError] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
   const [curatorId, setCuratorId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [, setIsLoading] = useState(false);
   const { user, authenticated } = usePrivy();
 
   useEffect(() => {
@@ -31,12 +34,16 @@ const CuratorDashboardButton = () => {
       if (!walletAddress) return;
 
       setIsLoading(true);
+
       try {
         const response = await fetch(`/api/library/curator/${walletAddress}/fetch-details`);
+
         if (!response.ok) {
           throw new Error('Failed to fetch curator data');
         }
+
         const data = await response.json();
+
         setCuratorId(data.id); // Assuming the API returns an object with an `id` field
       } catch (err) {
         setSubmitError((err as Error).message || 'Failed to fetch curator data');

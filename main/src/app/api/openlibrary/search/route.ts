@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const isbn = searchParams.get('isbn');
-  console.log('ISBN:', isbn);
 
   if (!isbn) {
     return NextResponse.json({ error: 'ISBN is required' }, { status: 400 });
@@ -21,7 +20,9 @@ export async function GET(request: Request) {
 
     // Extract the book records
     const records = data.records;
+
     if (!records || Object.keys(records).length === 0) {
+
       return NextResponse.json({ error: 'No book found with this ISBN' }, { status: 404 });
     }
 

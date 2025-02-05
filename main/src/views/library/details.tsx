@@ -1,6 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+
+import { useRouter } from 'next/navigation';
+
+import { usePrivy } from '@privy-io/react-auth';
+
 import {
   Card,
   CardContent,
@@ -15,21 +20,43 @@ import {
   Box,
   Paper,
   Chip,
-  InputAdornment,
   CircularProgress, // For the loading spinner
 } from '@mui/material';
-import { Search, Calendar, Book } from 'lucide-react';
+import { Calendar, Book, Home } from 'lucide-react';
+
 import { ToastContainer, toast } from 'react-toastify'; // Import toast notifications
+
+import BookSearchGrid from '@/components/library/BookSaerchCard';
+
+
+interface Book {
+  id: string;
+  wallet: string
+  title: string;
+  author: string;
+  publisher: string;
+  publishDate: Date;
+  pagination: number;
+  additionalNotes?: string;
+  isbn: number;
+  availability: boolean;
+  image?: string;
+  curatorId: string;
+  createdAt: Date;
+}
 
 interface Curator {
   id: number;
+  wallet: string;
   name: string;
   description: string;
   country: string;
   state: string;
   city: string;
   coverImage: string;
+  publicNotice: string;
   isVerified: boolean;
+  books: Book[];
 }
 
 interface LandingDetailsProps {
@@ -44,35 +71,65 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const [author, setAuthor] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
 
-  const [error, setError] = useState<string | null>(null); // Error state for validation
-  const [loading, setLoading] = useState(false); // Loading state for form submission
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleClickOpen = () => setOpen(true);
-  const handleClose = () => {
-    setOpen(false);
-    setError(null); // Clear errors when modal is closed
+  const [failedLoads, setFailedLoads] = useState(new Set<number>());
+
+  const { user } = usePrivy();
+  const [walletAddress, setWalletAddress] = useState('');
+  const router = useRouter();
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
   };
 
+  const handleSearchClick = () => {
+    console.log('Searching for:', searchQuery);
+  };
+
+  const handleImageError = (isbn: number) => {
+    setFailedLoads((prev) => new Set(prev).add(isbn));
+  };
+
+  const handleClickOpen = () => setOpen(true);
+
+  const handleClose = () => {
+    setOpen(false);
+    setError(null);
+  };
+
+  // Return home function
+  const handleReturnHome = () => {
+    router.push('/');
+  };
+
+  useEffect(() => {
+    if (user && user.wallet) {
+      setWalletAddress(user.wallet.address);
+    }
+  }, [user]);
+
   const handleSubmitRequest = async () => {
-    // Basic validation
+
     if (!bookTitle) {
       setError('Book title is required');
+
       return;
     }
 
-    setError(null); // Clear any previous errors
-    setLoading(true); // Start loading
+    setError(null);
+    setLoading(true);
 
-    // Prepare the data for submission
     const requestData = {
+      wallet: walletAddress,
       title: bookTitle,
-      author: author || '', // optional field
-      additionalNotes: additionalNotes || '', // optional field
+      author: author || '',
+      additionalNotes: additionalNotes || '',
       curatorId: Curator.id.toString(),
     };
 
     try {
-      // Send data to the API
       const response = await fetch(`/api/library/curator/${Curator.id}/request-book`, {
         method: 'POST',
         headers: {
@@ -83,39 +140,36 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
+
         throw new Error(errorData.error || 'Failed to submit request');
       }
 
-      const data = await response.json();
+      await response.json();
 
-      // Show success toast
       toast.success('Your book request has been submitted successfully!', {
         position: 'bottom-center',
-        autoClose: 3000, // Close after 3 seconds
+        autoClose: 3000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
       });
 
-      // Clear form fields
       setBookTitle('');
       setAuthor('');
       setAdditionalNotes('');
-      handleClose(); // Close the modal
+      handleClose();
     } catch (error: any) {
-
-      // Show error toast
       toast.error(error.message || 'There was an error submitting your request', {
         position: 'bottom-center',
-        autoClose: 3000, // Close after 3 seconds
+        autoClose: 3000,
         hideProgressBar: false,
         closeOnClick: true,
         pauseOnHover: true,
         draggable: true,
       });
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
@@ -127,26 +181,39 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
     { id: 3, book: "1984", borrowDate: "2025-01-25", returnDate: "2025-02-25", status: "active" },
   ];
 
-  const books = [
-    { id: 1, title: "The Great Gatsby", author: "F. Scott Fitzgerald", available: true },
-    { id: 2, title: "To Kill a Mockingbird", author: "Harper Lee", available: false },
-    { id: 3, title: "1984", author: "George Orwell", available: true },
-    { id: 4, title: "Pride and Prejudice", author: "Jane Austen", available: true },
-    { id: 5, title: "Moby Dick", author: "Herman Melville", available: true },
-    { id: 6, title: "The Catcher in the Rye", author: "J.D. Salinger", available: false },
-    { id: 7, title: "Brave New World", author: "Aldous Huxley", available: true },
-    { id: 8, title: "War and Peace", author: "Leo Tolstoy", available: true },
-    { id: 9, title: "The Odyssey", author: "Homer", available: true },
-    { id: 10, title: "The Picture of Dorian Gray", author: "Oscar Wilde", available: false },
-  ];
-
   return (
     <div className="relative max-w-[990px] mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Toast Container */}
+      {/* Home Icon Button */}
+      <Box
+        sx={{
+          position: 'absolute',
+          top: 12,
+          left: -50,
+          zIndex: 10
+        }}
+      >
+        <Button
+          variant="outlined"
+          onClick={handleReturnHome}
+          sx={{
+            minWidth: 'auto',
+            p: 1,
+            borderColor: 'black',
+            color: 'black',
+            '&:hover': {
+              backgroundColor: 'rgba(0,0,0,0.1)',
+              borderColor: 'black'
+            }
+          }}
+        >
+          <Home size={24} />
+        </Button>
+      </Box>
+
       <ToastContainer />
 
       <Grid container spacing={3}>
-         <Grid item xs={12} md={6}>
+        <Grid item xs={12} md={6}>
           <Card elevation={3} sx={{ height: '100%' }}>
             <Box sx={{ position: 'relative', height: '100%' }}>
               <img
@@ -158,14 +225,13 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
           </Card>
         </Grid>
 
-        {/* Right Side */}
+        {/* Rest of the existing component remains unchanged */}
         <Grid item xs={12} md={6}>
           <Grid container spacing={3}>
-            {/* Top - Request Book Button */}
             <Grid item xs={12}>
               <Card elevation={3}>
                 <CardContent sx={{ textAlign: 'center', p: 4 }}>
-                <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
+                  <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold' }}>
                     Ready to borrow?
                   </Typography>
                   <Button
@@ -176,7 +242,7 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
                       mt: 1,
                       backgroundColor: 'black',
                       color: 'white',
-                      '&:hover': { backgroundColor: '#333' } // Slightly lighter black on hover
+                      '&:hover': { backgroundColor: '#333' }
                     }}
                   >
                     Request a Book
@@ -185,8 +251,7 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
               </Card>
             </Grid>
 
-
-            {/* Bottom - Transactions */}
+            {/* Remaining Grid items and content stay the same */}
             <Grid item xs={12}>
               <Card elevation={3}>
                 <CardContent sx={{ p: 4 }}>
@@ -199,10 +264,10 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
                       display: 'flex',
                       flexDirection: 'column',
                       gap: 2,
-                      height: '200px', // Fixed height for the list section
-                      overflowY: 'auto', // Scroll if the content exceeds the height
-                      justifyContent: transactions.length === 0 ? 'center' : 'flex-start', // Center content if empty
-                      textAlign: 'center', // Center the text
+                      height: '200px',
+                      overflowY: 'auto',
+                      justifyContent: transactions.length === 0 ? 'center' : 'flex-start',
+                      textAlign: 'center',
                     }}
                   >
                     {transactions.length === 0 ? (
@@ -235,6 +300,8 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
                 </CardContent>
               </Card>
             </Grid>
+
+            {/* Remaining Grid items and content stay the same */}
             <Grid item xs={12}>
               <Card elevation={3}>
                 <CardContent sx={{ p: 4 }}>
@@ -242,10 +309,10 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
                     sx={{
                       display: 'flex',
                       flexDirection: 'column',
-                      alignItems: 'center', // Center horizontally
-                      justifyContent: 'center', // Center vertically
+                      alignItems: 'center',
+                      justifyContent: 'center',
                       textAlign: 'center',
-                      height: '100%', // Ensure full height for centering
+                      height: '100%',
                     }}
                   >
                     <Typography variant="h5">{Curator.name} Library Notice</Typography>
@@ -253,15 +320,19 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
                   <Box
                     sx={{
                       display: 'flex',
-                      height: '200px', // Fixed height
+                      height: '200px',
                       alignItems: 'center',
                       justifyContent: 'center',
                       textAlign: 'center',
-                      px: 3, // Add padding for better readability
+                      px: 3,
                     }}
                   >
                     <Typography variant="body1" color="text.secondary">
-                    All library books must be handled with care and returned in good condition. Borrowing privileges are available to registered members only. Please follow platform library guidelines for a smooth and enjoyable experience.
+                      {Curator.publicNotice && Curator.publicNotice.trim() ? (
+                        Curator.publicNotice
+                      ) : (
+                        "All library books must be handled with care and returned in good condition. Borrowing privileges are available to registered members only. Please follow platform library guidelines for a smooth and enjoyable experience."
+                      )}
                     </Typography>
                   </Box>
                 </CardContent>
@@ -273,66 +344,21 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
 
       {/* Book Search Section */}
       <Card elevation={3} sx={{ mt: 4 }}>
-        <CardContent sx={{ p: 4 }}>
-          <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
-            <TextField
-              fullWidth
-              placeholder="Search books by title, author, or ISBN..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search size={20} />
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Button
-                    variant="contained"
-                    sx={{
-                      mt: 1,
-                      backgroundColor: 'black',
-                      color: 'white',
-                      '&:hover': { backgroundColor: '#333' } // Slightly lighter black on hover
-                    }}
-                  >
-                    Search
-            </Button>
-            </Box>
-            <Grid container spacing={2}>
-              {books.map((book) => (
-                <Grid item xs={2.4} sm={2.4} md={2.4} key={book.id}>  {/* xs, sm, md: 12 / 5 = 2.4 */}
-                  <Box
-                    sx={{
-                      position: 'relative',
-                      width: '100%',
-                      height: '300px', // Fixed height
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      '&:hover .overlay': {
-                        opacity: 1,
-                      }
-                    }}
-                  >
-                    <img
-                      src={`${ipfsUrl}QmY46BDeryMhxUXteDS5im7424F9GDZmh5M6upjitUJCEG`}
-                      alt={book.title}
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover', // Ensures the image covers the area
-                      }}
-                    />
-                  </Box>
-                </Grid>
-              ))}
-            </Grid>
-        </CardContent>
+        <BookSearchGrid
+          searchQuery={searchQuery}
+          onSearchChange={handleSearchChange}
+          onSearchClick={handleSearchClick}
+          BookCurator={{
+            ...Curator,
+            id: String(Curator.id)
+          }}
+          failedLoads={failedLoads as Set<number>}
+          onImageError={handleImageError}
+        />
       </Card>
 
-     {/* Request Book Modal */}
-     <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+      {/* Request Book Modal */}
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>Request a Book</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -378,7 +404,7 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
           <Button
             variant="contained"
             onClick={handleSubmitRequest}
-            disabled={loading} // Disable button while loading
+            disabled={loading}
             sx={{
               color: 'white',
               backgroundColor: 'black',

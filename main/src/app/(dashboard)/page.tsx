@@ -11,13 +11,16 @@ function HomePage() {
     // Fetch curators from the API
     async function fetchCurators() {
       const response = await fetch('/api/library/curator/list')
+
       if (response.ok) {
         const data = await response.json()
+
         setCurators(data)
       } else {
         console.error('Error fetching curators')
       }
     }
+
     fetchCurators()
   }, [])
 

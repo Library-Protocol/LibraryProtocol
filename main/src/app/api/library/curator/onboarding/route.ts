@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
@@ -20,6 +21,7 @@ export async function POST(request: Request) {
     const file = new File([blob], fileName, { type: 'image/png' });
 
     const data = new FormData();
+
     data.append('file', file);
 
     const upload = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
@@ -52,6 +54,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, curator });
   } catch (error) {
     console.error('Error in onboarding:', error);
+
     return NextResponse.json(
       { error: 'Failed to create library' },
       { status: 500 }

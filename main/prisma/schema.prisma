@@ -4,44 +4,93 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  url      = env("DATABASE_URL") // Ensure DATABASE_URL points to your SQLite file
+  url      = env("DATABASE_URL")
+}
+
+enum BorrowingStatus {
+  Preparing
+  Dispatched
+  Delivered
+  Returned
+}
+
+enum BookRequestStatus {
+  Pending
+  Approved
+  Rejected
 }
 
 model Book {
-  id          String   @id @default(uuid()) // Complex ID with UUID
-  title       String
-  author      String
-  publisher   String
-  publishDate String
-  pagination  Int
+  id              String       @id @default(uuid())
+  title           String
+  author          String
+  publisher       String
+  publishDate     String
+  pagination      Int
   additionalNotes String?
-  isbn        String   @unique
-  availability Boolean  @default(true) // Book availability
-  image       String?  // Path or URL to the book cover image
-  curatorId   String   // Foreign key for the curator
-  curator     Curator  @relation(fields: [curatorId], references: [id])
-  createdAt   DateTime @default(now())
+  isbn            String       @unique
+  availability    Boolean      @default(true)
+  image           String?
+  curatorId       String
+  curator         Curator      @relation(fields: [curatorId], references: [id])
+  createdAt       DateTime     @default(now())
+  borrowings      Borrowings[]
 }
 
 model Curator {
-  id          String   @id @default(uuid()) // Complex ID with UUID
-  wallet      String   @unique // Wallet address
-  name        String
-  country     String
-  city        String
-  state       String
-  publicNotice
-  coverImage  String?  // Optional path or URL to the curator's cover image
-  isVerified  Boolean @default(false)
-  books       Book[]   // Relation to books curated by this curator
-  BookRequests BookRequests[]
+  id            String          @id @default(uuid())
+  wallet        String          @unique
+  name          String
+  country       String
+  city          String
+  state         String
+  publicNotice  String?
+  coverImage    String?
+  isVerified    Boolean         @default(false)
+  books         Book[]
+  bookRequests  BookRequests[]
+  createdAt     DateTime        @default(now())
+  Borrowings    Borrowings[]
+  BorrowingLogs BorrowingLogs[]
 }
 
 model BookRequests {
-  id          String   @id @default(uuid()) // Complex ID with UUID
-  title       String
-  author      String
+  id              String            @id @default(uuid())
+  wallet          String
+  title           String
+  author          String
   additionalNotes String?
-  curatorId   String   // Foreign key for the curator
-  curator     Curator  @relation(fields: [curatorId], references: [id])
+  curatorId       String
+  curator         Curator           @relation(fields: [curatorId], references: [id])
+  createdAt       DateTime          @default(now())
+  status          BookRequestStatus @default(Pending)
+}
+
+model Borrowings {
+  id              String          @id @default(uuid())
+  wallet          String
+  name            String
+  email           String
+  deliveryAddress String
+  phone           String?
+  borrowDate      DateTime
+  returnDate      DateTime
+  bookId          String
+  book            Book            @relation(fields: [bookId], references: [id])
+  curatorId       String
+  curator         Curator         @relation(fields: [curatorId], references: [id])
+  createdAt       DateTime        @default(now())
+  logs            BorrowingLogs[]
+}
+
+model BorrowingLogs {
+  id          String          @id @default(uuid())
+  wallet      String
+  status      BorrowingStatus @default(Preparing)
+  message     String?
+  borrowingId String
+  borrowing   Borrowings      @relation(fields: [borrowingId], references: [id])
+  curatorId   String
+  curator     Curator         @relation(fields: [curatorId], references: [id])
+  createdAt   DateTime        @default(now())
 }

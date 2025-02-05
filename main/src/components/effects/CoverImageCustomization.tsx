@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+
 import { Box, Slider, Select, MenuItem, Typography } from '@mui/material';
 import { SketchPicker } from 'react-color';
 import html2canvas from 'html2canvas';
@@ -40,6 +41,7 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
         });
 
         const imageData = canvas.toDataURL('image/png', 1.0); // Max quality
+
         onImageChange?.(imageData);
       } catch (error) {
         console.error('Error converting to image:', error);
@@ -52,14 +54,17 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
     const timeoutId = setTimeout(() => {
       handleChange();
     }, 100); // Small delay to ensure rendering is complete
+
     return () => clearTimeout(timeoutId);
   }, [libraryName]);
 
   // Debounced handler for style changes
   useEffect(() => {
+
     const timeoutId = setTimeout(() => {
       handleChange();
     }, 300);
+
     return () => clearTimeout(timeoutId);
   }, [primaryColor, secondaryColor, useGradient, overlayOpacity, titleSize, coverStyle]);
 

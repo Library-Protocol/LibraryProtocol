@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+
 import {
   Card,
   CardContent,
@@ -13,21 +14,23 @@ import {
   Grid,
   Typography,
   Box,
-  Paper,
-  Chip,
   InputAdornment,
   CircularProgress,
 } from '@mui/material';
-import { Search, Calendar } from 'lucide-react';
+
 import { ToastContainer, toast } from 'react-toastify';
+
 import FallbackBookCover from '@/components/library/FallbackBookCover';
+import BookRequestsCard from '@/components/library/BookRequestsCard';
+import BookSearchGrid from '@/components/library/BookSaerchCard';
+import BookBorrowRequestsCard from '@/components/library/BookBorrowRequestsCard';
 
 interface Book {
   id: string;
   title: string;
   author: string;
   publisher: string;
-  publishDate: Date; // ✅ Match Prisma DateTime
+  publishDate: Date;
   pagination: number;
   additionalNotes?: string;
   isbn: number;
@@ -37,6 +40,32 @@ interface Book {
   createdAt: Date;
 }
 
+interface BookRequest {
+  id: string;
+  title: string;
+  author: string;
+  additionalNotes?: string;
+  wallet: string;
+  curatorId: string;
+  createdAt: Date;
+}
+
+interface BorrowBookRequests {
+  id: string;
+  title: string;
+  author: string;
+  additionalNotes?: string;
+  wallet: string;
+  curatorId: string;
+  createdAt: Date;
+  name: string; // Add this
+  email: string; // Add this
+  deliveryAddress: string; // Add this
+  borrowDate: Date; // Add this
+  returnDate: Date; // Add this
+  book: Book; // Add this
+}
+
 interface Curator {
   id: string;
   name: string;
@@ -44,20 +73,24 @@ interface Curator {
   country: string;
   state: string;
   city: string;
+  publicNotice: string;
   coverImage?: string;
   isVerified: boolean;
-  books: Book[]; // ✅ Plural "books"
+  books: Book[];
+  bookRequests: BookRequest[];
 }
 
 interface LandingDetailsProps {
   Curator: Curator;
 }
 
-
 const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const [open, setOpen] = useState(false);
+  const [openPublicNotice, setOpenPublicNotice] = useState(false);
+  const [publicNoticeText, setPublicNoticeText] = useState(Curator.publicNotice || '');
   const [searchQuery, setSearchQuery] = useState('');
-
+  const [bookRequests, setBookRequests] = useState<BookRequest[]>([]);
+  const [bookBorrowRequests, setBookBorrowRequests] = useState<BorrowBookRequests[]>([]);
   const [bookTitle, setBookTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
@@ -68,24 +101,49 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [searchLoading, setSearchLoading] = useState(false); // Loading state for ISBN search
+  const [searchLoading, setSearchLoading] = useState(false);
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.target.value);
+  };
+
+  const handleSearchClick = () => {
+    // Implement your search logic here
+    console.log('Searching for:', searchQuery);
+  };
+
+  const handleImageError = (isbn: number) => {
+    setFailedLoads((prev) => new Set(prev).add(isbn));
+  };
 
   const handleClickOpen = () => setOpen(true);
+
   const handleClose = () => {
     setOpen(false);
-    setError(null);
+    setError(null); // Clear error state
+    setIsbn(''); // Reset ISBN field
+    setBookTitle('');
+    setAuthor('');
+    setAdditionalNotes('');
+    setPublisher('');
+    setPublishDate('');
+    setPagination('');
+    setCoverImage(null);
+  };
+
+  const handleClickOpenPublicNotice = () => setOpenPublicNotice(true);
+
+  const handleClosePublicNotice = () => {
+    setOpenPublicNotice(false);
+    setPublicNoticeText(Curator.publicNotice || '');
   };
 
   const [failedLoads, setFailedLoads] = useState(new Set());
 
-  const handleImageError = (isbn: number) => {
-    setFailedLoads(prev => new Set(prev).add(isbn));
-  };
 
-  // Fetch book data when ISBN is 14 characters long
   useEffect(() => {
     if (isbn.length === 13) {
-      fetchBookData(Number(isbn)); // Convert string to number
+      fetchBookData(Number(isbn));
     }
   }, [isbn]);
 
@@ -95,37 +153,38 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
       const coverResponse = await fetch(coverUrl);
 
       if (coverResponse.ok) {
-        setCoverImage(coverUrl); // Set the cover image URL if valid
+        setCoverImage(coverUrl);
       } else {
-        setCoverImage(null); // No cover image available
+        setCoverImage(null);
       }
     } catch (error) {
       console.error('Error fetching cover image:', error);
-      setCoverImage(null); // Fallback to null in case of an error
+      setCoverImage(null);
     }
   };
 
   const fetchBookData = async (isbn: number) => {
-    setSearchLoading(true); // Show spinner
+    setSearchLoading(true);
+
     try {
       const response = await fetch(`/api/openlibrary/search?isbn=${isbn}`);
+
       if (!response.ok) {
         throw new Error('Failed to fetch book data');
       }
+
       const data = await response.json();
 
       if (data.error) {
         throw new Error(data.error);
       }
 
-      // Auto-fill form fields
       setBookTitle(data.title || '');
       setAuthor(data.authors || '');
       setPublisher(data.publisher || '');
       setPublishDate(data.publishDate || '');
       setPagination(data.pagination || '');
 
-      // Fetch the cover image separately
       await fetchCoverImage(isbn);
     } catch (error: any) {
       toast.error(error.message || 'Failed to fetch book data', {
@@ -137,13 +196,45 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
         draggable: true,
       });
     } finally {
-      setSearchLoading(false); // Hide spinner
+      setSearchLoading(false);
+    }
+  };
+
+  const handleSavePublicNotice = async () => {
+
+    if (publicNoticeText.length > 200) {
+      toast.error('Public notice cannot exceed 200 characters.');
+
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/library/curator/public-notice', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ publicNotice: publicNoticeText, curatorId: Curator.id }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update public notice');
+      }
+
+      // Update the local state to reflect the new public notice
+      Curator.publicNotice = publicNoticeText;  // Update the frontend state directly
+
+      toast.success('Public notice updated successfully!');
+      handleClosePublicNotice();
+    } catch (error) {
+      toast.error('Failed to update public notice');
     }
   };
 
   const handleSubmitRequest = async () => {
     if (!bookTitle) {
       setError('Book title is required');
+
       return;
     }
 
@@ -174,10 +265,11 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
+
         throw new Error(errorData.error || 'Failed to submit request');
       }
 
-      const data = await response.json();
+      await response.json();
 
       toast.success('Your book has successfully been added to your catalog!', {
         position: 'bottom-center',
@@ -188,7 +280,6 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
         draggable: true,
       });
 
-      // Reset form fields
       setBookTitle('');
       setAuthor('');
       setAdditionalNotes('');
@@ -196,7 +287,7 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
       setPublisher('');
       setPublishDate('');
       setPagination('');
-      setCoverImage(null); // Reset cover image
+      setCoverImage(null);
       handleClose();
 
       window.location.reload();
@@ -214,32 +305,169 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
     }
   };
 
-  const ipfsUrl = process.env.NEXT_PUBLIC_IPFS_GATEWAY;
+  useEffect(() => {
+    const fetchBookRequests = async () => {
+      try {
+        const response = await fetch(`/api/library/curator/${Curator.id}/book-requests`);
 
-  const transactions = [];
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        // Only update state if bookRequests exists in response
+        if (data.bookRequests) {
+          setBookRequests(data.bookRequests || []); // Fallback to empty array if `bookRequests` is missing
+        }
+
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (Curator.id) {
+      fetchBookRequests();
+    }
+  }, [Curator.id]);
+
+  useEffect(() => {
+    const fetchBookBorrowRequests = async () => {
+      try {
+        const response = await fetch(`/api/library/curator/${Curator.id}/book-borrow-requests`);
+
+        if (!response.ok) {
+
+          throw new Error(`Failed to fetch: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        if (data.borrowings) {
+          setBookBorrowRequests(data.borrowings || []);
+        }
+
+      } catch (err: unknown) {
+        setError(err instanceof Error ? err.message : 'An unknown error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (Curator.id) {
+      fetchBookBorrowRequests();
+    }
+  }, [Curator.id]);
+
+  const ipfsUrl = process.env.NEXT_PUBLIC_IPFS_GATEWAY;
 
   return (
     <div className="relative max-w-[990px] mx-auto px-4 sm:px-6 lg:px-8">
       <ToastContainer />
 
       <Grid container spacing={3}>
+        {/* Left Side: Image and Library Notice Card */}
         <Grid item xs={12} md={6}>
-          <Card elevation={3} sx={{ height: '100%' }}>
-            <Box sx={{ position: 'relative', height: '100%' }}>
-              <img
-                src={`${ipfsUrl}${Curator.coverImage}`}
-                alt="sample"
-                className="w-full h-full object-cover"
-              />
-            </Box>
-          </Card>
+          <Grid container spacing={2}>
+            <Grid item xs={12}>
+              <Card elevation={3} sx={{ height: '550px' }}>
+                <Box sx={{ position: 'relative', height: '100%' }}>
+                <img
+                  src={`${ipfsUrl}${Curator.coverImage}`}
+                  alt={Curator.name}
+                  className="w-full h-[550px] object-cover" />
+                </Box>
+              </Card>
+            </Grid>
+
+            <Grid item xs={12}>
+              <Card elevation={3}>
+                <CardContent sx={{ p: 4 }}>
+                <Box
+                    sx={{
+                      display: 'flex',
+                      flexDirection: 'row', // Horizontally align the title and the button
+                      alignItems: 'center', // Vertically center the items
+                      justifyContent: 'center', // Center the content horizontally
+                      width: '100%',
+                      height: '50px',
+                      gap: 2, // Add spacing between the title and the button
+                    }}
+                  >
+                    <Typography variant="h5">{Curator.name} Library Notice</Typography>
+
+                    {/* Conditional button for updating public notice */}
+                    {Curator.publicNotice && Curator.publicNotice.trim() && (
+                      <Button
+                      variant="outlined"
+                      onClick={handleClickOpenPublicNotice} // Open the modal to update the public notice
+                      sx={{
+                        fontSize: '0.8rem',
+                        padding: '4px 8px',
+                        textTransform: 'none',
+                        height: '30px',
+                        width: 'auto',
+                        backgroundColor: 'black',
+                        borderColor: 'black',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: '#f5f5f5', // Slight gray on hover
+                          borderColor: 'black',
+                        },
+                      }}
+                    >
+                      Update
+                    </Button>
+                    )}
+                  </Box>
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      height: '100px',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textAlign: 'center',
+                      px: 3,
+                    }}
+                  >
+                    <Typography variant="body1" color="text.secondary">
+                      {Curator.publicNotice ? (
+                        Curator.publicNotice
+                      ) : (
+                        <Button
+                        variant="outlined"
+                        onClick={handleClickOpenPublicNotice} // Open the modal
+                        sx={{
+                          mt: 2,
+                          backgroundColor: "black",
+                          color: "white",
+                          borderColor: "white",
+                          "&:hover": {
+                            backgroundColor: "white",
+                            color: "black",
+                            borderColor: "black",
+                          },
+                        }}
+                      >
+                        Add a Public Notice
+                      </Button>
+                      )}
+                    </Typography>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
         </Grid>
 
+        {/* Right Side: Welcome, Current Lendings, and Current Book Requests */}
         <Grid item xs={12} md={6}>
           <Grid container spacing={3}>
             <Grid item xs={12}>
               <div
-                className="relative bg-gradient-to-r from-green-600 to-teal-500 rounded-[32px] overflow-hidden p-4 text-white transform transition-all duration-300 hover:scale-10 hover:shadow-2xl"
+                className="relative bg-gradient-to-r from-green-600 to-teal-500 rounded-[5px] overflow-hidden p-4 text-white transform transition-all duration-300 hover:scale-10 hover:shadow-2xl"
                 style={{ minHeight: 'auto' }}
               >
                 <div className="absolute inset-0 bg-black/10 hover:bg-black/20 transition-all duration-300 z-0" />
@@ -257,161 +485,28 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
                 </div>
               </div>
             </Grid>
-
             <Grid item xs={12}>
-              <Card elevation={3}>
-                <CardContent sx={{ p: 4 }}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 3 }}>
-                    <Calendar size={20} style={{ marginRight: 8 }} />
-                    <Typography variant="h5">Current Lendings</Typography>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 2,
-                      height: '200px',
-                      overflowY: 'auto',
-                      justifyContent: transactions.length === 0 ? 'center' : 'flex-start',
-                      textAlign: 'center',
-                    }}
-                  >
-                    {transactions.length === 0 ? (
-                      <Typography variant="body1" color="text.secondary">
-                        No borrowing logs available at the moment
-                      </Typography>
-                    ) : (
-                      transactions.map((transaction) => (
-                        <Paper key={transaction.id} elevation={1} sx={{ p: 2 }}>
-                          <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Box>
-                              <Typography variant="subtitle1">{transaction.book}</Typography>
-                              <Typography variant="body2" color="text.secondary">
-                                Borrowed: {transaction.borrowDate}
-                              </Typography>
-                            </Box>
-                            <Chip
-                              label={`Return by: ${transaction.returnDate}`}
-                              sx={{
-                                backgroundColor: 'black',
-                                color: 'white',
-                              }}
-                              variant="outlined"
-                            />
-                          </Box>
-                        </Paper>
-                      ))
-                    )}
-                  </Box>
-                </CardContent>
-              </Card>
+              <BookBorrowRequestsCard bookBorrowRequests={bookBorrowRequests} Curator={Curator} />
             </Grid>
-
             <Grid item xs={12}>
-              <Card elevation={3}>
-                <CardContent sx={{ p: 4 }}>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      textAlign: 'center',
-                      height: '50px',
-                    }}
-                  >
-                    <Typography variant="h5">{Curator.name} Library Notice</Typography>
-                  </Box>
-                  <Box
-                    sx={{
-                      display: 'flex',
-                      height: '100px',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      textAlign: 'center',
-                      px: 3,
-                    }}
-                  >
-                    <Typography variant="body1" color="text.secondary">
-                      All library books must be handled with care and returned in good condition. Borrowing privileges
-                      are available to registered members only. Please follow platform library guidelines for a smooth
-                      and enjoyable experience.
-                    </Typography>
-                  </Box>
-                </CardContent>
-              </Card>
+              <BookRequestsCard bookRequests={bookRequests} Curator={Curator} />
             </Grid>
           </Grid>
         </Grid>
       </Grid>
 
       <Card elevation={3} sx={{ mt: 4 }}>
-        <CardContent sx={{ p: 4 }}>
-          <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
-            <TextField
-              fullWidth
-              placeholder="Search books by title, author, or ISBN..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              InputProps={{
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search size={20} />
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <Button
-              variant="contained"
-              sx={{
-                mt: 1,
-                backgroundColor: 'black',
-                color: 'white',
-                '&:hover': { backgroundColor: '#333' },
-              }}
-            >
-              Search
-            </Button>
-          </Box>
-          <Grid container spacing={2}>
-            {Curator.books.map((book) => {
-              const bookCover = `https://covers.openlibrary.org/b/isbn/${book.isbn}-L.jpg?default=false`;
-              const shouldShowFallback = failedLoads.has(book.isbn);
-
-              return (
-                <Grid item xs={2.4} sm={2.4} md={2.4} key={book.id}>
-                  <Box
-                    sx={{
-                      position: 'relative',
-                      width: '100%',
-                      height: '250px',
-                      borderRadius: '8px',
-                      overflow: 'hidden',
-                      '&:hover .overlay': {
-                        opacity: 1,
-                      },
-                    }}
-                  >
-                    {!shouldShowFallback ? (
-                      <img
-                        src={bookCover}
-                        alt={book.title}
-                        onError={() => handleImageError(book.isbn)}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                        }}
-                      />
-                    ) : (
-                      <FallbackBookCover title={book.title} author={book.author} width="180px" height="250px" />
-                    )}
-                  </Box>
-                </Grid>
-              );
-            })}
-          </Grid>
-        </CardContent>
+      <BookSearchGrid
+        searchQuery={searchQuery}
+        onSearchChange={handleSearchChange}
+        onSearchClick={handleSearchClick}
+        BookCurator={{
+          ...Curator,
+          id: String(Curator.id) // Convert number id to string
+        }}
+        failedLoads={failedLoads as Set<number>}
+        onImageError={handleImageError}
+      />
       </Card>
 
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
@@ -524,6 +619,51 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Modal for Adding/Editing Public Notice */}
+      <Dialog
+          open={openPublicNotice}
+          onClose={handleClosePublicNotice}
+          maxWidth="sm" // Adjust maxWidth as needed
+          fullWidth
+          sx={{
+            '& .MuiDialogPaper-root': {
+              width: '80%',  // Adjust width if necessary
+              maxWidth: 'sm',  // Ensure maxWidth is applied
+              margin: 'auto',  // Center the dialog horizontally
+              top: '50%',  // Center vertically
+              transform: 'translateY(-50%)',  // Adjust for perfect centering
+            }
+          }}
+        >
+          <DialogTitle>Add/Edit Public Notice</DialogTitle>
+          <DialogContent>
+          <TextField
+              fullWidth
+              multiline
+              rows={4}
+              variant="outlined"
+              placeholder="Enter your public notice here..."
+              value={publicNoticeText}
+              onChange={(e) => setPublicNoticeText(e.target.value)}
+              sx={{ mt: 2 }}
+              inputProps={{
+                maxLength: 200, // Limit the number of characters to 150
+              }}
+            />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleClosePublicNotice}>Cancel</Button>
+            <Button
+              onClick={handleSavePublicNotice}
+              variant="contained"
+              color="primary"
+              disabled={!publicNoticeText.trim()} // Disable if text is empty
+            >
+              Save
+            </Button>
+          </DialogActions>
+        </Dialog>
     </div>
   );
 };

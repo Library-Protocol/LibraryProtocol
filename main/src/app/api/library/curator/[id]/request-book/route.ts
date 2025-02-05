@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
+
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
 export async function POST(request: Request ) {
   try {
-    const { title, author, additionalNotes, curatorId } = await request.json();
+    const { title, author, additionalNotes, curatorId, wallet } = await request.json();
 
     if (!curatorId) {
       return NextResponse.json({ error: 'Curator ID is required' }, { status: 400 });
@@ -25,11 +26,12 @@ export async function POST(request: Request ) {
 
     const bookRequest = await prisma.bookRequests.create({
       data: {
+        wallet,
         title,
         author,
         additionalNotes,
         curatorId,
-      },
+      }
     });
 
     return NextResponse.json(bookRequest, { status: 201 });

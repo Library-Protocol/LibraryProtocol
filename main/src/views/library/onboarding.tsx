@@ -1,13 +1,16 @@
 'use client'
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Link from 'next/link';
+
 import { Card, CardContent, Button, LinearProgress, Typography, Box, IconButton, TextField, CircularProgress, MenuItem, ListItemText } from '@mui/material';
 import { ArrowLeft, Camera } from 'lucide-react';
 import Radar from 'radar-sdk-js';
+
 import debounce from 'lodash/debounce';
-import CustomizableCover from '@/components/effects/CoverImageCustomization';
+
 import { usePrivy } from '@privy-io/react-auth';
+
+import CustomizableCover from '@/components/effects/CoverImageCustomization';
 
 // Define interfaces
 interface RadarAutocompleteAddress {
@@ -95,13 +98,16 @@ const CreatorOnboarding = () => {
   }, [user]);
 
   const handleSubmit = async () => {
+
     if (!isWalletFetched) {
       setSubmitError('Please wait while we fetch your wallet address.');
+
       return;
     }
 
     if (!libraryName || !country || !city || !state || !coverImage) {
       setSubmitError('Please fill in all required fields and customize your cover');
+
       return;
     }
 
@@ -130,6 +136,7 @@ const CreatorOnboarding = () => {
 
       if (!response.ok) {
         setSubmitError(data.error || 'Failed to create library');
+
         return;
       }
 
@@ -148,6 +155,7 @@ const CreatorOnboarding = () => {
     if (!query) {
       setSearchResults([]);
       setIsSearching(false);
+
       return;
     }
 
@@ -169,8 +177,8 @@ const CreatorOnboarding = () => {
         setSearchResults([]);
       }
     } catch (err) {
+
       setLocationError('Failed to search location. Please try again.');
-      console.error(err);
     } finally {
       setIsSearching(false);
     }
@@ -183,6 +191,7 @@ const CreatorOnboarding = () => {
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
+
     setSearchQuery(query);
     debouncedSearch(query);
   };
