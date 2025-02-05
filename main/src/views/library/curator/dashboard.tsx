@@ -84,6 +84,8 @@ interface LandingDetailsProps {
   Curator: Curator;
 }
 
+// TODO: Improve modal logics later and mover interfaces to types.ts
+
 const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const [open, setOpen] = useState(false);
   const [openPublicNotice, setOpenPublicNotice] = useState(false);
