@@ -23,7 +23,7 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
   const [useGradient, setUseGradient] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [overlayOpacity, setOverlayOpacity] = useState(50);
-  const [titleSize, setTitleSize] = useState(48);
+  const [titleSize, setTitleSize] = useState(72);
   const [coverStyle, setCoverStyle] = useState<CoverStyle>('modern');
 
   // Reference to the cover element for image generation
@@ -227,6 +227,7 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
                 min={24}
                 max={72}
                 valueLabelDisplay="auto"
+                disabled
               />
             </div>
           </div>

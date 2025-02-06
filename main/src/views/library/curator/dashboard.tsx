@@ -24,6 +24,8 @@ import FallbackBookCover from '@/components/library/FallbackBookCover';
 import BookRequestsCard from '@/components/library/BookRequestsCard';
 import BookSearchGrid from '@/components/library/BookSaerchCard';
 import BookBorrowRequestsCard from '@/components/library/BookBorrowRequestsCard';
+import { Home } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface Book {
   id: string;
@@ -104,10 +106,17 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
+  const [Books, setBooks] = useState<Book[]>(Curator.books);
+  const router = useRouter();
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(event.target.value);
   };
+
+    // Return home function
+    const handleReturnHome = () => {
+      router.push('/');
+    };
 
   const handleSearchClick = () => {
     // Implement your search logic here
@@ -171,9 +180,9 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
     try {
       const response = await fetch(`/api/openlibrary/search?isbn=${isbn}`);
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch book data');
-      }
+      // if (!response.ok) {
+      //   throw new Error('Failed to fetch book data');
+      // }
 
       const data = await response.json();
 
@@ -233,10 +242,83 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
     }
   };
 
+  // const handleSubmitRequest = async () => {
+  //   if (!bookTitle) {
+  //     setError('Book title is required');
+
+  //     return;
+  //   }
+
+  //   setError(null);
+  //   setLoading(true);
+
+  //   const requestData = {
+  //     title: bookTitle,
+  //     author: author || '',
+  //     additionalNotes: additionalNotes || '',
+  //     isbn: isbn || '',
+  //     publisher: publisher || '',
+  //     publishDate: publishDate || '',
+  //     pagination: pagination || '',
+  //     curatorId: Curator.id.toString(),
+  //   };
+
+  //   console.log('requested data', requestData);
+
+  //   try {
+  //     const response = await fetch(`/api/library/curator/${Curator.id}/add-book`, {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify(requestData),
+  //     });
+
+  //     if (!response.ok) {
+  //       const errorData = await response.json();
+
+  //       throw new Error(errorData.error || 'Failed to submit request');
+  //     }
+
+  //     await response.json();
+
+  //     toast.success('Your book has successfully been added to your catalog!', {
+  //       position: 'bottom-center',
+  //       autoClose: 3000,
+  //       hideProgressBar: false,
+  //       closeOnClick: true,
+  //       pauseOnHover: true,
+  //       draggable: true,
+  //     });
+
+  //     setBookTitle('');
+  //     setAuthor('');
+  //     setAdditionalNotes('');
+  //     setIsbn('');
+  //     setPublisher('');
+  //     setPublishDate('');
+  //     setPagination('');
+  //     setCoverImage(null);
+  //     handleClose();
+
+  //     window.location.reload();
+  //   } catch (error: any) {
+  //     toast.error(error.message || 'There was an error submitting your request', {
+  //       position: 'bottom-center',
+  //       autoClose: 3000,
+  //       hideProgressBar: false,
+  //       closeOnClick: true,
+  //       pauseOnHover: true,
+  //       draggable: true,
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
   const handleSubmitRequest = async () => {
     if (!bookTitle) {
       setError('Book title is required');
-
       return;
     }
 
@@ -254,9 +336,8 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
       curatorId: Curator.id.toString(),
     };
 
-    console.log('requested data', requestData);
-
     try {
+      // Make the request to add the book
       const response = await fetch(`/api/library/curator/${Curator.id}/add-book`, {
         method: 'POST',
         headers: {
@@ -267,11 +348,21 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-
         throw new Error(errorData.error || 'Failed to submit request');
       }
 
-      await response.json();
+      // Fetch the updated list of books after adding the new book
+      const updatedBooksResponse = await fetch(`/api/library/curator/${Curator.id}`);
+      if (!updatedBooksResponse.ok) {
+        throw new Error('Failed to fetch updated books');
+      }
+
+      // Extract the books from the response
+      const updatedBooks = await updatedBooksResponse.json();
+      const books = updatedBooks.books; // Access the 'books' field
+
+      // Update the state with the new list of books
+      setBooks(books);
 
       toast.success('Your book has successfully been added to your catalog!', {
         position: 'bottom-center',
@@ -282,6 +373,7 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
         draggable: true,
       });
 
+      // Reset form fields
       setBookTitle('');
       setAuthor('');
       setAdditionalNotes('');
@@ -291,8 +383,6 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
       setPagination('');
       setCoverImage(null);
       handleClose();
-
-      window.location.reload();
     } catch (error: any) {
       toast.error(error.message || 'There was an error submitting your request', {
         position: 'bottom-center',
@@ -312,9 +402,9 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
       try {
         const response = await fetch(`/api/library/curator/${Curator.id}/book-requests`);
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch: ${response.statusText}`);
-        }
+        // if (!response.ok) {
+        //   throw new Error(`Failed to fetch: ${response.statusText}`);
+        // }
 
         const data = await response.json();
 
@@ -340,10 +430,10 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
       try {
         const response = await fetch(`/api/library/curator/${Curator.id}/book-borrow-requests`);
 
-        if (!response.ok) {
+        // if (!response.ok) {
 
-          throw new Error(`Failed to fetch: ${response.statusText}`);
-        }
+        //   throw new Error(`Failed to fetch: ${response.statusText}`);
+        // }
 
         const data = await response.json();
 
@@ -366,7 +456,33 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const ipfsUrl = process.env.NEXT_PUBLIC_IPFS_GATEWAY;
 
   return (
-    <div className="relative max-w-[990px] mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="relative max-w-[880px] mx-auto px-4 sm:px-6 lg:px-8">
+       <Box
+        sx={{
+          position: 'absolute',
+          top: 12,
+          left: -50,
+          zIndex: 10
+        }}
+      >
+        <Button
+          variant="contained" // Ensures a solid background
+          onClick={handleReturnHome}
+          sx={{
+            minWidth: 'auto',
+            p: 1,
+            backgroundColor: 'black', // Black background
+            color: 'white', // White text
+            borderColor: 'black',
+            '&:hover': {
+              backgroundColor: 'rgba(0,0,0,0.8)', // Slightly lighter black on hover
+              borderColor: 'black'
+            }
+          }}
+        >
+          <Home size={32} />
+        </Button>
+      </Box>
       <ToastContainer />
 
       <Grid container spacing={3}>
@@ -394,7 +510,7 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
                       alignItems: 'center', // Vertically center the items
                       justifyContent: 'center', // Center the content horizontally
                       width: '100%',
-                      height: '50px',
+                      height: '80px',
                       gap: 2, // Add spacing between the title and the button
                     }}
                   >
@@ -502,10 +618,8 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
         searchQuery={searchQuery}
         onSearchChange={handleSearchChange}
         onSearchClick={handleSearchClick}
-        BookCurator={{
-          ...Curator,
-          id: String(Curator.id) // Convert number id to string
-        }}
+        BookCurator={Curator}
+        Books={Books}
         failedLoads={failedLoads as Set<number>}
         onImageError={handleImageError}
       />
@@ -604,21 +718,26 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
             Cancel
           </Button>
           <Button
-            variant="contained"
-            onClick={handleSubmitRequest}
-            disabled={loading}
-            sx={{
-              color: 'white',
-              backgroundColor: 'black',
-              border: '1px solid white',
-              '&:hover': {
-                backgroundColor: 'white',
-                color: 'black',
-              },
-            }}
-          >
-            {loading ? <CircularProgress size={24} /> : 'Add Book'}
-          </Button>
+          variant="contained"
+          onClick={handleSubmitRequest}
+          disabled={loading}
+          sx={{
+            color: 'white',
+            backgroundColor: 'black',
+            border: '1px solid white',
+            display: 'flex', // Flexbox to align content
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 1, // Adds spacing when showing text
+            minWidth: 120, // Prevents width shrink on loading
+            '&:hover': {
+              backgroundColor: 'white',
+              color: 'black',
+            },
+          }}
+        >
+          {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Add Book'}
+        </Button>
         </DialogActions>
       </Dialog>
 

@@ -73,16 +73,15 @@ interface CuratorProps {
 interface BookBorrowRequestsCardProps {
   bookBorrowRequests: BorrowBookRequest[];
   Curator: CuratorProps;
-  onUpdateLogs?: () => void;
 }
 
 const statusOrder: BorrowingStatus[] = ['Preparing', 'Dispatched', 'Delivered', 'Returned'];
 
 const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
-  bookBorrowRequests,
+  bookBorrowRequests: initialRequests,
   Curator,
-  onUpdateLogs
 }) => {
+
   const [selectedRequest, setSelectedRequest] = useState<BorrowBookRequest | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAcceptModalOpen, setIsAcceptModalOpen] = useState(false);
@@ -92,6 +91,7 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
   const [confirmationNote, setConfirmationNote] = useState('');
   const [newLogStatus, setNewLogStatus] = useState<BorrowingStatus>('Preparing');
   const [newLogMessage, setNewLogMessage] = useState('');
+  const [bookBorrowRequests, setBookBorrowRequests] = useState<BorrowBookRequest[]>(initialRequests);
   const { user } = usePrivy();
 
   const getNextStatus = (currentLogs: BorrowingLog[] | undefined): BorrowingStatus | null => {
@@ -182,6 +182,27 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
     setNewLogMessage('');
   };
 
+  const fetchBookBorrowRequests = async () => {
+    try {
+      const response = await fetch(`/api/library/curator/${Curator.id}/book-borrow-requests`);
+      if (!response.ok) throw new Error('Failed to fetch borrow requests');
+
+      const data = await response.json();
+      if (data && Array.isArray(data.borrowings)) {
+        setBookBorrowRequests(data.borrowings);
+        // setSelectedRequest(data.borrowings);
+      }
+    } catch (error) {
+      console.error('Error fetching borrow requests:', error);
+      setBookBorrowRequests([]);
+    }
+  };
+
+  // Fetch data on page load
+  useEffect(() => {
+    fetchBookBorrowRequests();
+  }, []);
+
   const handleSubmitNewLog = async () => {
     if (!selectedRequest) return;
 
@@ -195,6 +216,7 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
         bookId: selectedRequest?.book.id
       };
 
+
       const response = await fetch(`/api/library/curator/${Curator.id}/books/accept-borrow-request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -204,7 +226,7 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
       if (response.ok) {
         toast.success('Borrowing status updated successfully');
         handleCloseAddLogModal();
-        onUpdateLogs?.();
+        fetchBookBorrowRequests();
       } else {
         toast.error('Failed to update borrowing status');
       }
@@ -219,7 +241,9 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
         wallet: walletAddress,
         note: confirmationNote,
         borrowingId: selectedRequest?.id,
-        bookId: selectedRequest?.book.id
+        bookId: selectedRequest?.book.id,
+        curatorId: Curator.id,
+        status: statusOrder[0], // Defaults to 'Preparing'
       };
 
       const response = await fetch(`/api/library/curator/${Curator.id}/books/accept-borrow-request`, {
@@ -231,7 +255,7 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
       if (response.ok) {
         toast.success('Borrow request processed successfully');
         handleCloseAcceptModal();
-        onUpdateLogs?.();
+        fetchBookBorrowRequests();
       } else {
         toast.error('Failed to process borrow request');
       }

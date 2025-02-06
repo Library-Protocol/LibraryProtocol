@@ -46,7 +46,7 @@ interface Book {
 }
 
 interface Curator {
-  id: number;
+  id: string;
   wallet: string;
   name: string;
   description: string;
@@ -78,6 +78,8 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
 
   const { user } = usePrivy();
   const [walletAddress, setWalletAddress] = useState('');
+  const [Books] = useState<Book[]>(Curator.books);
+
   const router = useRouter();
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -193,23 +195,23 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
         }}
       >
         <Button
-          variant="outlined"
+          variant="contained" // Ensures a solid background
           onClick={handleReturnHome}
           sx={{
             minWidth: 'auto',
             p: 1,
+            backgroundColor: 'black', // Black background
+            color: 'white', // White text
             borderColor: 'black',
-            color: 'black',
             '&:hover': {
-              backgroundColor: 'rgba(0,0,0,0.1)',
+              backgroundColor: 'rgba(0,0,0,0.8)', // Slightly lighter black on hover
               borderColor: 'black'
             }
           }}
         >
-          <Home size={24} />
+          <Home size={32} />
         </Button>
       </Box>
-
       <ToastContainer />
 
       <Grid container spacing={3}>
@@ -348,10 +350,8 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
           searchQuery={searchQuery}
           onSearchChange={handleSearchChange}
           onSearchClick={handleSearchClick}
-          BookCurator={{
-            ...Curator,
-            id: String(Curator.id)
-          }}
+          BookCurator={Curator}
+          Books={Books}
           failedLoads={failedLoads as Set<number>}
           onImageError={handleImageError}
         />

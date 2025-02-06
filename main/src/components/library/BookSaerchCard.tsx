@@ -32,6 +32,7 @@ interface BookSearchGridProps {
   onSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   onSearchClick: () => void;
   BookCurator: BookCurator;
+  Books: Book[];
   failedLoads: Set<number>;
   onImageError: (isbn: number) => void;
 }
@@ -41,6 +42,7 @@ const BookSearchGrid: React.FC<BookSearchGridProps> = ({
   onSearchChange,
   onSearchClick,
   BookCurator,
+  Books,
   failedLoads,
   onImageError,
 }) => {
@@ -90,7 +92,7 @@ const BookSearchGrid: React.FC<BookSearchGridProps> = ({
         </Button>
       </Box>
       <Grid container spacing={2}>
-        {BookCurator.books.map((book) => {
+        {Books.map((book) => {
           const bookCover = `https://covers.openlibrary.org/b/isbn/${book.isbn}-L.jpg?default=false`;
           const shouldShowFallback = failedLoads.has(book.isbn);
           const isImageLoaded = loadedImages.has(book.isbn);
