@@ -185,9 +185,11 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
   const fetchBookBorrowRequests = async () => {
     try {
       const response = await fetch(`/api/library/curator/${Curator.id}/book-borrow-requests`);
+
       if (!response.ok) throw new Error('Failed to fetch borrow requests');
 
       const data = await response.json();
+
       if (data && Array.isArray(data.borrowings)) {
         setBookBorrowRequests(data.borrowings);
         // setSelectedRequest(data.borrowings);

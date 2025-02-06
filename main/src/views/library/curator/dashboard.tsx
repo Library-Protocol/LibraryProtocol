@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 
+import { useRouter } from 'next/navigation';
+
 import {
   Card,
   CardContent,
@@ -20,12 +22,17 @@ import {
 
 import { ToastContainer, toast } from 'react-toastify';
 
-import FallbackBookCover from '@/components/library/FallbackBookCover';
-import BookRequestsCard from '@/components/library/BookRequestsCard';
-import BookSearchGrid from '@/components/library/BookSaerchCard';
-import BookBorrowRequestsCard from '@/components/library/BookBorrowRequestsCard';
 import { Home } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+
+import FallbackBookCover from '@/components/library/FallbackBookCover';
+
+import BookRequestsCard from '@/components/library/BookRequestsCard';
+
+import BookSearchGrid from '@/components/library/BookSaerchCard';
+
+import BookBorrowRequestsCard from '@/components/library/BookBorrowRequestsCard';
+
+
 
 interface Book {
   id: string;
@@ -317,8 +324,10 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
   // };
 
   const handleSubmitRequest = async () => {
+
     if (!bookTitle) {
       setError('Book title is required');
+
       return;
     }
 
@@ -348,11 +357,13 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
+
         throw new Error(errorData.error || 'Failed to submit request');
       }
 
       // Fetch the updated list of books after adding the new book
       const updatedBooksResponse = await fetch(`/api/library/curator/${Curator.id}`);
+
       if (!updatedBooksResponse.ok) {
         throw new Error('Failed to fetch updated books');
       }
