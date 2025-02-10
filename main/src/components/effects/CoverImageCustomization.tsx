@@ -35,11 +35,17 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
   // Function to handle image upload
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
+
+
     if (file) {
+
       const reader = new FileReader();
+
       reader.onload = (e) => {
+
         setUploadedImage(e.target?.result as string);
       };
+
       reader.readAsDataURL(file);
     }
   };
@@ -53,9 +59,11 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
           useCORS: true,
           backgroundColor: null,
           logging: false, // Disable logs
+
         });
 
         const imageData = canvas.toDataURL('image/png', 1.0); // Max quality
+
         onImageChange?.(imageData);
       } catch (error) {
         console.error('Error converting to image:', error);
