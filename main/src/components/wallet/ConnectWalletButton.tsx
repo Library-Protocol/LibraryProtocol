@@ -57,6 +57,7 @@ const CuratorDashboardButton = () => {
     fetchCuratorId();
   }, [walletAddress]);
 
+
   // Don't render anything if not authenticated or curatorId is not fetchedç
   if (!authenticated || !curatorId) {
     return null;

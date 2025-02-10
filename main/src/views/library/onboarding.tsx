@@ -58,6 +58,7 @@ const CreatorOnboarding = () => {
   const [walletAddress, setWalletAddress] = useState('');
   const [isWalletFetched, setIsWalletFetched] = useState(false);
   const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [curatorPlatformFee] = useState<string>("0.001121");
 
   const { user } = usePrivy();
 
@@ -118,8 +119,11 @@ const CreatorOnboarding = () => {
     try {
       // First, handle the blockchain registration
       const registrationData: CuratorRegistrationData = {
-        name: libraryName
+        name: libraryName,
+        registerFee: curatorPlatformFee
       };
+
+      console.log('Curator Payload', registrationData)
 
       // Wait for blockchain transaction to complete
       const { hash, uniqueId } = await registerCurator(registrationData);
@@ -370,7 +374,7 @@ const CreatorOnboarding = () => {
                       label="Country"
                       value={country}
                       InputProps={{
-                        readOnly: true,
+                      readOnly: true,
                       }}
                       className="mb-4"
                     />
@@ -379,7 +383,7 @@ const CreatorOnboarding = () => {
                       label="City"
                       value={city}
                       InputProps={{
-                        readOnly: true,
+                      readOnly: true,
                       }}
                       className="mb-4"
                     />
@@ -388,11 +392,24 @@ const CreatorOnboarding = () => {
                       label="State"
                       value={state}
                       InputProps={{
-                        readOnly: true,
+                      readOnly: true,
                       }}
                       className="mb-4"
                     />
-
+                    <TextField
+                      fullWidth
+                      label="Platform Fee"
+                      value={curatorPlatformFee} // Keep it as a string
+                      InputProps={{
+                        readOnly: true,
+                        startAdornment: (
+                          <Typography variant="body1" sx={{ mr: 1 }}>
+                            ETH
+                          </Typography>
+                        ),
+                      }}
+                      className="mb-4"
+                    />
                     <div className='mt-6'>
                       <Typography variant='h6' className='mb-2'>
                         Map

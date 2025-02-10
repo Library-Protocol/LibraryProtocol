@@ -4,7 +4,7 @@ import type { Log, TransactionReceipt } from 'ethers';
 import { arbitrumABI } from './arbitrum/contractConfig';
 
 // Contract address should be replaced with your actual deployed contract address
-const CONTRACT_ADDRESS = '0x431c7E9E2bf7dCB7eFFeDDF0111e3aFC28E59237';
+const CONTRACT_ADDRESS = '0x053cea4934F722B63c4ac484484bB157d278a614';
 
 // Get ethers provider and signer
 const getProviderAndSigner = async () => {
@@ -29,6 +29,7 @@ const getContract = async () => {
 
 export type CuratorRegistrationData = {
   name: string;
+  registerFee: string;
 };
 
 export type BookData = {
@@ -86,7 +87,9 @@ export const registerCurator = async (
   try {
     const contract = await getContract();
 
-    const tx = await contract.registerAsCurator(data.name);
+    const tx = await contract.registerAsCurator(data.name, {
+      value: ethers.parseUnits(data.registerFee)
+    });
 
     await getProviderAndSigner();
     const receipt: TransactionReceipt = await tx.wait();

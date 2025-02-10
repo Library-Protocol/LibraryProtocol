@@ -184,6 +184,24 @@ export const arbitrumABI = [
         "internalType": "uint256",
         "name": "isbn",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "bookTokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "libraryTokenId",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "copies",
+        "type": "uint256"
       }
     ],
     "name": "BookAdded",
@@ -388,6 +406,12 @@ export const arbitrumABI = [
         "internalType": "string",
         "name": "name",
         "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "libraryTokenId",
+        "type": "uint256"
       }
     ],
     "name": "CuratorRegistered",
@@ -559,11 +583,29 @@ export const arbitrumABI = [
         "internalType": "uint256",
         "name": "_isbn",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_copies",
+        "type": "uint256"
       }
     ],
     "name": "addBook",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "addBookFee",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -884,6 +926,21 @@ export const arbitrumABI = [
         "internalType": "uint256",
         "name": "isbn",
         "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "bookTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "libraryTokenId",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "copies",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1034,6 +1091,11 @@ export const arbitrumABI = [
         "internalType": "bool",
         "name": "isVerified",
         "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "libraryTokenId",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1104,6 +1166,21 @@ export const arbitrumABI = [
           {
             "internalType": "uint256",
             "name": "isbn",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "bookTokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "libraryTokenId",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "copies",
             "type": "uint256"
           }
         ],
@@ -1360,6 +1437,11 @@ export const arbitrumABI = [
             "internalType": "bool",
             "name": "isVerified",
             "type": "bool"
+          },
+          {
+            "internalType": "uint256",
+            "name": "libraryTokenId",
+            "type": "uint256"
           }
         ],
         "internalType": "struct LibraryProtocol.Curator",
@@ -1371,7 +1453,18 @@ export const arbitrumABI = [
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_registerAsCuratorFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_addBookFee",
+        "type": "uint256"
+      }
+    ],
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -1424,7 +1517,20 @@ export const arbitrumABI = [
     ],
     "name": "registerAsCurator",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "registerAsCuratorFee",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
     "type": "function"
   },
   {
@@ -1503,6 +1609,19 @@ export const arbitrumABI = [
   {
     "inputs": [
       {
+        "internalType": "uint256",
+        "name": "_newFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "setAddBookFee",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "address",
         "name": "operator",
         "type": "address"
@@ -1514,6 +1633,19 @@ export const arbitrumABI = [
       }
     ],
     "name": "setApprovalForAll",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_newFee",
+        "type": "uint256"
+      }
+    ],
+    "name": "setRegisterAsCuratorFee",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1572,7 +1704,7 @@ export const arbitrumABI = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "_tokenId",
         "type": "uint256"
       }
     ],
