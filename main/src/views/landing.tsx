@@ -1,7 +1,10 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+
+
 import { CheckCircle } from 'lucide-react';
+
 import { usePrivy } from '@privy-io/react-auth'; // Import Privy
 
 interface Curator {
@@ -35,10 +38,13 @@ const LandingPage: React.FC<LandingPageProps> = ({ curators }) => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
+
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
     }, 10000);
+
     return () => clearInterval(timer);
+
   }, []);
 
   const goToSlide = (index: number): void => {
