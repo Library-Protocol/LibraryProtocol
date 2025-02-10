@@ -21,10 +21,6 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       },
     });
 
-    if (borrowings.length === 0) {
-      return NextResponse.json({ message: 'No borrowings found for this curator' }, { status: 404 });
-    }
-
     return NextResponse.json({ borrowings }, { status: 200 });
 
   } catch (error) {

@@ -15,11 +15,10 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     // Fetch book requests where curatorId matches
     const bookRequests = await prisma.bookRequests.findMany({
       where: { curatorId },
+      include: {
+        logs: true,
+      },
     });
-
-    if (bookRequests.length === 0) {
-      return NextResponse.json({ message: 'No book requests found for this curator' }, { status: 404 });
-    }
 
     return NextResponse.json({ bookRequests }, { status: 200 });
 

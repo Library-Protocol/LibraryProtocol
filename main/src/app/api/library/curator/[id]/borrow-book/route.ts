@@ -20,7 +20,19 @@ export async function POST(
       deliveryAddress,
       borrowDate,
       returnDate,
+      onChainBorrowingId,
     } = await request.json();
+
+    console.log('API PAYLOAD',   wallet,
+      bookId,
+      name,
+      email,
+      phone,
+      deliveryAddress,
+      borrowDate,
+      returnDate,
+      onChainBorrowingId
+    )
 
     // Validation
     if (!name || !email || !borrowDate || !returnDate || !bookId) {
@@ -39,6 +51,7 @@ export async function POST(
         borrowDate: new Date(borrowDate),
         returnDate: new Date(returnDate),
         curatorId,
+        onChainBorrowingId,
       },
     });
 

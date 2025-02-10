@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
   try {
-    const { wallet, name, country, city, state, coverImage } = await request.json();
+    const { wallet, name, country, city, state, coverImage, transactionHash, onChainUniqueId } = await request.json();
 
     if (!coverImage) {
       return NextResponse.json({ error: 'Cover image is required' }, { status: 400 });
@@ -48,6 +48,8 @@ export async function POST(request: Request) {
         state,
         wallet: wallet,
         coverImage: imageUrl,
+        transactionHash,
+        onChainUniqueId
       },
     });
 

@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 export async function POST(request: Request ) {
   try {
-    const { title, author, additionalNotes, curatorId, wallet } = await request.json();
+    const { isbn, title, author, additionalNotes, curatorId, wallet, transactionHash, onChainBookRequestId } = await request.json();
 
     if (!curatorId) {
       return NextResponse.json({ error: 'Curator ID is required' }, { status: 400 });
@@ -27,10 +27,13 @@ export async function POST(request: Request ) {
     const bookRequest = await prisma.bookRequests.create({
       data: {
         wallet,
+        isbn,
         title,
         author,
         additionalNotes,
         curatorId,
+        transactionHash,
+        onChainBookRequestId
       }
     });
 

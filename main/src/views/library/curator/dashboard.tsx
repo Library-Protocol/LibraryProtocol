@@ -31,11 +31,12 @@ import BookRequestsCard from '@/components/library/BookRequestsCard';
 import BookSearchGrid from '@/components/library/BookSaerchCard';
 
 import BookBorrowRequestsCard from '@/components/library/BookBorrowRequestsCard';
-
-
+import { addBook } from '@/contract/Interraction';
 
 interface Book {
   id: string;
+  onChainUniqueId: string
+  transactionHash: string
   title: string;
   author: string;
   publisher: string;
@@ -51,12 +52,16 @@ interface Book {
 
 interface BookRequest {
   id: string;
+  logs: any;
+  isbn: string;
   title: string;
   author: string;
   additionalNotes?: string;
   wallet: string;
   curatorId: string;
   createdAt: Date;
+  transactionHash: string;
+  onChainBookRequestId: string;
 }
 
 interface BorrowBookRequests {
@@ -73,10 +78,13 @@ interface BorrowBookRequests {
   borrowDate: Date; // Add this
   returnDate: Date; // Add this
   book: Book; // Add this
+  onChainBorrowingId: string;
 }
 
 interface Curator {
   id: string;
+  onChainUniqueId: string
+  transactionHash: string
   name: string;
   description?: string;
   country: string;
@@ -93,7 +101,7 @@ interface LandingDetailsProps {
   Curator: Curator;
 }
 
-// TODO: Improve modal logics later and mover interfaces to types.ts
+// TODO: Improve modal logics later and move interfaces to types.ts
 
 const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const [open, setOpen] = useState(false);
@@ -249,80 +257,6 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
     }
   };
 
-  // const handleSubmitRequest = async () => {
-  //   if (!bookTitle) {
-  //     setError('Book title is required');
-
-  //     return;
-  //   }
-
-  //   setError(null);
-  //   setLoading(true);
-
-  //   const requestData = {
-  //     title: bookTitle,
-  //     author: author || '',
-  //     additionalNotes: additionalNotes || '',
-  //     isbn: isbn || '',
-  //     publisher: publisher || '',
-  //     publishDate: publishDate || '',
-  //     pagination: pagination || '',
-  //     curatorId: Curator.id.toString(),
-  //   };
-
-  //   console.log('requested data', requestData);
-
-  //   try {
-  //     const response = await fetch(`/api/library/curator/${Curator.id}/add-book`, {
-  //       method: 'POST',
-  //       headers: {
-  //         'Content-Type': 'application/json',
-  //       },
-  //       body: JSON.stringify(requestData),
-  //     });
-
-  //     if (!response.ok) {
-  //       const errorData = await response.json();
-
-  //       throw new Error(errorData.error || 'Failed to submit request');
-  //     }
-
-  //     await response.json();
-
-  //     toast.success('Your book has successfully been added to your catalog!', {
-  //       position: 'bottom-center',
-  //       autoClose: 3000,
-  //       hideProgressBar: false,
-  //       closeOnClick: true,
-  //       pauseOnHover: true,
-  //       draggable: true,
-  //     });
-
-  //     setBookTitle('');
-  //     setAuthor('');
-  //     setAdditionalNotes('');
-  //     setIsbn('');
-  //     setPublisher('');
-  //     setPublishDate('');
-  //     setPagination('');
-  //     setCoverImage(null);
-  //     handleClose();
-
-  //     window.location.reload();
-  //   } catch (error: any) {
-  //     toast.error(error.message || 'There was an error submitting your request', {
-  //       position: 'bottom-center',
-  //       autoClose: 3000,
-  //       hideProgressBar: false,
-  //       closeOnClick: true,
-  //       pauseOnHover: true,
-  //       draggable: true,
-  //     });
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleSubmitRequest = async () => {
 
     if (!bookTitle) {
@@ -334,18 +268,35 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
     setError(null);
     setLoading(true);
 
-    const requestData = {
-      title: bookTitle,
-      author: author || '',
-      additionalNotes: additionalNotes || '',
-      isbn: isbn || '',
-      publisher: publisher || '',
-      publishDate: publishDate || '',
-      pagination: pagination || '',
-      curatorId: Curator.id.toString(),
-    };
 
     try {
+
+      const addBookData = {
+        title: bookTitle,
+        author: author,
+        publisher: publisher,
+        publishDate: publishDate,
+        pagination: Number(pagination) || 0, // Ensure pagination is a number
+        additionalNotes: additionalNotes,
+        onChainUniqueId: Curator.onChainUniqueId,
+        isbn: Number(isbn)
+      };
+
+      const { hash, uniqueId } = await addBook(addBookData);
+
+      const requestData = {
+        title: bookTitle,
+        author: author || '',
+        additionalNotes: additionalNotes || '',
+        isbn: isbn || '',
+        publisher: publisher || '',
+        publishDate: publishDate || '',
+        pagination: pagination || '',
+        curatorId: Curator.id.toString(),
+        onChainUniqueId: uniqueId,
+        transactionHash: hash
+      };
+
       // Make the request to add the book
       const response = await fetch(`/api/library/curator/${Curator.id}/add-book`, {
         method: 'POST',
@@ -413,9 +364,9 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
       try {
         const response = await fetch(`/api/library/curator/${Curator.id}/book-requests`);
 
-        // if (!response.ok) {
-        //   throw new Error(`Failed to fetch: ${response.statusText}`);
-        // }
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.statusText}`);
+        }
 
         const data = await response.json();
 

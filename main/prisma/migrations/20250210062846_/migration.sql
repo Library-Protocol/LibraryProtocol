@@ -7,6 +7,8 @@ CREATE TYPE "BookRequestStatus" AS ENUM ('Pending', 'Approved', 'Rejected');
 -- CreateTable
 CREATE TABLE "Book" (
     "id" TEXT NOT NULL,
+    "onChainUniqueId" TEXT NOT NULL,
+    "transactionHash" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "author" TEXT NOT NULL,
     "publisher" TEXT NOT NULL,
@@ -25,6 +27,8 @@ CREATE TABLE "Book" (
 -- CreateTable
 CREATE TABLE "Curator" (
     "id" TEXT NOT NULL,
+    "onChainUniqueId" TEXT NOT NULL,
+    "transactionHash" TEXT NOT NULL,
     "wallet" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "country" TEXT NOT NULL,
@@ -42,19 +46,35 @@ CREATE TABLE "Curator" (
 CREATE TABLE "BookRequests" (
     "id" TEXT NOT NULL,
     "wallet" TEXT NOT NULL,
+    "isbn" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "author" TEXT NOT NULL,
     "additionalNotes" TEXT,
     "curatorId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "status" "BookRequestStatus" NOT NULL DEFAULT 'Pending',
+    "transactionHash" TEXT NOT NULL,
+    "onChainBookRequestId" TEXT NOT NULL,
 
     CONSTRAINT "BookRequests_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
+CREATE TABLE "BookRequestLogs" (
+    "id" TEXT NOT NULL,
+    "bookRequestId" TEXT NOT NULL,
+    "curatorId" TEXT NOT NULL,
+    "status" "BookRequestStatus" NOT NULL,
+    "message" TEXT,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "BookRequestLogs_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "Borrowings" (
     "id" TEXT NOT NULL,
+    "onChainBorrowingId" TEXT NOT NULL,
     "wallet" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "email" TEXT NOT NULL,
@@ -93,6 +113,12 @@ ALTER TABLE "Book" ADD CONSTRAINT "Book_curatorId_fkey" FOREIGN KEY ("curatorId"
 
 -- AddForeignKey
 ALTER TABLE "BookRequests" ADD CONSTRAINT "BookRequests_curatorId_fkey" FOREIGN KEY ("curatorId") REFERENCES "Curator"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BookRequestLogs" ADD CONSTRAINT "BookRequestLogs_bookRequestId_fkey" FOREIGN KEY ("bookRequestId") REFERENCES "BookRequests"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "BookRequestLogs" ADD CONSTRAINT "BookRequestLogs_curatorId_fkey" FOREIGN KEY ("curatorId") REFERENCES "Curator"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Borrowings" ADD CONSTRAINT "Borrowings_bookId_fkey" FOREIGN KEY ("bookId") REFERENCES "Book"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

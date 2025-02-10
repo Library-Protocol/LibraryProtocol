@@ -13,14 +13,8 @@ export async function POST(request: Request) {
       borrowingId,
       note,
       curatorId,
-      status, // Optional status field
-    } = await request.json();
-
-    console.log('Borrow Logs',  [
-      curatorId,
       status,
-
-    ]);
+    } = await request.json();
 
     if (!wallet || !borrowingId) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });

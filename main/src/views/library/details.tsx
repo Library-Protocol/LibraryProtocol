@@ -27,6 +27,8 @@ import { Calendar, Book, Home } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify'; // Import toast notifications
 
 import BookSearchGrid from '@/components/library/BookSaerchCard';
+import { bookRequest } from '@/contract/Interraction';
+import BorrowingTitle from '@/components/effects/BookTitle';
 
 
 interface Book {
@@ -45,6 +47,9 @@ interface Book {
   createdAt: Date;
 }
 
+interface BookRequest {
+  status: string;
+}
 interface Curator {
   id: string;
   wallet: string;
@@ -57,6 +62,15 @@ interface Curator {
   publicNotice: string;
   isVerified: boolean;
   books: Book[];
+  onChainUniqueId: string;
+  status: BookRequest;
+}
+
+interface Lending {
+  id: string
+  borrowDate: string
+  returnDate: string
+  book: Book
 }
 
 interface LandingDetailsProps {
@@ -66,19 +80,19 @@ interface LandingDetailsProps {
 const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-
+  const [isbn, setISBN] = useState('');
   const [bookTitle, setBookTitle] = useState('');
   const [author, setAuthor] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
-
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-
   const [failedLoads, setFailedLoads] = useState(new Set<number>());
-
   const { user } = usePrivy();
   const [walletAddress, setWalletAddress] = useState('');
   const [Books] = useState<Book[]>(Curator.books);
+  const [lendings, setLendings] = useState<Lending[]>([]);
+
+  const ipfsUrl = process.env.NEXT_PUBLIC_IPFS_GATEWAY;
 
   const router = useRouter();
 
@@ -123,12 +137,26 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
     setError(null);
     setLoading(true);
 
+    const onChainRequestData = {
+      isbn: isbn,
+      title: bookTitle,
+      author: author || '',
+      additionalNotes: additionalNotes || '',
+      curatorId: Curator.onChainUniqueId,
+      status: 'Pending'
+    }
+
+    const { hash, requestId } = await bookRequest(onChainRequestData)
+
     const requestData = {
       wallet: walletAddress,
+      isbn: isbn,
       title: bookTitle,
       author: author || '',
       additionalNotes: additionalNotes || '',
       curatorId: Curator.id.toString(),
+      transactionHash: hash,
+      onChainBookRequestId: requestId
     };
 
     try {
@@ -175,13 +203,26 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
     }
   };
 
-  const ipfsUrl = process.env.NEXT_PUBLIC_IPFS_GATEWAY;
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      try {
+        const response = await fetch(`/api/library/curator/${Curator.id}/lendings`);
 
-  const transactions = [
-    { id: 1, book: "The Great Gatsby", borrowDate: "2025-01-20", returnDate: "2025-02-20", status: "active" },
-    { id: 2, book: "To Kill a Mockingbird", borrowDate: "2025-01-15", returnDate: "2025-02-15", status: "overdue" },
-    { id: 3, book: "1984", borrowDate: "2025-01-25", returnDate: "2025-02-25", status: "active" },
-  ];
+        if (!response.ok) {
+          throw new Error('Failed to fetch transactions');
+        }
+
+        const data = await response.json();
+
+        setLendings(data);
+      } catch (error) {
+        console.error('Error fetching transactions:', error);
+        toast.error('Failed to load transactions');
+      }
+    };
+
+    fetchTransactions();
+  }, [Curator.id]);
 
   return (
     <div className="relative max-w-[990px] mx-auto px-4 sm:px-6 lg:px-8">
@@ -268,33 +309,34 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
                       gap: 2,
                       height: '200px',
                       overflowY: 'auto',
-                      justifyContent: transactions.length === 0 ? 'center' : 'flex-start',
+                      justifyContent: lendings.length === 0 ? 'center' : 'flex-start',
                       textAlign: 'center',
                     }}
                   >
-                    {transactions.length === 0 ? (
+                    {lendings.length === 0 ? (
                       <Typography variant="body1" color="text.secondary">
                         No borrowing logs available at the moment
                       </Typography>
                     ) : (
-                      transactions.map((transaction) => (
-                        <Paper key={transaction.id} elevation={1} sx={{ p: 2 }}>
+                      lendings.map((lending) => (
+                        <Paper key={lending.id} elevation={1} sx={{ p: 2 }}>
                           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                             <Box>
-                              <Typography variant="subtitle1">{transaction.book}</Typography>
+                              {/* <Typography variant="subtitle1">{lending.book.title}</Typography> */}
+                              <BorrowingTitle title={lending.book.title} />
                               <Typography variant="body2" color="text.secondary">
-                                Borrowed: {transaction.borrowDate}
+                                Borrowed: {new Date(lending.borrowDate).toLocaleDateString()}
                               </Typography>
                             </Box>
                             <Chip
-                              label={`Return by: ${transaction.returnDate}`}
+                              label={`Return by: ${new Date(lending.returnDate).toLocaleDateString()}`}
                               sx={{
                                 backgroundColor: 'black',
-                                color: 'white'
+                                color: 'white',
                               }}
                               variant="outlined"
                             />
-                          </Box>
+                           </Box>
                         </Paper>
                       ))
                     )}
@@ -359,9 +401,18 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
 
       {/* Request Book Modal */}
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-        <DialogTitle>Request a Book</DialogTitle>
+        <DialogTitle>Request A Book</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              fullWidth
+              label="ISBN"
+              variant="outlined"
+              value={isbn}
+              onChange={(e) => setISBN(e.target.value)}
+              error={!!error}
+              helperText={error}
+            />
             <TextField
               fullWidth
               label="Book Title"
@@ -373,10 +424,11 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
             />
             <TextField
               fullWidth
-              label="Author (optional)"
+              label="Author"
               variant="outlined"
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
+              error={!!error}
             />
             <TextField
               fullWidth
@@ -405,17 +457,13 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
             variant="contained"
             onClick={handleSubmitRequest}
             disabled={loading}
-            sx={{
-              color: 'white',
-              backgroundColor: 'black',
-              border: '1px solid white',
-              '&:hover': {
-                backgroundColor: 'white',
-                color: 'black',
-              },
-            }}
-          >
-            {loading ? <CircularProgress size={24} /> : 'Submit Request'}
+               sx={{
+                backgroundColor: 'black',
+                color: 'white',
+                '&:hover': { backgroundColor: '#333' },
+              }}
+              >
+              {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> :'Submit Request'}
           </Button>
         </DialogActions>
       </Dialog>

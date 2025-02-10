@@ -6,6 +6,8 @@ import { ExternalLink } from 'lucide-react';
 
 import { usePrivy } from '@privy-io/react-auth';
 
+import Novu from '../notification/Novu';
+
 const CuratorDashboardButton = () => {
   const [, setSubmitError] = useState('');
   const [walletAddress, setWalletAddress] = useState('');
@@ -75,6 +77,7 @@ const CuratorDashboardButton = () => {
   );
 };
 
+
 const ConnectWalletButton = () => {
   const { ready, authenticated, login, logout } = usePrivy();
 
@@ -120,6 +123,7 @@ const ConnectWalletButton = () => {
         {authenticated ? 'Logout' : 'Connect Wallet'}
       </button>
       <CuratorDashboardButton />
+      <Novu />
     </div>
   );
 };

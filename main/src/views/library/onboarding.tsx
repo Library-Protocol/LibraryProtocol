@@ -11,8 +11,10 @@ import debounce from 'lodash/debounce';
 import { usePrivy } from '@privy-io/react-auth';
 
 import CustomizableCover from '@/components/effects/CoverImageCustomization';
+import { registerCurator } from '@/contract/Interraction';
 
-// Define interfaces
+import type { CuratorRegistrationData } from '@/contract/Interraction';
+
 interface RadarAutocompleteAddress {
   address: string;
   city: string;
@@ -98,7 +100,6 @@ const CreatorOnboarding = () => {
   }, [user]);
 
   const handleSubmit = async () => {
-
     if (!isWalletFetched) {
       setSubmitError('Please wait while we fetch your wallet address.');
 
@@ -114,38 +115,55 @@ const CreatorOnboarding = () => {
     setIsSubmitting(true);
     setSubmitError('');
 
-    const payload = {
-      wallet: walletAddress,
-      name: libraryName,
-      country,
-      city,
-      state,
-      coverImage // Include the cover image in the payload
-    };
-
     try {
+      // First, handle the blockchain registration
+      const registrationData: CuratorRegistrationData = {
+        name: libraryName
+      };
+
+      // Wait for blockchain transaction to complete
+      const { hash, uniqueId } = await registerCurator(registrationData);
+
+      // If blockchain transaction is successful, proceed with your API call
       const response = await fetch('/api/library/curator/onboarding', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          wallet: walletAddress,
+          name: libraryName,
+          country,
+          city,
+          state,
+          coverImage,
+          transactionHash: hash,
+          onChainUniqueId: uniqueId
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setSubmitError(data.error || 'Failed to create library');
-
-        return;
+        throw new Error(data.error || 'Failed to create library');
       }
 
       setStep(step + 1);
     } catch (error) {
       console.error('Failed to create library:', error);
-      setSubmitError(
-        error instanceof Error ? error.message : 'Failed to create library. Please try again.'
-      );
+
+      // Handle specific MetaMask errors
+      if (error instanceof Error) {
+        if (error.message.includes('user rejected transaction')) {
+          setSubmitError('Transaction was rejected. Please try again.');
+        } else if (error.message.includes('insufficient funds')) {
+          setSubmitError('Insufficient funds to complete the transaction.');
+        } else {
+          setSubmitError(error.message);
+        }
+      } else {
+        setSubmitError('Failed to create library. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }

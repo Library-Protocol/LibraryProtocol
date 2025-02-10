@@ -19,10 +19,14 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  CircularProgress,
 } from '@mui/material';
 import { Calendar, Copy, History, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
+
 import { usePrivy } from '@privy-io/react-auth';
+
+import { borrowBookConfirmationAndStatusUpdate } from '@/contract/Interraction';
 
 interface Book {
   id: string;
@@ -64,6 +68,7 @@ interface BorrowBookRequest {
   returnDate: Date;
   book: Book;
   logs?: BorrowingLog[];
+  onChainBorrowingId: string;
 }
 
 interface CuratorProps {
@@ -92,6 +97,7 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
   const [newLogStatus, setNewLogStatus] = useState<BorrowingStatus>('Preparing');
   const [newLogMessage, setNewLogMessage] = useState('');
   const [bookBorrowRequests, setBookBorrowRequests] = useState<BorrowBookRequest[]>(initialRequests);
+  const [loading, setLoading] = useState(false);
   const { user } = usePrivy();
 
   const getNextStatus = (currentLogs: BorrowingLog[] | undefined): BorrowingStatus | null => {
@@ -195,7 +201,7 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
         // setSelectedRequest(data.borrowings);
       }
     } catch (error) {
-      console.error('Error fetching borrow requests:', error);
+      // console.error('Error fetching borrow requests:', error);
       setBookBorrowRequests([]);
     }
   };
@@ -208,7 +214,18 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
   const handleSubmitNewLog = async () => {
     if (!selectedRequest) return;
 
+    setLoading(true);
+
     try {
+
+      const BorrowBookConfirmation = {
+        borrowingId: selectedRequest?.onChainBorrowingId,
+        status: newLogStatus,
+        message: newLogMessage.trim(),
+      };
+
+      await borrowBookConfirmationAndStatusUpdate(BorrowBookConfirmation);
+
       const logData = {
         status: newLogStatus,
         wallet: walletAddress,
@@ -238,7 +255,19 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
   };
 
   const handleSubmitBorrowRequest = async () => {
+
+    setLoading(true);
+
     try {
+
+      const BorrowBookConfirmation = {
+        borrowingId: selectedRequest?.onChainBorrowingId,
+        status: statusOrder[0],
+        message: confirmationNote
+      };
+
+      await borrowBookConfirmationAndStatusUpdate(BorrowBookConfirmation);
+
       const submissionData = {
         wallet: walletAddress,
         note: confirmationNote,
@@ -508,8 +537,8 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
               color: 'white',
               '&:hover': { backgroundColor: '#333' },
             }}
-          >
-            Confirm
+           >
+            {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Confirm'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -640,8 +669,8 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
                 backgroundColor: '#333',
               },
             }}
-          >
-            Update Status
+            >
+            {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Update Status'}
           </Button>
         </DialogActions>
       </Dialog>

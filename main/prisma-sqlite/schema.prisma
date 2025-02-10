@@ -22,6 +22,8 @@ enum BookRequestStatus {
 
 model Book {
   id              String       @id @default(uuid())
+  onChainUniqueId String
+  transactionHash String
   title           String
   author          String
   publisher       String
@@ -38,25 +40,29 @@ model Book {
 }
 
 model Curator {
-  id            String          @id @default(uuid())
-  wallet        String          @unique
-  name          String
-  country       String
-  city          String
-  state         String
-  publicNotice  String?
-  coverImage    String?
-  isVerified    Boolean         @default(false)
-  books         Book[]
-  bookRequests  BookRequests[]
-  createdAt     DateTime        @default(now())
-  Borrowings    Borrowings[]
-  BorrowingLogs BorrowingLogs[]
+  id             String          @id @default(uuid())
+  onChainUniqueId String
+  transactionHash String
+  wallet         String          @unique
+  name           String
+  country        String
+  city           String
+  state          String
+  publicNotice   String?
+  coverImage     String?
+  isVerified     Boolean         @default(false)
+  books          Book[]
+  bookRequests   BookRequests[]
+  bookRequestLogs BookRequestLogs[]
+  createdAt      DateTime        @default(now())
+  Borrowings     Borrowings[]
+  BorrowingLogs  BorrowingLogs[]
 }
 
 model BookRequests {
   id              String            @id @default(uuid())
   wallet          String
+  isbn            String
   title           String
   author          String
   additionalNotes String?
@@ -64,23 +70,38 @@ model BookRequests {
   curator         Curator           @relation(fields: [curatorId], references: [id])
   createdAt       DateTime          @default(now())
   status          BookRequestStatus @default(Pending)
+  transactionHash String
+  onChainBookRequestId String
+  logs            BookRequestLogs[]
+}
+
+model BookRequestLogs {
+  id            String            @id @default(uuid())
+  bookRequestId String
+  bookRequest   BookRequests      @relation(fields: [bookRequestId], references: [id])
+  curatorId     String
+  curator       Curator           @relation(fields: [curatorId], references: [id])
+  status        BookRequestStatus
+  message       String?
+  createdAt     DateTime          @default(now())
 }
 
 model Borrowings {
-  id              String          @id @default(uuid())
-  wallet          String
-  name            String
-  email           String
-  deliveryAddress String
-  phone           String?
-  borrowDate      DateTime
-  returnDate      DateTime
-  bookId          String
-  book            Book            @relation(fields: [bookId], references: [id])
-  curatorId       String
-  curator         Curator         @relation(fields: [curatorId], references: [id])
-  createdAt       DateTime        @default(now())
-  logs            BorrowingLogs[]
+  id               String          @id @default(uuid())
+  onChainBorrowingId String
+  wallet           String
+  name             String
+  email            String
+  deliveryAddress  String
+  phone            String?
+  borrowDate       DateTime
+  returnDate       DateTime
+  bookId           String
+  book             Book            @relation(fields: [bookId], references: [id])
+  curatorId        String
+  curator          Curator         @relation(fields: [curatorId], references: [id])
+  createdAt        DateTime        @default(now())
+  logs             BorrowingLogs[]
 }
 
 model BorrowingLogs {

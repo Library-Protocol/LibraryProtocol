@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
   try {
-    const { title, author, publisher, publishDate, pagination, additionalNotes, isbn, image, curatorId } = await request.json();
+    const { title, author, publisher, publishDate, pagination, additionalNotes, isbn, image, curatorId, onChainUniqueId, transactionHash } = await request.json();
 
     if (!curatorId || !title || !author || !isbn || !publisher || !publishDate || !pagination) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -23,6 +23,8 @@ export async function POST(request: Request) {
         isbn,
         image,
         curatorId,
+        onChainUniqueId,
+        transactionHash
       },
     });
 

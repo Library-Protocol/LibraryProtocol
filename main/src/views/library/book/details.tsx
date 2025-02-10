@@ -10,8 +10,12 @@ import { usePrivy } from '@privy-io/react-auth';
 
 import { Library } from 'lucide-react';
 
+import { borrowThisBook } from '@/contract/Interraction';
+
 interface Book {
   id: string;
+  onChainUniqueId: string
+  transactionHash: string
   title: string;
   author: string;
   publisher: string;
@@ -25,8 +29,14 @@ interface Book {
   createdAt: Date;
 }
 
+interface BorrowBook {
+  onChainBorrowingId: string
+}
+
 interface Curator {
   id: string;
+  onChainUniqueId: string
+  transactionHash: string
   name: string;
   description?: string;
   country: string;
@@ -36,6 +46,7 @@ interface Curator {
   coverImage?: string;
   isVerified: boolean;
   books: Book[];
+  borrowBook: BorrowBook
 }
 
 interface BookDetailsProps {
@@ -69,11 +80,19 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
     }
   }, [user]);
 
+
   const handleSubmit = async () => {
     setError(null); // Clear any previous errors
     setLoading(true); // Start loading
 
-    // Prepare the data for submission
+    const BorrowBookData = {
+      bookId: Book.onChainUniqueId,
+      borrowDate: Math.floor(new Date(borrowDate).getTime() / 1000), // Convert to seconds
+      returnDate: Math.floor(new Date(returnDate).getTime() / 1000), // Convert to seconds
+    };
+
+    const { borrowingId } = await borrowThisBook(BorrowBookData);
+
     const borrowBookData = {
       wallet: walletAddress,
       bookId: Book.id.toString(),
@@ -84,7 +103,10 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
       borrowDate: new Date(borrowDate).toISOString(),
       returnDate: new Date(returnDate).toISOString(),
       curatorId: Curator.id.toString(),
+      onChainBorrowingId: borrowingId
     };
+
+    console.log('Borrow', borrowBookData)
 
     try {
       // Send data to the API
@@ -178,15 +200,13 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
       <Grid container spacing={2}>
         {/* Book Cover Image (on the Left) */}
         <Grid item xs={12} md={6}>
-          <Card elevation={3} sx={{ height: '775px' }}>
-            <Box sx={{ position: 'relative', height: '100%' }}>
-              <img
-                src={bookCover}
-                alt={Book.title}
-                className="w-full h-[775px] object-cover"
-              />
-            </Box>
-          </Card>
+          <Box sx={{ position: 'relative', height: '100%', borderRadius: '12px', overflow: 'hidden' }}>
+            <img
+              src={bookCover}
+              alt={Book.title}
+              className="w-full h-[740px] object-cover"
+            />
+          </Box>
         </Grid>
 
         {/* Book Details Section (on the Right) */}

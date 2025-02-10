@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-
 import { CheckCircle } from 'lucide-react';
+import { usePrivy } from '@privy-io/react-auth'; // Import Privy
 
 interface Curator {
   id: number;
@@ -21,6 +21,7 @@ interface LandingPageProps {
 
 const LandingPage: React.FC<LandingPageProps> = ({ curators }) => {
   const ipfsUrl = process.env.NEXT_PUBLIC_IPFS_GATEWAY;
+  const { login, authenticated } = usePrivy(); // Get Privy authentication methods
 
   const heroSlides = [
     {
@@ -37,12 +38,19 @@ const LandingPage: React.FC<LandingPageProps> = ({ curators }) => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % heroSlides.length);
     }, 10000);
-
     return () => clearInterval(timer);
   }, []);
 
   const goToSlide = (index: number): void => {
     setCurrentSlide(index);
+  };
+
+  const handleGetStarted = () => {
+    if (!authenticated) {
+      login(); // Trigger Privy modal if not logged in
+    } else {
+      window.location.href = '/library/onboarding'; // Redirect if logged in
+    }
   };
 
   return (
@@ -56,10 +64,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ curators }) => {
               currentSlide === index ? 'opacity-100' : 'opacity-0'
             }`}
           >
-            <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: `url('${slide.image}')` }}
-            />
+            <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${slide.image}')` }} />
             <div className="absolute inset-0 bg-black bg-opacity-50 flex flex-col justify-center p-6 lg:p-16">
               <div className="max-w-2xl">
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white">{slide.title}</h1>
@@ -84,29 +89,22 @@ const LandingPage: React.FC<LandingPageProps> = ({ curators }) => {
         </div>
       </div>
 
-     {/* Two Beautiful Cards Section */}
-     <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-6">
+      {/* Two Beautiful Cards Section */}
+      <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 gap-6">
         {/* Borrow a Book Card */}
-        <div
-          className="relative bg-gradient-to-r from-purple-600 to-blue-500 rounded-[32px] overflow-hidden p-8 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-        >
+        <div className="relative bg-gradient-to-r from-purple-600 to-blue-500 rounded-[32px] overflow-hidden p-8 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
           <div className="absolute inset-0 bg-black/10 hover:bg-black/20 transition-all duration-300 z-0" />
           <h2 className="text-2xl sm:text-3xl font-bold mb-4">Borrow a Book</h2>
           <p className="text-base sm:text-lg mb-6">
             Explore a world of stories. Borrow books from our onchain library and dive into new adventures.
           </p>
-          <button
-            className="bg-white text-black px-6 py-3 rounded-lg font-medium text-lg hover:bg-black hover:text-white transition-colors z-20 relative"
-            onClick={() => window.location.href = '/library/borrow'} // Add your URL here
-          >
+          <button className="bg-white text-black px-6 py-3 rounded-lg font-medium text-lg hover:bg-black hover:text-white transition-colors z-20 relative">
             Start Borrowing
           </button>
         </div>
 
         {/* Create a Library Card */}
-        <div
-          className="relative bg-gradient-to-r from-green-600 to-teal-500 rounded-[32px] overflow-hidden p-8 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-2xl"
-        >
+        <div className="relative bg-gradient-to-r from-green-600 to-teal-500 rounded-[32px] overflow-hidden p-8 text-white transform transition-all duration-300 hover:scale-105 hover:shadow-2xl">
           <div className="absolute inset-0 bg-black/10 hover:bg-black/20 transition-all duration-300 z-0" />
           <h2 className="text-2xl sm:text-3xl font-bold mb-4">Create a Library</h2>
           <p className="text-base sm:text-lg mb-6">
@@ -114,7 +112,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ curators }) => {
           </p>
           <button
             className="bg-white text-black px-6 py-3 rounded-lg font-medium text-lg hover:bg-black hover:text-white transition-colors z-20 relative"
-            onClick={() => window.location.href = '/library/onboarding'} // Add your URL here
+            onClick={handleGetStarted} // Updated click handler
           >
             Get Started
           </button>
@@ -122,42 +120,42 @@ const LandingPage: React.FC<LandingPageProps> = ({ curators }) => {
       </div>
 
       {/* Display Curators */}
-      <div className="mt-12">
-        <h2 className="text-2xl sm:text-3xl font-bold mb-6">Featured Libraries</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-          {curators.map((curator) => (
-            <a
-              key={curator.id}
-              href={`/library/curator/${curator.id}`}
-              className="relative bg-gray-200 rounded-lg overflow-hidden hover:scale-105 transform transition-all duration-300 max-w-[250px] max-h-[350px]"
-            >
-              {/* Verification Badge */}
-              {curator.isVerified && (
-                <div className="absolute top-2 right-2 p-1 rounded-full shadow-md">
-                  <CheckCircle size={18} className="text-blue-500" />
-                </div>
-              )}
+      {curators.length >= 1 && (
+        <div className="mt-12">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-6">Featured Libraries</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            {curators.map((curator) => (
+              <a
+                key={curator.id}
+                href={`/library/curator/${curator.id}`}
+                className="relative bg-gray-200 rounded-lg overflow-hidden hover:scale-105 transform transition-all duration-300 max-w-[250px] max-h-[350px]"
+              >
+                {/* Verification Badge */}
+                {curator.isVerified && (
+                  <div className="absolute top-2 right-2 p-1 rounded-full shadow-md">
+                    <CheckCircle size={18} className="text-blue-500" />
+                  </div>
+                )}
 
-              {curator.coverImage ? (
-                <img
-                  src={`${ipfsUrl}${curator.coverImage}`}
-                  alt={curator.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gray-300">
-                  <span className="text-white">No Image Available</span>
-                </div>
-              )}
+                {curator.coverImage ? (
+                  <img src={`${ipfsUrl}${curator.coverImage}`} alt={curator.name} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center bg-gray-300">
+                    <span className="text-white">No Image Available</span>
+                  </div>
+                )}
 
-              {/* Country Label */}
-              <div className="absolute bottom-4 left-4 p-2 bg-black bg-opacity-50 text-white rounded">
-                <h3 className="text-sm font-bold">{curator.country}, {curator.state}</h3>
-              </div>
-            </a>
-          ))}
+                {/* Country Label */}
+                <div className="absolute bottom-4 left-4 p-2 bg-black bg-opacity-50 text-white rounded">
+                  <h3 className="text-sm font-bold">
+                    {curator.country}, {curator.state}
+                  </h3>
+                </div>
+              </a>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };
