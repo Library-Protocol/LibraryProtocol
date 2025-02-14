@@ -2,8 +2,6 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { useRouter } from 'next/navigation';
-
 import {
   Card,
   CardContent,
@@ -18,11 +16,12 @@ import {
   Box,
   InputAdornment,
   CircularProgress,
+  IconButton,
 } from '@mui/material';
 
 import { ToastContainer, toast } from 'react-toastify';
 
-import { Home } from 'lucide-react';
+import { Home, Minus, Plus } from 'lucide-react';
 
 import FallbackBookCover from '@/components/library/FallbackBookCover';
 
@@ -107,7 +106,6 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const [open, setOpen] = useState(false);
   const [openPublicNotice, setOpenPublicNotice] = useState(false);
   const [publicNoticeText, setPublicNoticeText] = useState(Curator.publicNotice || '');
-  const [searchQuery, setSearchQuery] = useState('');
   const [bookRequests, setBookRequests] = useState<BookRequest[]>([]);
   const [bookBorrowRequests, setBookBorrowRequests] = useState<BorrowBookRequests[]>([]);
   const [bookTitle, setBookTitle] = useState('');
@@ -117,26 +115,20 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const [publisher, setPublisher] = useState('');
   const [publishDate, setPublishDate] = useState('');
   const [pagination, setPagination] = useState('');
+  const [copies, setCopies] = useState<number>(1);
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [Books, setBooks] = useState<Book[]>(Curator.books);
-  const router = useRouter();
 
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-  };
+  const handleDecrease = () => setCopies((prev) => Math.max(1, prev - 1));
+  const handleIncrease = () => setCopies((prev) => prev + 0);
 
     // Return home function
     const handleReturnHome = () => {
-      router.push('/');
+      window.location.href = '/';
     };
-
-  const handleSearchClick = () => {
-    // Implement your search logic here
-    console.log('Searching for:', searchQuery);
-  };
 
   const handleImageError = (isbn: number) => {
     setFailedLoads((prev) => new Set(prev).add(isbn));
@@ -279,10 +271,15 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
         pagination: Number(pagination) || 0, // Ensure pagination is a number
         additionalNotes: additionalNotes,
         onChainUniqueId: Curator.onChainUniqueId,
-        isbn: Number(isbn)
+        isbn: Number(isbn),
+        copies: copies
       };
 
-      const { hash, uniqueId } = await addBook(addBookData);
+      console.log('Book Data', addBookData)
+
+      const { hash, uniqueId, nftTokenId } = await addBook(addBookData);
+
+      console.log('Book Blockchain Data', hash, uniqueId, nftTokenId)
 
       const requestData = {
         title: bookTitle,
@@ -294,7 +291,8 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
         pagination: pagination || '',
         curatorId: Curator.id.toString(),
         onChainUniqueId: uniqueId,
-        transactionHash: hash
+        transactionHash: hash,
+        nftTokenId: nftTokenId
       };
 
       // Make the request to add the book
@@ -546,10 +544,7 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
         <Grid item xs={12} md={6}>
           <Grid container spacing={3}>
             <Grid item xs={12}>
-              <div
-                className="relative bg-gradient-to-r from-green-600 to-teal-500 rounded-[5px] overflow-hidden p-4 text-white transform transition-all duration-300 hover:scale-10 hover:shadow-2xl"
-                style={{ minHeight: 'auto' }}
-              >
+              <div className="relative bg-gradient-to-r from-brown-700 to-brown-500 rounded-[5px] overflow-hidden p-4 text-white transform transition-all duration-300">
                 <div className="absolute inset-0 bg-black/10 hover:bg-black/20 transition-all duration-300 z-0" />
                 <h2 className="text-xl sm:text-2xl font-bold mb-2">Welcome, {Curator.name}</h2>
                 <p className="text-sm sm:text-base mb-3">
@@ -577,9 +572,6 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
 
       <Card elevation={3} sx={{ mt: 4 }}>
       <BookSearchGrid
-        searchQuery={searchQuery}
-        onSearchChange={handleSearchChange}
-        onSearchClick={handleSearchClick}
         BookCurator={Curator}
         Books={Books}
         failedLoads={failedLoads as Set<number>}
@@ -643,6 +635,31 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
                 value={pagination}
                 onChange={(e) => setPagination(e.target.value)}
               />
+             <Box
+                display="flex"
+                alignItems="center"
+                justifyContent="center"
+                gap={1}
+                sx={{
+                  border: "1px solid #ccc",
+                  borderRadius: "8px",
+                  p: 1,
+                  backgroundColor: "transparent",
+                }}
+              >
+                <Typography variant="body1" sx={{ mr: 1 }}>
+                  Copies:
+                </Typography>
+                <IconButton onClick={handleDecrease} size="small">
+                  <Minus size={18} />
+                </IconButton>
+                <Typography variant="h6" sx={{ minWidth: "30px", textAlign: "center" }}>
+                  {copies}
+                </Typography>
+                <IconButton onClick={handleIncrease} size="small">
+                  <Plus size={18} />
+                </IconButton>
+              </Box>
               <TextField
                 fullWidth
                 label="Additional Notes"

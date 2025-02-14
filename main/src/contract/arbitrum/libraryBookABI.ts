@@ -1,4 +1,4 @@
-export const arbitrumABI = [
+export const libraryBookABI = [
   {
     "inputs": [
       {
@@ -176,7 +176,7 @@ export const arbitrumABI = [
       {
         "indexed": false,
         "internalType": "string",
-        "name": "curatorId",
+        "name": "libraryOwnerId",
         "type": "string"
       },
       {
@@ -250,7 +250,7 @@ export const arbitrumABI = [
       {
         "indexed": false,
         "internalType": "string",
-        "name": "curatorId",
+        "name": "libraryOwnerId",
         "type": "string"
       },
       {
@@ -311,7 +311,7 @@ export const arbitrumABI = [
       {
         "indexed": false,
         "internalType": "string",
-        "name": "curatorId",
+        "name": "libraryOwnerId",
         "type": "string"
       },
       {
@@ -384,37 +384,6 @@ export const arbitrumABI = [
       }
     ],
     "name": "BorrowingLogAdded",
-    "type": "event"
-  },
-  {
-    "anonymous": false,
-    "inputs": [
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "uniqueId",
-        "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "address",
-        "name": "wallet",
-        "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "string",
-        "name": "name",
-        "type": "string"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "libraryTokenId",
-        "type": "uint256"
-      }
-    ],
-    "name": "CuratorRegistered",
     "type": "event"
   },
   {
@@ -545,6 +514,11 @@ export const arbitrumABI = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "minter",
+        "type": "address"
+      },
+      {
         "internalType": "string",
         "name": "_title",
         "type": "string"
@@ -576,7 +550,7 @@ export const arbitrumABI = [
       },
       {
         "internalType": "string",
-        "name": "_curatorId",
+        "name": "_libraryOwnerId",
         "type": "string"
       },
       {
@@ -592,7 +566,7 @@ export const arbitrumABI = [
     ],
     "name": "addBook",
     "outputs": [],
-    "stateMutability": "payable",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -611,6 +585,11 @@ export const arbitrumABI = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "minter",
+        "type": "address"
+      },
+      {
         "internalType": "string",
         "name": "_title",
         "type": "string"
@@ -627,7 +606,7 @@ export const arbitrumABI = [
       },
       {
         "internalType": "string",
-        "name": "_curatorId",
+        "name": "_libraryOwnerId",
         "type": "string"
       },
       {
@@ -648,6 +627,11 @@ export const arbitrumABI = [
   },
   {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "minter",
+        "type": "address"
+      },
       {
         "internalType": "string",
         "name": "_requestId",
@@ -672,6 +656,39 @@ export const arbitrumABI = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
+        "internalType": "string",
+        "name": "_bookId",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_borrowDate",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_returnDate",
+        "type": "uint256"
+      }
+    ],
+    "name": "addBorrowBook",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
+      },
+      {
         "internalType": "string",
         "name": "_borrowingId",
         "type": "string"
@@ -687,7 +704,7 @@ export const arbitrumABI = [
         "type": "string"
       }
     ],
-    "name": "addBorrowingLog",
+    "name": "addBorrowBookLog",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -796,7 +813,7 @@ export const arbitrumABI = [
       },
       {
         "internalType": "string",
-        "name": "curatorId",
+        "name": "libraryOwnerId",
         "type": "string"
       },
       {
@@ -914,7 +931,7 @@ export const arbitrumABI = [
       },
       {
         "internalType": "string",
-        "name": "curatorId",
+        "name": "libraryOwnerId",
         "type": "string"
       },
       {
@@ -950,29 +967,6 @@ export const arbitrumABI = [
     "inputs": [
       {
         "internalType": "string",
-        "name": "_bookId",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_borrowDate",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_returnDate",
-        "type": "uint256"
-      }
-    ],
-    "name": "borrowBook",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
         "name": "",
         "type": "string"
       },
@@ -996,7 +990,7 @@ export const arbitrumABI = [
       },
       {
         "internalType": "string",
-        "name": "curatorId",
+        "name": "libraryOwnerId",
         "type": "string"
       },
       {
@@ -1040,7 +1034,7 @@ export const arbitrumABI = [
       },
       {
         "internalType": "string",
-        "name": "curatorId",
+        "name": "libraryOwnerId",
         "type": "string"
       },
       {
@@ -1066,403 +1060,13 @@ export const arbitrumABI = [
     "inputs": [
       {
         "internalType": "string",
-        "name": "",
-        "type": "string"
-      }
-    ],
-    "name": "curators",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "uniqueId",
+        "name": "uri",
         "type": "string"
       },
       {
         "internalType": "address",
-        "name": "wallet",
+        "name": "_libraryProtocolAddress",
         "type": "address"
-      },
-      {
-        "internalType": "string",
-        "name": "name",
-        "type": "string"
-      },
-      {
-        "internalType": "bool",
-        "name": "isVerified",
-        "type": "bool"
-      },
-      {
-        "internalType": "uint256",
-        "name": "libraryTokenId",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "_bookId",
-        "type": "string"
-      }
-    ],
-    "name": "getBook",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "uniqueId",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "title",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "author",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "publisher",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "publishDate",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "pagination",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "additionalNotes",
-            "type": "string"
-          },
-          {
-            "internalType": "bool",
-            "name": "availability",
-            "type": "bool"
-          },
-          {
-            "internalType": "string",
-            "name": "curatorId",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "createdAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "isbn",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "bookTokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "libraryTokenId",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "copies",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct LibraryProtocol.Book",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "_requestId",
-        "type": "string"
-      }
-    ],
-    "name": "getBookRequest",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "id",
-            "type": "string"
-          },
-          {
-            "internalType": "address",
-            "name": "wallet",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "title",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "author",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "additionalNotes",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "curatorId",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "createdAt",
-            "type": "uint256"
-          },
-          {
-            "internalType": "string",
-            "name": "status",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "isbn",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct LibraryProtocol.BookRequest",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "_requestId",
-        "type": "string"
-      }
-    ],
-    "name": "getBookRequestLogs",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "requestId",
-            "type": "string"
-          },
-          {
-            "internalType": "address",
-            "name": "wallet",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "status",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "message",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "createdAt",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct LibraryProtocol.BookRequestLog[]",
-        "name": "",
-        "type": "tuple[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "_borrowingId",
-        "type": "string"
-      }
-    ],
-    "name": "getBorrowing",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "bookId",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "bookTitle",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "curatorId",
-            "type": "string"
-          },
-          {
-            "internalType": "address",
-            "name": "borrower",
-            "type": "address"
-          },
-          {
-            "internalType": "uint256",
-            "name": "borrowDate",
-            "type": "uint256"
-          },
-          {
-            "internalType": "uint256",
-            "name": "returnDate",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct LibraryProtocol.Borrowing",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "_borrowingId",
-        "type": "string"
-      }
-    ],
-    "name": "getBorrowingLogs",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "borrowingId",
-            "type": "string"
-          },
-          {
-            "internalType": "address",
-            "name": "wallet",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "curatorId",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "status",
-            "type": "string"
-          },
-          {
-            "internalType": "string",
-            "name": "message",
-            "type": "string"
-          },
-          {
-            "internalType": "uint256",
-            "name": "createdAt",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct LibraryProtocol.BorrowingLog[]",
-        "name": "",
-        "type": "tuple[]"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "_curatorId",
-        "type": "string"
-      }
-    ],
-    "name": "getCurator",
-    "outputs": [
-      {
-        "components": [
-          {
-            "internalType": "string",
-            "name": "uniqueId",
-            "type": "string"
-          },
-          {
-            "internalType": "address",
-            "name": "wallet",
-            "type": "address"
-          },
-          {
-            "internalType": "string",
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "internalType": "bool",
-            "name": "isVerified",
-            "type": "bool"
-          },
-          {
-            "internalType": "uint256",
-            "name": "libraryTokenId",
-            "type": "uint256"
-          }
-        ],
-        "internalType": "struct LibraryProtocol.Curator",
-        "name": "",
-        "type": "tuple"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_registerAsCuratorFee",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_addBookFee",
-        "type": "uint256"
       }
     ],
     "name": "initialize",
@@ -1496,10 +1100,10 @@ export const arbitrumABI = [
   },
   {
     "inputs": [],
-    "name": "owner",
+    "name": "libraryProtocol",
     "outputs": [
       {
-        "internalType": "address",
+        "internalType": "contract LibraryProtocol",
         "name": "",
         "type": "address"
       }
@@ -1508,26 +1112,13 @@ export const arbitrumABI = [
     "type": "function"
   },
   {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "_name",
-        "type": "string"
-      }
-    ],
-    "name": "registerAsCurator",
-    "outputs": [],
-    "stateMutability": "payable",
-    "type": "function"
-  },
-  {
     "inputs": [],
-    "name": "registerAsCuratorFee",
+    "name": "owner",
     "outputs": [
       {
-        "internalType": "uint256",
+        "internalType": "address",
         "name": "",
-        "type": "uint256"
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -1609,19 +1200,6 @@ export const arbitrumABI = [
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_newFee",
-        "type": "uint256"
-      }
-    ],
-    "name": "setAddBookFee",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "address",
         "name": "operator",
         "type": "address"
@@ -1633,19 +1211,6 @@ export const arbitrumABI = [
       }
     ],
     "name": "setApprovalForAll",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "uint256",
-        "name": "_newFee",
-        "type": "uint256"
-      }
-    ],
-    "name": "setRegisterAsCuratorFee",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1685,17 +1250,12 @@ export const arbitrumABI = [
   {
     "inputs": [
       {
-        "internalType": "string",
-        "name": "_bookId",
-        "type": "string"
-      },
-      {
-        "internalType": "bool",
-        "name": "_availability",
-        "type": "bool"
+        "internalType": "address",
+        "name": "_libraryProtocol",
+        "type": "address"
       }
     ],
-    "name": "updateBookAvailability",
+    "name": "updateLibraryProtocol",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -1704,7 +1264,7 @@ export const arbitrumABI = [
     "inputs": [
       {
         "internalType": "uint256",
-        "name": "_tokenId",
+        "name": "",
         "type": "uint256"
       }
     ],

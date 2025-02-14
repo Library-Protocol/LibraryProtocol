@@ -98,7 +98,7 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
       borderRadius: '12px',
       overflow: 'hidden',
       transition: 'all 0.3s ease',
-      backgroundColor: '#ffffff',
+      // backgroundColor: '#ffffff',
     };
 
     const backgroundStyles: React.CSSProperties = {
@@ -161,7 +161,7 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
                   wordWrap: 'break-word',
                 }}
               >
-                {libraryName || 'My Library'}
+                {(libraryName || 'My') + ' Library'}
               </Typography>
             </div>
           </div>

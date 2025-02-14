@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 
 import { Card, CardContent, Button, LinearProgress, Typography, Box, IconButton, TextField, CircularProgress, MenuItem, ListItemText } from '@mui/material';
-import { ArrowLeft, Camera } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Radar from 'radar-sdk-js';
 
 import debounce from 'lodash/debounce';
@@ -120,13 +120,10 @@ const CreatorOnboarding = () => {
       // First, handle the blockchain registration
       const registrationData: CuratorRegistrationData = {
         name: libraryName,
-        registerFee: curatorPlatformFee
       };
 
-      console.log('Curator Payload', registrationData)
-
       // Wait for blockchain transaction to complete
-      const { hash, uniqueId } = await registerCurator(registrationData);
+      const { hash, uniqueId, nftTokenId } = await registerCurator(registrationData);
 
       // If blockchain transaction is successful, proceed with your API call
       const response = await fetch('/api/library/curator/onboarding', {
@@ -142,7 +139,8 @@ const CreatorOnboarding = () => {
           state,
           coverImage,
           transactionHash: hash,
-          onChainUniqueId: uniqueId
+          onChainUniqueId: uniqueId,
+          nftTokenId
         }),
       });
 
@@ -237,7 +235,7 @@ const CreatorOnboarding = () => {
   const SuccessStep = () => (
     <>
      <Typography variant="body1" className="text-center mb-6">
-        Congratulations! You’ve successfully onboarded as a <strong>curator of knowledge</strong>. Start adding your books to share with the community, or borrow from other curators !
+        Congratulations! You’ve successfully onboarded as a <strong>Library Owner</strong>. Start adding books to share with the community, or borrow from other library owners !
       </Typography>
     </>
   );
@@ -289,30 +287,6 @@ const CreatorOnboarding = () => {
               <CardContent className='pt-6'>
                 {step === 1 ? (
                   <div className='space-y-6'>
-                    <div className='flex justify-center mb-6'>
-                      <div className='relative'>
-                        <div className='w-24 h-24 rounded-full bg-black flex items-center justify-center'>
-                          <Camera className='w-8 h-8 text-white' />
-                        </div>
-                        <IconButton
-                          sx={{
-                            position: 'absolute',
-                            bottom: 0,
-                            right: 0,
-                            backgroundColor: 'white',
-                            border: '1px solid #e2e8f0',
-                            width: 32,
-                            height: 32,
-                            '&:hover': {
-                              backgroundColor: '#f8fafc'
-                            }
-                          }}
-                        >
-                          <Camera className='w-4 h-4' />
-                        </IconButton>
-                      </div>
-                    </div>
-
                     <TextField
                       fullWidth
                       label='Library Name'

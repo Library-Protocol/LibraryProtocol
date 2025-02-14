@@ -27,8 +27,10 @@ import { Calendar, Book, Home } from 'lucide-react';
 import { ToastContainer, toast } from 'react-toastify'; // Import toast notifications
 
 import BookSearchGrid from '@/components/library/BookSaerchCard';
-import { bookRequest } from '@/contract/Interraction';
+// import { bookRequest } from '@/contract/Interraction';
 import BorrowingTitle from '@/components/effects/BookTitle';
+
+import { bookRequest } from '@/contract/Interraction';
 
 
 interface Book {
@@ -79,7 +81,6 @@ interface LandingDetailsProps {
 
 const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
   const [isbn, setISBN] = useState('');
   const [bookTitle, setBookTitle] = useState('');
   const [author, setAuthor] = useState('');
@@ -95,14 +96,6 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const ipfsUrl = process.env.NEXT_PUBLIC_IPFS_GATEWAY;
 
   const router = useRouter();
-
-  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(event.target.value);
-  };
-
-  const handleSearchClick = () => {
-    console.log('Searching for:', searchQuery);
-  };
 
   const handleImageError = (isbn: number) => {
     setFailedLoads((prev) => new Set(prev).add(isbn));
@@ -158,6 +151,8 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
       transactionHash: hash,
       onChainBookRequestId: requestId
     };
+
+    console.log('Request Data', requestData)
 
     try {
       const response = await fetch(`/api/library/curator/${Curator.id}/request-book`, {
@@ -288,7 +283,7 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
                       '&:hover': { backgroundColor: '#333' }
                     }}
                   >
-                    Request a Book
+                    Request A Book
                   </Button>
                 </CardContent>
               </Card>
@@ -389,9 +384,6 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
       {/* Book Search Section */}
       <Card elevation={3} sx={{ mt: 4 }}>
         <BookSearchGrid
-          searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
-          onSearchClick={handleSearchClick}
           BookCurator={Curator}
           Books={Books}
           failedLoads={failedLoads as Set<number>}

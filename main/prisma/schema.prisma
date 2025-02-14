@@ -20,6 +20,20 @@ enum BookRequestStatus {
   Rejected
 }
 
+enum UserRole {
+  Admin
+  Curator
+  Member
+}
+
+enum SocialPlatform {
+  Instagram
+  Twitter
+  LinkedIn
+  Facebook
+  TikTok
+}
+
 model Book {
   id              String       @id @default(uuid())
   onChainUniqueId String
@@ -37,42 +51,46 @@ model Book {
   curator         Curator      @relation(fields: [curatorId], references: [id])
   createdAt       DateTime     @default(now())
   borrowings      Borrowings[]
+  nftTokenId      String
 }
 
 model Curator {
-  id             String          @id @default(uuid())
+  id              String            @id @default(uuid())
   onChainUniqueId String
   transactionHash String
-  wallet         String          @unique
-  name           String
-  country        String
-  city           String
-  state          String
-  publicNotice   String?
-  coverImage     String?
-  isVerified     Boolean         @default(false)
-  books          Book[]
-  bookRequests   BookRequests[]
+  wallet          String            @unique
+  name            String
+  country         String
+  city            String
+  state           String
+  publicNotice    String?
+  coverImage      String?
+  isVerified      Boolean           @default(false)
+  books           Book[]
+  bookRequests    BookRequests[]
   bookRequestLogs BookRequestLogs[]
-  createdAt      DateTime        @default(now())
-  Borrowings     Borrowings[]
-  BorrowingLogs  BorrowingLogs[]
+  createdAt       DateTime          @default(now())
+  Borrowings      Borrowings[]
+  BorrowingLogs   BorrowingLogs[]
+  nftTokenId      String
+  userId          String            @unique
+  user            User              @relation(fields: [userId], references: [id])
 }
 
 model BookRequests {
-  id              String            @id @default(uuid())
-  wallet          String
-  isbn            String
-  title           String
-  author          String
-  additionalNotes String?
-  curatorId       String
-  curator         Curator           @relation(fields: [curatorId], references: [id])
-  createdAt       DateTime          @default(now())
-  status          BookRequestStatus @default(Pending)
-  transactionHash String
+  id                   String            @id @default(uuid())
+  wallet               String
+  isbn                 String
+  title                String
+  author               String
+  additionalNotes      String?
+  curatorId            String
+  curator              Curator           @relation(fields: [curatorId], references: [id])
+  createdAt            DateTime          @default(now())
+  status               BookRequestStatus @default(Pending)
+  transactionHash      String
   onChainBookRequestId String
-  logs            BookRequestLogs[]
+  logs                 BookRequestLogs[]
 }
 
 model BookRequestLogs {
@@ -87,21 +105,21 @@ model BookRequestLogs {
 }
 
 model Borrowings {
-  id               String          @id @default(uuid())
+  id                 String          @id @default(uuid())
   onChainBorrowingId String
-  wallet           String
-  name             String
-  email            String
-  deliveryAddress  String
-  phone            String?
-  borrowDate       DateTime
-  returnDate       DateTime
-  bookId           String
-  book             Book            @relation(fields: [bookId], references: [id])
-  curatorId        String
-  curator          Curator         @relation(fields: [curatorId], references: [id])
-  createdAt        DateTime        @default(now())
-  logs             BorrowingLogs[]
+  wallet             String
+  name               String
+  email              String
+  deliveryAddress    String
+  phone              String?
+  borrowDate         DateTime
+  returnDate         DateTime
+  bookId             String
+  book               Book            @relation(fields: [bookId], references: [id])
+  curatorId          String
+  curator            Curator         @relation(fields: [curatorId], references: [id])
+  createdAt          DateTime        @default(now())
+  logs               BorrowingLogs[]
 }
 
 model BorrowingLogs {
@@ -114,4 +132,47 @@ model BorrowingLogs {
   curatorId   String
   curator     Curator         @relation(fields: [curatorId], references: [id])
   createdAt   DateTime        @default(now())
+}
+
+model User {
+  id                  String       @id @default(uuid())
+  wallet              String       @unique
+  name                String
+  email               String?      @unique
+  bio                 String? // Removed @db.Text
+  profileImage        String?
+  country             String?
+  city                String?
+  state               String?
+  socialLinks         SocialLink[]
+  onboardingCompleted Boolean      @default(false)
+  createdAt           DateTime     @default(now())
+  updatedAt           DateTime     @updatedAt
+  isVerified          Boolean      @default(false)
+  role                UserRole     @default(Member)
+
+  interests Interest[] // New relation to store user interests
+
+  curator Curator?
+}
+
+model Interest {
+  id     String @id @default(uuid())
+  name   String
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@unique([userId, name]) // Ensure a user doesn't add the same interest multiple times
+}
+
+model SocialLink {
+  id        String         @id @default(uuid())
+  platform  SocialPlatform
+  handle    String
+  userId    String
+  user      User           @relation(fields: [userId], references: [id])
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+
+  @@unique([userId, platform])
 }

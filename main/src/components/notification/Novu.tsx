@@ -48,8 +48,8 @@ const router = useRouter();
 
   return (
       <Inbox
-        applicationIdentifier="p3EAIz0y2oQr"
-        subscriberId="67a4e3a3ff13d2c0930fe346"
+        applicationIdentifier={process.env.NEXT_PUBLIC_NOVU_APPLICATION_ID || ""}
+        subscriberId={process.env.NEXT_PUBLIC_NOVU_SUBCRIBER_ID || ""}
         tabs={tabs}
         routerPush={(path: string) => router.push(path)}
         appearance={appearance}

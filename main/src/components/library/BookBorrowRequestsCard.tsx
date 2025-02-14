@@ -26,7 +26,9 @@ import { toast } from 'react-toastify';
 
 import { usePrivy } from '@privy-io/react-auth';
 
-import { borrowBookConfirmationAndStatusUpdate } from '@/contract/Interraction';
+import { borrowBookRequestLogAndConfirmation } from '@/contract/Interraction';
+
+// import { borrowBookConfirmationAndStatusUpdate } from '@/contract/Interraction';
 
 interface Book {
   id: string;
@@ -98,6 +100,7 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
   const [newLogMessage, setNewLogMessage] = useState('');
   const [bookBorrowRequests, setBookBorrowRequests] = useState<BorrowBookRequest[]>(initialRequests);
   const [loading, setLoading] = useState(false);
+  const [loadingBorrowStatus, setBorrowStatusLoading] = useState(false);
   const { user } = usePrivy();
 
   const getNextStatus = (currentLogs: BorrowingLog[] | undefined): BorrowingStatus | null => {
@@ -214,9 +217,10 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
   const handleSubmitNewLog = async () => {
     if (!selectedRequest) return;
 
-    setLoading(true);
-
     try {
+
+      setLoading(true);
+      setBorrowStatusLoading(true);
 
       const BorrowBookConfirmation = {
         borrowingId: selectedRequest?.onChainBorrowingId,
@@ -224,7 +228,7 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
         message: newLogMessage.trim(),
       };
 
-      await borrowBookConfirmationAndStatusUpdate(BorrowBookConfirmation);
+      await borrowBookRequestLogAndConfirmation(BorrowBookConfirmation);
 
       const logData = {
         status: newLogStatus,
@@ -245,11 +249,16 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
       if (response.ok) {
         toast.success('Borrowing status updated successfully');
         handleCloseAddLogModal();
+        handleCloseLogsModal();
         fetchBookBorrowRequests();
+        setLoading(false);
+        setBorrowStatusLoading(false);
       } else {
         toast.error('Failed to update borrowing status');
       }
     } catch (error) {
+      setLoading(false);
+      setBorrowStatusLoading(false);
       toast.error('An error occurred while updating the status');
     }
   };
@@ -266,7 +275,7 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
         message: confirmationNote
       };
 
-      await borrowBookConfirmationAndStatusUpdate(BorrowBookConfirmation);
+      await borrowBookRequestLogAndConfirmation(BorrowBookConfirmation);
 
       const submissionData = {
         wallet: walletAddress,
@@ -380,7 +389,7 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
                             },
                           }}
                         >
-                          Logs
+                          Status
                         </Button>
                       ) : (
                         <Button
@@ -670,7 +679,7 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
               },
             }}
             >
-            {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Update Status'}
+            {loadingBorrowStatus ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Update Status'}
           </Button>
         </DialogActions>
       </Dialog>

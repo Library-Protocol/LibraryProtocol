@@ -4,6 +4,12 @@ CREATE TYPE "BorrowingStatus" AS ENUM ('Preparing', 'Dispatched', 'Delivered', '
 -- CreateEnum
 CREATE TYPE "BookRequestStatus" AS ENUM ('Pending', 'Approved', 'Rejected');
 
+-- CreateEnum
+CREATE TYPE "UserRole" AS ENUM ('Admin', 'Curator', 'Member');
+
+-- CreateEnum
+CREATE TYPE "SocialPlatform" AS ENUM ('Instagram', 'Twitter', 'LinkedIn', 'Facebook', 'TikTok');
+
 -- CreateTable
 CREATE TABLE "Book" (
     "id" TEXT NOT NULL,
@@ -20,6 +26,7 @@ CREATE TABLE "Book" (
     "image" TEXT,
     "curatorId" TEXT NOT NULL,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "nftTokenId" TEXT NOT NULL,
 
     CONSTRAINT "Book_pkey" PRIMARY KEY ("id")
 );
@@ -38,6 +45,8 @@ CREATE TABLE "Curator" (
     "coverImage" TEXT,
     "isVerified" BOOLEAN NOT NULL DEFAULT false,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "nftTokenId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
 
     CONSTRAINT "Curator_pkey" PRIMARY KEY ("id")
 );
@@ -102,14 +111,73 @@ CREATE TABLE "BorrowingLogs" (
     CONSTRAINT "BorrowingLogs_pkey" PRIMARY KEY ("id")
 );
 
+-- CreateTable
+CREATE TABLE "User" (
+    "id" TEXT NOT NULL,
+    "wallet" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "email" TEXT,
+    "bio" TEXT,
+    "profileImage" TEXT,
+    "country" TEXT,
+    "city" TEXT,
+    "state" TEXT,
+    "onboardingCompleted" BOOLEAN NOT NULL DEFAULT false,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "isVerified" BOOLEAN NOT NULL DEFAULT false,
+    "role" "UserRole" NOT NULL DEFAULT 'Member',
+
+    CONSTRAINT "User_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "Interest" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+
+    CONSTRAINT "Interest_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "SocialLink" (
+    "id" TEXT NOT NULL,
+    "platform" "SocialPlatform" NOT NULL,
+    "handle" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "SocialLink_pkey" PRIMARY KEY ("id")
+);
+
 -- CreateIndex
 CREATE UNIQUE INDEX "Book_isbn_key" ON "Book"("isbn");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "Curator_wallet_key" ON "Curator"("wallet");
 
+-- CreateIndex
+CREATE UNIQUE INDEX "Curator_userId_key" ON "Curator"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_wallet_key" ON "User"("wallet");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "Interest_userId_name_key" ON "Interest"("userId", "name");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "SocialLink_userId_platform_key" ON "SocialLink"("userId", "platform");
+
 -- AddForeignKey
 ALTER TABLE "Book" ADD CONSTRAINT "Book_curatorId_fkey" FOREIGN KEY ("curatorId") REFERENCES "Curator"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Curator" ADD CONSTRAINT "Curator_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "BookRequests" ADD CONSTRAINT "BookRequests_curatorId_fkey" FOREIGN KEY ("curatorId") REFERENCES "Curator"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
@@ -131,3 +199,9 @@ ALTER TABLE "BorrowingLogs" ADD CONSTRAINT "BorrowingLogs_borrowingId_fkey" FORE
 
 -- AddForeignKey
 ALTER TABLE "BorrowingLogs" ADD CONSTRAINT "BorrowingLogs_curatorId_fkey" FOREIGN KEY ("curatorId") REFERENCES "Curator"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "Interest" ADD CONSTRAINT "Interest_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "SocialLink" ADD CONSTRAINT "SocialLink_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

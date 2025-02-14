@@ -10,7 +10,9 @@ import { usePrivy } from '@privy-io/react-auth';
 
 import { Library } from 'lucide-react';
 
-import { borrowThisBook } from '@/contract/Interraction';
+import { borrowBookRequest } from '@/contract/Interraction';
+import FallbackBookCover from '@/components/library/FallbackBookCover';
+
 
 interface Book {
   id: string;
@@ -65,6 +67,7 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
   const [loading, setLoading] = useState(false);
   const { user } = usePrivy();
   const [walletAddress, setWalletAddress] = useState('');
+  const [imageError, setImageError] = useState(false);
   const router = useRouter();
 
   // Return home function
@@ -91,7 +94,7 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
       returnDate: Math.floor(new Date(returnDate).getTime() / 1000), // Convert to seconds
     };
 
-    const { borrowingId } = await borrowThisBook(BorrowBookData);
+    const { borrowingId } = await borrowBookRequest(BorrowBookData);
 
     const borrowBookData = {
       wallet: walletAddress,
@@ -105,8 +108,6 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
       curatorId: Curator.id.toString(),
       onChainBorrowingId: borrowingId
     };
-
-    console.log('Borrow', borrowBookData)
 
     try {
       // Send data to the API
@@ -201,12 +202,17 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
         {/* Book Cover Image (on the Left) */}
         <Grid item xs={12} md={6}>
           <Box sx={{ position: 'relative', height: '100%', borderRadius: '12px', overflow: 'hidden' }}>
-            <img
-              src={bookCover}
-              alt={Book.title}
-              className="w-full h-[740px] object-cover"
-            />
-          </Box>
+            {!imageError ? (
+              <img
+                src={bookCover}
+                alt={Book.title}
+                className="w-full h-[740px] object-cover"
+                onError={() => setImageError(true)}
+              />
+            ) : (
+              <FallbackBookCover title={Book.title} author={Book.author} width="100%" height="100%" />
+            )}
+          </Box>;
         </Grid>
 
         {/* Book Details Section (on the Right) */}

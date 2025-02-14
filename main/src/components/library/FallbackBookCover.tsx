@@ -7,9 +7,18 @@ interface FallbackBookCoverProps {
   author: string;
   width?: string | number;
   height?: string | number;
+  titleFontSize?: string | number;
+  authorFontSize?: string | number;
 }
 
-const FallbackBookCover: React.FC<FallbackBookCoverProps> = ({ title, author, width = "300px", height = "400px" }) => {
+const FallbackBookCover: React.FC<FallbackBookCoverProps> = ({
+  title,
+  author,
+  width = "300px",
+  height = "400px",
+  titleFontSize = "1rem", // Default title font size
+  authorFontSize = "0.875rem", // Default author font size
+}) => {
   return (
     <Box
       sx={{
@@ -39,10 +48,33 @@ const FallbackBookCover: React.FC<FallbackBookCoverProps> = ({ title, author, wi
           padding: 2,
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#333", mb: 1 }}>
+        <Typography
+          variant="h6"
+          sx={{
+            fontWeight: "bold",
+            color: "#333",
+            mb: 1,
+            maxWidth: "100%",
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+            fontSize: titleFontSize,
+          }}
+        >
           {title}
         </Typography>
-        <Typography variant="body2" color="text.secondary" fontStyle="italic">
+        <Typography
+          variant="body2"
+          color="text.secondary"
+          fontStyle="italic"
+          sx={{
+            maxWidth: "100%",
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+            fontSize: authorFontSize,
+          }}
+        >
           {author}
         </Typography>
       </Box>

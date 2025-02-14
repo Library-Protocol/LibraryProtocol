@@ -6,7 +6,9 @@ const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
   try {
-    const { wallet, name, country, city, state, coverImage, transactionHash, onChainUniqueId } = await request.json();
+    const { wallet, name, country, city, state, coverImage, transactionHash, onChainUniqueId, nftTokenId } = await request.json();
+
+    console.log('Route Response', wallet, name, country, city, state, coverImage, transactionHash, onChainUniqueId, nftTokenId)
 
     if (!coverImage) {
       return NextResponse.json({ error: 'Cover image is required' }, { status: 400 });
@@ -24,6 +26,8 @@ export async function POST(request: Request) {
 
     data.append('file', file);
 
+    console.log('Data', data)
+
     const upload = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
       method: "POST",
       headers: {
@@ -40,6 +44,8 @@ export async function POST(request: Request) {
 
     const imageUrl = `${uploadRes.IpfsHash}`;
 
+    console.log('Image Url', imageUrl)
+
     const curator = await prisma.curator.create({
       data: {
         name,
@@ -49,7 +55,13 @@ export async function POST(request: Request) {
         wallet: wallet,
         coverImage: imageUrl,
         transactionHash,
-        onChainUniqueId
+        onChainUniqueId,
+        nftTokenId,
+        user: {
+          connect: {
+            wallet: wallet
+          }
+        }
       },
     });
 

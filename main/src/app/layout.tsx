@@ -15,6 +15,7 @@ import '@/app/globals.css'
 
 // Generated Icon CSS Imports
 import '@assets/iconify-icons/generated-icons.css'
+// import PrivyProviderWrapper from '@/components/wallet/PrivyProviderWrapper'
 
 export const metadata = {
   title: 'Library Protocol',
@@ -25,8 +26,6 @@ export const metadata = {
 const RootLayout = async (props: ChildrenType) => {
   const { children } = props
 
-  // Vars
-
   const systemMode = await getSystemMode()
   const direction = 'ltr'
 
@@ -34,7 +33,9 @@ const RootLayout = async (props: ChildrenType) => {
     <html id='__next' lang='en' dir={direction} suppressHydrationWarning>
       <body className='flex is-full min-bs-full flex-auto flex-col'>
         <InitColorSchemeScript attribute='data' defaultMode={systemMode} />
-        {children}
+          {/* <PrivyProviderWrapper> */}
+                {children}
+          {/* </PrivyProviderWrapper> */}
       </body>
     </html>
   )

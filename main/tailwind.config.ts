@@ -11,7 +11,16 @@ const config: Config = {
   important: '#__next',
   plugins: [tailwindcssLogical, tailwindPlugin],
   theme: {
-    extend: {}
+    extend: {
+      colors: {
+        brown: {
+          500: '#A0522D', // Sienna
+          600: '#8B4513', // SaddleBrown
+          700: '#654321', // Dark Brown
+          800: '#5C4033', // Very Dark Brown
+        },
+      },
+    }
   }
 }
 

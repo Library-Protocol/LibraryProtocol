@@ -8,6 +8,8 @@ export async function POST(request: Request ) {
   try {
     const { isbn, title, author, additionalNotes, curatorId, wallet, transactionHash, onChainBookRequestId } = await request.json();
 
+    console.log('Book Request Backend Response', isbn, title, author, additionalNotes, curatorId, wallet, transactionHash, onChainBookRequestId)
+
     if (!curatorId) {
       return NextResponse.json({ error: 'Curator ID is required' }, { status: 400 });
     }
