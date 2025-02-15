@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { ExternalLink } from 'lucide-react';
+import { User } from 'lucide-react';
 import { usePrivy } from '@privy-io/react-auth';
 
 import Novu from '../notification/Novu';
@@ -60,8 +60,8 @@ const DashboardButton = () => {
       href={`/user/dashboard/${walletAddress}`}
       className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brown-700 to-brown-500 px-6 py-3 text-white shadow-lg transition-all hover:shadow-brown-500/25 hover:translate-y-[-2px] active:translate-y-[1px]"
     >
-      <span className="relative font-semibold">Dashboard</span>
-      <ExternalLink size={18} className="transition-transform group-hover:rotate-45" />
+      <span className="relative font-semibold">Profile</span>
+      <User size={18} className="transition-transform group-hover:rotate-45" />
       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-brown-700/20 to-brown-500/20 blur-xl transition-opacity opacity-0 group-hover:opacity-100" />
     </Link>
   );

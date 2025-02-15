@@ -121,9 +121,48 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const [loading, setLoading] = useState(false);
   const [searchLoading, setSearchLoading] = useState(false);
   const [Books, setBooks] = useState<Book[]>(Curator.books);
+  const [, setFileError] = useState('');
 
   const handleDecrease = () => setCopies((prev) => Math.max(1, prev - 1));
   const handleIncrease = () => setCopies((prev) => prev + 0);
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+
+    if (file) {
+      // Validate file type
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+
+      if (!allowedTypes.includes(file.type)) {
+        setFileError('Only JPEG, JPG, and PNG files are allowed.');
+
+return;
+      }
+
+      // Validate file size (e.g., 5MB limit)
+      const maxSize = 5 * 1024 * 1024; // 5MB
+
+      if (file.size > maxSize) {
+        setFileError('File size must be less than 5MB.');
+
+return;
+      }
+
+      // Clear any previous errors
+      setFileError('');
+
+      // Convert the file to base64
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        if (typeof reader.result === 'string') {
+          setCoverImage(reader.result); // Set the base64-encoded image
+        }
+      };
+
+      reader.readAsDataURL(file);
+    }
+  };
 
     // Return home function
     const handleReturnHome = () => {
@@ -147,6 +186,7 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
     setPublishDate('');
     setPagination('');
     setCoverImage(null);
+    setFileError('');
   };
 
   const handleClickOpenPublicNotice = () => setOpenPublicNotice(true);
@@ -292,7 +332,8 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
         curatorId: Curator.id.toString(),
         onChainUniqueId: uniqueId,
         transactionHash: hash,
-        nftTokenId: nftTokenId
+        nftTokenId: nftTokenId,
+        image: coverImage,
       };
 
       // Make the request to add the book
@@ -324,7 +365,7 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
       // Update the state with the new list of books
       setBooks(books);
 
-      toast.success('Your book has successfully been added to your catalog!', {
+      toast.success('Book Successfully added to library!', {
         position: 'bottom-center',
         autoClose: 3000,
         hideProgressBar: false,
@@ -580,123 +621,150 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
       </Card>
 
       <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-        <DialogTitle>Add A Book</DialogTitle>
-        <DialogContent>
-          <Box sx={{ pt: 2, display: 'flex', gap: 4 }}>
-            <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <TextField
-                fullWidth
-                label="ISBN"
-                variant="outlined"
-                value={isbn}
-                onChange={(e) => setIsbn(e.target.value)}
-                error={!!error}
-                helperText={error}
-                InputProps={{
-                  endAdornment: searchLoading ? (
-                    <InputAdornment position="end">
-                      <CircularProgress size={20} />
-                    </InputAdornment>
-                  ) : null,
+      <DialogTitle>Add A Book</DialogTitle>
+      <DialogContent>
+        <Box sx={{ pt: 2, display: 'flex', gap: 4 }}>
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <TextField
+              fullWidth
+              label="ISBN"
+              variant="outlined"
+              value={isbn}
+              onChange={(e) => setIsbn(e.target.value)}
+              error={!!error}
+              helperText={error}
+              InputProps={{
+                endAdornment: searchLoading ? (
+                  <InputAdornment position="end">
+                    <CircularProgress size={20} />
+                  </InputAdornment>
+                ) : null,
                 }}
               />
-              <TextField
-                fullWidth
-                label="Book Title"
-                variant="outlined"
-                value={bookTitle}
-                onChange={(e) => setBookTitle(e.target.value)}
-              />
-              <TextField
-                fullWidth
-                label="Author"
-                variant="outlined"
-                value={author}
-                onChange={(e) => setAuthor(e.target.value)}
-              />
-              <TextField
-                fullWidth
-                label="Publisher"
-                variant="outlined"
-                value={publisher}
-                onChange={(e) => setPublisher(e.target.value)}
-              />
-              <TextField
-                fullWidth
-                label="Publish Date"
-                variant="outlined"
-                value={publishDate}
-                onChange={(e) => setPublishDate(e.target.value)}
-              />
-              <TextField
-                fullWidth
-                label="Pagination"
-                variant="outlined"
-                value={pagination}
-                onChange={(e) => setPagination(e.target.value)}
-              />
-             <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                gap={1}
-                sx={{
-                  border: "1px solid #ccc",
-                  borderRadius: "8px",
-                  p: 1,
-                  backgroundColor: "transparent",
-                }}
-              >
-                <Typography variant="body1" sx={{ mr: 1 }}>
-                  Copies:
-                </Typography>
-                <IconButton onClick={handleDecrease} size="small">
-                  <Minus size={18} />
-                </IconButton>
-                <Typography variant="h6" sx={{ minWidth: "30px", textAlign: "center" }}>
-                  {copies}
-                </Typography>
-                <IconButton onClick={handleIncrease} size="small">
-                  <Plus size={18} />
-                </IconButton>
-              </Box>
-              <TextField
-                fullWidth
-                label="Additional Notes"
-                multiline
-                rows={3}
-                variant="outlined"
-                value={additionalNotes}
-                onChange={(e) => setAdditionalNotes(e.target.value)}
-              />
-            </Box>
-
-            <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              {coverImage ? (
-                <img
-                  src={coverImage}
-                  alt={publisher}
-                  style={{ maxWidth: '100%', maxHeight: '450px', borderRadius: '3px' }}
+              <Grid container spacing={2}>
+                <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Book Title"
+                  variant="outlined"
+                  value={bookTitle}
+                  onChange={(e) => setBookTitle(e.target.value)}
                 />
-              ) : (
-                <FallbackBookCover title={bookTitle} author={author} />
-              )}
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Author"
+                  variant="outlined"
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Publisher"
+                  variant="outlined"
+                  value={publisher}
+                  onChange={(e) => setPublisher(e.target.value)}
+                />
+                </Grid>
+                <Grid item xs={12} sm={6}>
+                <TextField
+                  fullWidth
+                  label="Publish Date"
+                  variant="outlined"
+                  value={publishDate}
+                  onChange={(e) => setPublishDate(e.target.value)}
+                />
+                </Grid>
+                <Grid item xs={12} sm={12}>
+                <TextField
+                  fullWidth
+                  label="Pagination"
+                  variant="outlined"
+                  value={pagination}
+                  onChange={(e) => setPagination(e.target.value)}
+                />
+                </Grid>
+              </Grid>
+            <Box
+              display="flex"
+              alignItems="center"
+              justifyContent="center"
+              gap={1}
+              sx={{
+                border: "1px solid #ccc",
+                borderRadius: "8px",
+                p: 1,
+                backgroundColor: "transparent",
+              }}
+            >
+              <Typography variant="body1" sx={{ mr: 1 }}>
+                Copies:
+              </Typography>
+              <IconButton onClick={handleDecrease} size="small">
+                <Minus size={18} />
+              </IconButton>
+              <Typography variant="h6" sx={{ minWidth: "30px", textAlign: "center" }}>
+                {copies}
+              </Typography>
+              <IconButton onClick={handleIncrease} size="small">
+                <Plus size={18} />
+              </IconButton>
             </Box>
+            <TextField
+              fullWidth
+              label="Additional Notes"
+              multiline
+              rows={3}
+              variant="outlined"
+              value={additionalNotes}
+              onChange={(e) => setAdditionalNotes(e.target.value)}
+            />
+            {/* File Upload Button */}
+            <Button
+              variant="outlined"
+              component="label"
+              fullWidth
+              sx={{ mt: 2 }}
+            >
+              Upload Book Cover
+              <input
+                type="file"
+                hidden
+                accept="image/*"
+                onChange={handleFileUpload}
+              />
+            </Button>
           </Box>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleClose}
-            sx={{
-              color: 'black',
-              '&:hover': {
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-              },
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
+
+          <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+            {coverImage ? (
+              <img
+                src={coverImage}
+                alt="Book Cover"
+                style={{ maxWidth: '100%', maxHeight: '450px', borderRadius: '3px' }}
+              />
+            ) : (
+              <FallbackBookCover title={bookTitle} author={author} />
+            )}
+          </Box>
+        </Box>
+      </DialogContent>
+      <DialogActions>
+        <Button
+          onClick={handleClose}
+          sx={{
+            color: 'black',
+            '&:hover': {
+              backgroundColor: 'rgba(255, 255, 255, 0.1)',
+            },
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
           variant="contained"
           onClick={handleSubmitRequest}
           disabled={loading}
@@ -704,11 +772,11 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
             color: 'white',
             backgroundColor: 'black',
             border: '1px solid white',
-            display: 'flex', // Flexbox to align content
+            display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 1, // Adds spacing when showing text
-            minWidth: 120, // Prevents width shrink on loading
+            gap: 1,
+            minWidth: 120,
             '&:hover': {
               backgroundColor: 'white',
               color: 'black',
@@ -717,8 +785,8 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
         >
           {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Add Book'}
         </Button>
-        </DialogActions>
-      </Dialog>
+      </DialogActions>
+    </Dialog>
 
       {/* Modal for Adding/Editing Public Notice */}
       <Dialog

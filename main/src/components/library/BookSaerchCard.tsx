@@ -10,7 +10,7 @@ import {
   Grid,
   Skeleton,
   Typography,
-  CircularProgress
+  CircularProgress,
 } from '@mui/material';
 import { Search, BookX } from 'lucide-react';
 
@@ -21,6 +21,7 @@ interface Book {
   title: string;
   author: string;
   isbn: number;
+  image?: string; // Base64 encoded image
 }
 
 interface BookCurator {
@@ -64,7 +65,7 @@ const BookSearchGrid: React.FC<BookSearchGridProps> = ({
   }, [searchQuery, debouncedQuery]);
 
   const handleImageLoad = (isbn: number) => {
-    setLoadedImages(prev => new Set(prev.add(isbn)));
+    setLoadedImages((prev) => new Set(prev.add(isbn)));
   };
 
   const filteredBooks = useMemo(() => {
@@ -72,13 +73,13 @@ const BookSearchGrid: React.FC<BookSearchGridProps> = ({
 
     const query = debouncedQuery.toLowerCase().trim();
 
-    return Books.filter(book => {
+    return Books.filter((book) => {
       if (book.isbn.toString().includes(query)) return true;
       if (book.title.toLowerCase().includes(query)) return true;
       const titleWords = book.title.toLowerCase().split(' ');
 
       
-return titleWords.some(word => word.startsWith(query));
+return titleWords.some((word) => word.startsWith(query));
     });
   }, [Books, debouncedQuery]);
 
@@ -98,7 +99,7 @@ return titleWords.some(word => word.startsWith(query));
         minHeight: '300px',
         backgroundColor: 'rgba(0, 0, 0, 0.02)',
         borderRadius: 2,
-        textAlign: 'center'
+        textAlign: 'center',
       }}
     >
       <BookX size={48} strokeWidth={1.5} style={{ marginBottom: '16px', opacity: 0.6 }} />
@@ -107,9 +108,8 @@ return titleWords.some(word => word.startsWith(query));
       </Typography>
       <Typography variant="body2" sx={{ color: 'text.secondary', maxWidth: '400px' }}>
         {Books.length === 0
-          ? "This library is currently empty. Books added to this library will appear here."
-          : `No books match "${searchQuery}". Try adjusting your search term or check for typos.`
-        }
+          ? 'This library is currently empty. Books added to this library will appear here.'
+          : `No books match "${searchQuery}". Try adjusting your search term or check for typos.`}
       </Typography>
       {searchQuery && Books.length > 0 && (
         <Typography
@@ -118,7 +118,7 @@ return titleWords.some(word => word.startsWith(query));
             mt: 2,
             color: 'primary.main',
             cursor: 'pointer',
-            '&:hover': { textDecoration: 'underline' }
+            '&:hover': { textDecoration: 'underline' },
           }}
           onClick={() => setSearchQuery('')}
         >
@@ -150,7 +150,7 @@ return titleWords.some(word => word.startsWith(query));
                     size={20}
                     sx={{
                       color: 'text.secondary',
-                      opacity: 0.7
+                      opacity: 0.7,
                     }}
                   />
                 )}
@@ -202,35 +202,52 @@ return titleWords.some(word => word.startsWith(query));
                       },
                     }}
                   >
-                    {!shouldShowFallback ? (
+                    {/* Priority 1: Base64 Encoded Image */}
+                    {book.image ? (
+                      <img
+                        src={book.image}
+                        alt={book.title}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    ) : (
                       <>
-                        {!isImageLoaded && (
-                          <Skeleton
-                            variant="rectangular"
+                        {/* Priority 2: OpenLibrary Link */}
+                        {!shouldShowFallback ? (
+                          <>
+                            {!isImageLoaded && (
+                              <Skeleton
+                                variant="rectangular"
+                                width="100%"
+                                height="100%"
+                              />
+                            )}
+                            <img
+                              src={bookCover}
+                              alt={book.title}
+                              onLoad={() => handleImageLoad(book.isbn)}
+                              onError={() => onImageError(book.isbn)}
+                              style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                display: isImageLoaded ? 'block' : 'none',
+                              }}
+                            />
+                          </>
+                        ) : (
+                          // Priority 3: FallbackBookCover
+                          <FallbackBookCover
+                            title={book.title}
+                            author={book.author}
                             width="100%"
                             height="100%"
                           />
                         )}
-                        <img
-                          src={bookCover}
-                          alt={book.title}
-                          onLoad={() => handleImageLoad(book.isbn)}
-                          onError={() => onImageError(book.isbn)}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            display: isImageLoaded ? 'block' : 'none',
-                          }}
-                        />
                       </>
-                    ) : (
-                      <FallbackBookCover
-                        title={book.title}
-                        author={book.author}
-                        width="100%"
-                        height="100%"
-                      />
                     )}
                   </Box>
                 </Link>

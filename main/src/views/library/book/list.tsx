@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 
-import { Book } from 'lucide-react';
+import FallbackBookCover from '@/components/library/FallbackBookCover';
 
 interface BookType {
   id: string;
@@ -34,27 +34,15 @@ interface LandingPageProps {
   data: Curator[];
 }
 
-// Fallback Book Cover Component
-const FallbackBookCover: React.FC<{ title: string; author: string }> = ({ title, author }) => (
-  <div className="w-full h-full flex flex-col items-center justify-center bg-gray-100 p-4">
-    <Book className="w-12 h-12 text-gray-400 mb-2" />
-    <div className="text-xs text-center text-gray-600 font-medium truncate w-full">
-      {title}
-    </div>
-    <div className="text-xs text-center text-gray-500 truncate w-full">
-      {author}
-    </div>
-  </div>
-);
-
 // Book Card Component
 const BookCard: React.FC<{ book: BookType & { curator: { id: string; name: string; location: string } } }> = ({ book }) => {
-  console.log('book', book);
-  console.log('book.curator', book.curator);
-  const [coverImage, setCoverImage] = useState<string | null>(null);
+  const [coverImage, setCoverImage] = useState<string | null>(book.image || null);
 
   useEffect(() => {
     const fetchCoverImage = async () => {
+      // If book.image is already set (base64), skip fetching
+      if (book.image) return;
+
       if (!book.isbn) return;
 
       try {
@@ -73,41 +61,32 @@ const BookCard: React.FC<{ book: BookType & { curator: { id: string; name: strin
     };
 
     fetchCoverImage();
-  }, [book.isbn]);
+  }, [book.isbn, book.image]);
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden transform transition-all">
+    <div className="bg-white rounded-lg shadow-md overflow-hidden transform transition-all hover:shadow-lg">
       {/* Book Cover */}
-      <div className="relative h-40">
+      <div className="relative h-60">
         {coverImage ? (
-          <img
-            src={coverImage}
-            alt={book.title}
-            className="w-full h-full object-cover"
-          />
+         <img
+         src={coverImage}
+         alt={book.title}
+         className="w-full h-full object-cover object-center"
+       />
         ) : (
-          <FallbackBookCover title={book.title} author={book.author} />
+          <FallbackBookCover title={book.title} author={book.author} width={'176px'} height={'240px'} />
         )}
-        <div className="absolute bottom-2 left-2 px-2 py-1 bg-gray-800 bg-opacity-75 rounded-full text-white text-xs font-medium">
+
+        {/* Curator Name Badge */}
+        <div className="absolute top-2 left-2 px-2 py-1 bg-gray-800 bg-opacity-75 rounded-full text-white text-xs font-medium">
           {book.curator.name}
         </div>
       </div>
 
-      {/* Book Details */}
+      {/* Borrow Button */}
       <div className="p-3">
-        <h2 className="text-sm font-bold text-gray-900 truncate" title={book.title}>
-          {book.title}
-        </h2>
-        <p className="mt-1 text-xs text-gray-700 truncate" title={book.author}>
-          {book.author}
-        </p>
-        <p className="mt-1 text-xs text-gray-500 truncate" title={book.curator.location}>
-          {book.curator.location}
-        </p>
-
-        {/* Borrow Button */}
         <button
-          className={`mt-2 w-full px-2 py-1 rounded-md text-xs transition-colors ${
+          className={`w-full px-4 py-2 rounded-md text-sm transition-colors ${
             book.availability
               ? 'bg-brown-600 hover:bg-brown-800 text-white'
               : 'bg-brown-500 text-gray-500 cursor-not-allowed'
@@ -115,12 +94,15 @@ const BookCard: React.FC<{ book: BookType & { curator: { id: string; name: strin
           disabled={!book.availability}
           onClick={() => {
             if (book.availability) {
-              window.open(`/library/curator/${book.curator.id}/book/${book.isbn}`);
+              window.location.href = `/library/curator/${book.curator.id}/book/${book.isbn}`;
             }
           }}
         >
           {book.availability ? 'Borrow Now' : 'Unavailable'}
         </button>
+        <p className="text-xs text-black truncate mt-2" title={book.curator.location}>
+            {book.curator.location}
+          </p>
       </div>
     </div>
   );

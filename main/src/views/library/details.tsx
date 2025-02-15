@@ -256,8 +256,8 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
             <Box sx={{ position: 'relative', height: '100%' }}>
               <img
                 src={`${ipfsUrl}${Curator.coverImage}`}
-                alt='sample'
-                className="w-full h-full object-cover"
+                alt={Curator.name}
+                className="w-full h-full object-cover object-center"
               />
             </Box>
           </Card>

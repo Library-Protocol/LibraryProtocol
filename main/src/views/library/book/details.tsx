@@ -206,7 +206,7 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
               <img
                 src={bookCover}
                 alt={Book.title}
-                className="w-full h-[740px] object-cover"
+                className="w-full h-full object-fit object-center"
                 onError={() => setImageError(true)}
               />
             ) : (

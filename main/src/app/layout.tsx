@@ -15,7 +15,9 @@ import '@/app/globals.css'
 
 // Generated Icon CSS Imports
 import '@assets/iconify-icons/generated-icons.css'
-// import PrivyProviderWrapper from '@/components/wallet/PrivyProviderWrapper'
+import Providers from '@/context/wagmiProvider'
+import ClientNetworkCheck from '@/components/network/ClientNetworkCheck'
+import ConnectionStatus from '@/components/network/ConnectionStatus'
 
 export const metadata = {
   title: 'Library Protocol',
@@ -33,9 +35,11 @@ const RootLayout = async (props: ChildrenType) => {
     <html id='__next' lang='en' dir={direction} suppressHydrationWarning>
       <body className='flex is-full min-bs-full flex-auto flex-col'>
         <InitColorSchemeScript attribute='data' defaultMode={systemMode} />
-          {/* <PrivyProviderWrapper> */}
-                {children}
-          {/* </PrivyProviderWrapper> */}
+            <Providers>
+              <ClientNetworkCheck />
+                  {children}
+              <ConnectionStatus />
+            </Providers>
       </body>
     </html>
   )

@@ -8,7 +8,7 @@ export async function POST(request: Request) {
   try {
     const { title, author, publisher, publishDate, pagination, additionalNotes, isbn, image, curatorId, onChainUniqueId, transactionHash, nftTokenId } = await request.json();
 
-    console.log('Route Response',title, author, publisher, publishDate, pagination, additionalNotes, isbn, image, curatorId, onChainUniqueId, transactionHash, nftTokenId)
+    console.log('Route Response',title, author, publisher, publishDate, pagination, additionalNotes, isbn, image, curatorId, onChainUniqueId, transactionHash, nftTokenId, image)
 
     if (!curatorId || !title || !author || !isbn || !publisher || !publishDate || !pagination) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -27,7 +27,7 @@ export async function POST(request: Request) {
         curatorId,
         onChainUniqueId,
         transactionHash,
-        nftTokenId
+        nftTokenId,
       },
     });
 

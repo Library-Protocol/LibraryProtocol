@@ -37,13 +37,11 @@ interface UserDashboardComponentProps {
 }
 
 const UserDashboard: React.FC<UserDashboardComponentProps> = ({ data }) => {
-  console.log('User Data:', data);
   const [loading, setLoading] = useState(true);
   const [selectedBook, setSelectedBook] = useState<BookBorrowed | null>(null);
   const [coverImages, setCoverImages] = useState<{ [isbn: number]: string | null }>({});
 
   useEffect(() => {
-    // Simulate data fetching delay
     setTimeout(() => {
       setLoading(false);
     }, 2000);
@@ -316,20 +314,20 @@ const UserDashboard: React.FC<UserDashboardComponentProps> = ({ data }) => {
             {data.userDetails?.curator && (
             <Grid item xs={12} md={6}>
             <Link href={`/library/curator/dashboard/${data.userDetails?.curator.id}`} className="no-underline">
-              <Card className="relative bg-gradient-to-r from-brown-700 to-brown-500 rounded-[10px] overflow-hidden p-4 text-white transform transition-all duration-300 cursor-pointer">
+                <Card className="relative bg-gradient-to-r from-brown-600 via-brown-500 to-brown-700 rounded-[10px] overflow-hidden p-4 text-white">
                   <Box className="flex items-center gap-4">
-                    <Library className="w-12 h-12 text-white drop-shadow-md" />
-                    <Box>
-                      <Box className="flex items-center gap-2">
-                        <Typography variant="h6" className="font-bold text-white mb-1">
-                          View Your Library
-                        </Typography>
-                        <MoveRight className="w-5 h-5 text-white" />
-                      </Box>
-                      <Typography className="opacity-90 text-white">
-                        Includes information about your library like books, books borrowed, etc.
-                      </Typography>
+                  <Library className="w-12 h-12 text-white drop-shadow-md animate-pulse" />
+                  <Box>
+                    <Box className="flex items-center gap-2">
+                    <Typography variant="h6" className="font-bold text-white mb-1 tracking-wide">
+                      View Your Library
+                    </Typography>
+                    <MoveRight className="w-5 h-5 text-white transition-transform group-hover:translate-x-1" />
                     </Box>
+                    <Typography className="opacity-90 text-white text-sm leading-relaxed">
+                    Includes information about your library like books, books borrowed, etc.
+                    </Typography>
+                  </Box>
                   </Box>
                 </Card>
               </Link>

@@ -31,17 +31,6 @@ export async function POST(request: Request) {
       socialMedia = []
     } = await request.json()
 
-    console.log('Avatar:', profileImage)
-    console.log('Wallet:', wallet)
-    console.log('Name:', name)
-    console.log('Email:', email)
-    console.log('Bio:', bio)
-    console.log('Country:', country)
-    console.log('City:', city)
-    console.log('State:', state)
-    console.log('Interests:', interests)
-    console.log('SocialMedia:', socialMedia)
-
     if (!wallet || !name) {
       return NextResponse.json({ error: 'Wallet and name are required' }, { status: 400 })
     }
