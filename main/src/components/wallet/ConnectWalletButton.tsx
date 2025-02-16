@@ -1,79 +1,47 @@
-import React, { useEffect, useState } from 'react';
-
-import Link from 'next/link';
+'use client';
+import React from 'react';
 import { useRouter } from 'next/navigation';
-
-import { User } from 'lucide-react';
 import { usePrivy } from '@privy-io/react-auth';
 
-import Novu from '../notification/Novu';
-
 const SkeletonLoader = ({ width, height }: { width: string; height: string }) => (
-  <div className={`animate-pulse bg-gray-700 rounded`} style={{ width, height }}></div>
+  <div className="animate-pulse bg-gray-700 rounded" style={{ width, height }}></div>
 );
 
-const DashboardButton = () => {
+const WalletButton = () => {
   const router = useRouter();
-  const [, setSubmitError] = useState('');
-  const [walletAddress, setWalletAddress] = useState('');
-  const [userExists, setUserExists] = useState<boolean | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const { user, authenticated } = usePrivy();
+  const { user, authenticated, ready, login, logout } = usePrivy();
 
-  useEffect(() => {
-    if (user?.wallet) {
-      setWalletAddress(user.wallet.address);
-    }
-  }, [user]);
-
-  useEffect(() => {
-    const fetchUser = async () => {
-      if (!walletAddress) return;
+  // Combined async operation using React Query or SWR would be even better
+  React.useEffect(() => {
+    const checkUserExists = async () => {
+      if (!authenticated || !user?.wallet?.address) return;
 
       try {
-        const response = await fetch(`/api/user/fetch-details?wallet=${walletAddress}`);
-
-        setUserExists(response.ok);
-      } catch (err) {
-        setSubmitError((err as Error).message || 'Failed to fetch user data');
-        setUserExists(false);
-      } finally {
-        setIsLoading(false);
+        const response = await fetch(`/api/user/fetch-details?wallet=${user.wallet.address}`);
+        if (!response.ok) {
+          router.replace('/user/onboarding');
+        }
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        router.replace('/user/onboarding');
       }
     };
 
-    fetchUser();
-  }, [walletAddress]);
+    checkUserExists();
+  }, [authenticated, user?.wallet?.address, router]);
 
-  useEffect(() => {
-    if (userExists === false) {
-      router.push('/user/onboarding');
+  // Handle logout redirect
+  React.useEffect(() => {
+    if (!authenticated && ready) {
+      router.replace('/');
     }
-  }, [userExists, router]);
-
-  if (!authenticated || userExists === null || isLoading) {
-    return <SkeletonLoader width="120px" height="40px" />;
-  }
-
-  return (
-    <Link
-      href={`/user/dashboard/${walletAddress}`}
-      className="group relative inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-brown-700 to-brown-500 px-6 py-3 text-white shadow-lg transition-all hover:shadow-brown-500/25 hover:translate-y-[-2px] active:translate-y-[1px]"
-    >
-      <span className="relative font-semibold">Profile</span>
-      <User size={18} className="transition-transform group-hover:rotate-45" />
-      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-brown-700/20 to-brown-500/20 blur-xl transition-opacity opacity-0 group-hover:opacity-100" />
-    </Link>
-  );
-};
-
-const ConnectWalletButton = () => {
-  const { ready, authenticated, login, logout } = usePrivy();
+  }, [authenticated, ready, router]);
 
   const handleClick = () => {
     authenticated ? logout() : login();
   };
 
+  // Show skeleton only during initial load
   if (!ready) {
     return <SkeletonLoader width="180px" height="50px" />;
   }
@@ -86,10 +54,8 @@ const ConnectWalletButton = () => {
       >
         {authenticated ? 'Logout' : 'Connect Wallet'}
       </button>
-      <DashboardButton />
-      <Novu />
     </div>
   );
 };
 
-export default ConnectWalletButton;
+export default WalletButton;

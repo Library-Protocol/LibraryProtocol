@@ -1,23 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-
 import { useRouter } from 'next/navigation';
-
 import { Box, Button, Card, CardContent, CircularProgress, Grid, TextField, Typography } from '@mui/material';
 import { toast, ToastContainer } from 'react-toastify';
 import { usePrivy } from '@privy-io/react-auth';
-
 import { Library } from 'lucide-react';
-
 import { borrowBookRequest } from '@/contract/Interraction';
 import FallbackBookCover from '@/components/library/FallbackBookCover';
 
-
 interface Book {
   id: string;
-  onChainUniqueId: string
-  transactionHash: string
+  onChainUniqueId: string;
+  transactionHash: string;
   title: string;
   author: string;
   publisher: string;
@@ -32,13 +27,13 @@ interface Book {
 }
 
 interface BorrowBook {
-  onChainBorrowingId: string
+  onChainBorrowingId: string;
 }
 
 interface Curator {
   id: string;
-  onChainUniqueId: string
-  transactionHash: string
+  onChainUniqueId: string;
+  transactionHash: string;
   name: string;
   description?: string;
   country: string;
@@ -48,7 +43,7 @@ interface Curator {
   coverImage?: string;
   isVerified: boolean;
   books: Book[];
-  borrowBook: BorrowBook
+  borrowBook: BorrowBook;
 }
 
 interface BookDetailsProps {
@@ -68,13 +63,35 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
   const { user } = usePrivy();
   const [walletAddress, setWalletAddress] = useState('');
   const [imageError, setImageError] = useState(false);
+  const [showSummary, setShowSummary] = useState(false); // State for summary visibility
+  const [isGenerating, setIsGenerating] = useState(false); // State for generating summary
+  const [summaryText, setSummaryText] = useState(''); // State for streaming summary text
   const router = useRouter();
+
+  // Hard-coded summary for demonstration
+  const fullSummary =
+    "This is a dynamically generated summary of the book. It is being streamed letter by letter to simulate an AI-powered summary generation process. Once the summary is fully generated, you can flip back to the book cover.";
+
+  // Function to simulate streaming the summary letter by letter
+  const generateSummary = () => {
+    setIsGenerating(true);
+    setSummaryText('');
+    let index = 0;
+    const interval = setInterval(() => {
+      if (index < fullSummary.length) {
+        setSummaryText((prev) => prev + fullSummary[index]);
+        index++;
+      } else {
+        clearInterval(interval);
+        setIsGenerating(false);
+      }
+    }, 50); // Adjust the speed of streaming here
+  };
 
   // Return home function
   const handleReturnHome = () => {
     router.push(`/library/curator/${Curator.id}`);
   };
-
 
   // Move the walletAddress update logic inside useEffect
   useEffect(() => {
@@ -82,7 +99,6 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
       setWalletAddress(user.wallet.address);
     }
   }, [user]);
-
 
   const handleSubmit = async () => {
     setError(null); // Clear any previous errors
@@ -106,7 +122,7 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
       borrowDate: new Date(borrowDate).toISOString(),
       returnDate: new Date(returnDate).toISOString(),
       curatorId: Curator.id.toString(),
-      onChainBorrowingId: borrowingId
+      onChainBorrowingId: borrowingId,
     };
 
     try {
@@ -121,7 +137,6 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
-
         throw new Error(errorData.error || 'Failed to submit request');
       }
 
@@ -177,7 +192,7 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
           position: 'absolute',
           top: 10,
           left: -50,
-          zIndex: 10
+          zIndex: 10,
         }}
       >
         <Button
@@ -190,8 +205,8 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
             color: 'black',
             '&:hover': {
               backgroundColor: 'rgba(0,0,0,0.1)',
-              borderColor: 'black'
-            }
+              borderColor: 'black',
+            },
           }}
         >
           <Library size={24} />
@@ -202,17 +217,117 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
         {/* Book Cover Image (on the Left) */}
         <Grid item xs={12} md={6}>
           <Box sx={{ position: 'relative', height: '100%', borderRadius: '12px', overflow: 'hidden' }}>
-            {!imageError ? (
-              <img
-                src={bookCover}
-                alt={Book.title}
-                className="w-full h-full object-fit object-center"
-                onError={() => setImageError(true)}
-              />
-            ) : (
-              <FallbackBookCover title={Book.title} author={Book.author} width="100%" height="100%" />
-            )}
-          </Box>;
+            <Box
+              sx={{
+                position: 'relative',
+                width: '100%',
+                height: '100%',
+                transformStyle: 'preserve-3d',
+                transition: 'transform 0.6s',
+                transform: showSummary ? 'rotateY(180deg)' : 'rotateY(0deg)',
+              }}
+            >
+              {/* Front Side (Book Cover) */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  width: '100%',
+                  height: '100%',
+                  backfaceVisibility: 'hidden',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  backgroundColor: '#f5f5f5',
+                }}
+              >
+                {!imageError ? (
+                  <img
+                    src={bookCover}
+                    alt={Book.title}
+                    className="w-full h-full object-fit object-center"
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <FallbackBookCover title={Book.title} author={Book.author} width="100%" height="100%" />
+                )}
+                <Button
+                  variant="contained"
+                  sx={{
+                    position: 'absolute',
+                    bottom: 16,
+                    right: 16,
+                    backgroundColor: 'black',
+                    color: 'white',
+                    '&:hover': {
+                      backgroundColor: '#333',
+                    },
+                  }}
+                  onClick={() => setShowSummary(!showSummary)}
+                >
+                  View Summary
+                </Button>
+              </Box>
+
+              {/* Back Side (Summary) */}
+              <Box
+                sx={{
+                  position: 'absolute',
+                  width: '100%',
+                  height: '100%',
+                  backfaceVisibility: 'hidden',
+                  transform: 'rotateY(180deg)',
+                  backgroundColor: '#fff',
+                  padding: 2,
+                  boxShadow: 3,
+                  borderRadius: '12px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                }}
+              >
+                <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
+                  Summary
+                </Typography>
+                <Typography variant="body1" sx={{ textAlign: 'center', mb: 2 }}>
+                  {summaryText}
+                </Typography>
+                {!isGenerating && summaryText === '' && (
+                  <Button
+                    variant="contained"
+                    sx={{
+                      mt: 2,
+                      backgroundColor: 'black',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: '#333',
+                      },
+                    }}
+                    onClick={generateSummary}
+                  >
+                    Generate Summary
+                  </Button>
+                )}
+                {!isGenerating && summaryText !== '' && (
+                  <Button
+                    variant="contained"
+                    sx={{
+                      mt: 2,
+                      backgroundColor: 'black',
+                      color: 'white',
+                      '&:hover': {
+                        backgroundColor: '#333',
+                      },
+                    }}
+                    onClick={() => setShowSummary(!showSummary)}
+                  >
+                    Back to Cover
+                  </Button>
+                )}
+                {isGenerating && <CircularProgress size={24} sx={{ mt: 2 }} />}
+              </Box>
+            </Box>
+          </Box>
         </Grid>
 
         {/* Book Details Section (on the Right) */}

@@ -23,6 +23,7 @@ import { Plus, ArrowLeft } from 'lucide-react'
 import { usePrivy } from '@privy-io/react-auth'
 
 import AvatarSelector from '@/components/effects/AvatarSelector'
+import ConnectWalletButton from '@/components/wallet/ConnectWalletButton'
 
 const interests = [
   'Fiction books',
@@ -354,18 +355,29 @@ const UserOnboarding = () => {
               }
             }}
           />
-          <IconButton
+          <Button
             sx={{
               position: 'absolute',
               top: 8,
-              left: 8,
+              left: 8, // Move to the far right
               zIndex: 1200,
-              color: '#000000'
+              color: '#000000',
             }}
             onClick={handleBackToHome}
+            startIcon={<ArrowLeft className="w-6 h-6" />} // Add the icon
           >
-            <ArrowLeft className='w-6 h-6' />
-          </IconButton>
+            Back
+          </Button>
+          <Box
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              zIndex: 1200,
+            }}
+          >
+            <ConnectWalletButton />
+          </Box>
         </Box>
 
         <div className='min-h-screen flex items-center justify-center'>
