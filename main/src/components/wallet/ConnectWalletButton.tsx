@@ -1,11 +1,9 @@
 'use client';
 import React from 'react';
-import { useRouter } from 'next/navigation';
-import { usePrivy } from '@privy-io/react-auth';
 
-const SkeletonLoader = ({ width, height }: { width: string; height: string }) => (
-  <div className="animate-pulse bg-gray-700 rounded" style={{ width, height }}></div>
-);
+import { useRouter } from 'next/navigation';
+
+import { usePrivy } from '@privy-io/react-auth';
 
 const WalletButton = () => {
   const router = useRouter();
@@ -18,6 +16,7 @@ const WalletButton = () => {
 
       try {
         const response = await fetch(`/api/user/fetch-details?wallet=${user.wallet.address}`);
+
         if (!response.ok) {
           router.replace('/user/onboarding');
         }
@@ -40,11 +39,6 @@ const WalletButton = () => {
   const handleClick = () => {
     authenticated ? logout() : login();
   };
-
-  // Show skeleton only during initial load
-  if (!ready) {
-    return <SkeletonLoader width="180px" height="50px" />;
-  }
 
   return (
     <div className="flex gap-4 items-center">

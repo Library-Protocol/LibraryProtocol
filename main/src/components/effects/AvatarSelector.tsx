@@ -2,6 +2,7 @@ import React, { useState, useCallback, useMemo, useEffect } from 'react';
 
 import { Camera, X, RefreshCw } from 'lucide-react';
 import { IconButton } from '@mui/material';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const DICEBEAR_STYLES = [
   'adventurer',
@@ -22,21 +23,18 @@ interface AvatarSelectorProps {
 }
 
 const AvatarSelector = ({ onAvatarChange, uniqueId, initialImage }: AvatarSelectorProps) => {
-  // Initialize selectedAvatar with initialImage if provided
-  const [selectedAvatar, setSelectedAvatar] = useState('');
+  const [selectedAvatar, setSelectedAvatar] = useState(initialImage || '');
   const [showOptions, setShowOptions] = useState(false);
-  const [validAvatars] = useState<{ url: string; style: string }[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [validAvatars, setValidAvatars] = useState<{ url: string; style: string }[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  // Handle initialImage changes
   useEffect(() => {
     if (initialImage && initialImage !== selectedAvatar) {
       setSelectedAvatar(initialImage);
     }
   }, [initialImage]);
 
-  // Ensure avatar change is triggered whenever selectedAvatar changes
   useEffect(() => {
     if (selectedAvatar) {
       onAvatarChange(selectedAvatar);
@@ -54,21 +52,47 @@ const AvatarSelector = ({ onAvatarChange, uniqueId, initialImage }: AvatarSelect
       hash = hash & hash;
     }
 
-
-return Math.abs(hash).toString(36);
+    return Math.abs(hash).toString(36);
   }, [uniqueId, refreshKey]);
 
   const avatarOptions = useMemo(() => {
     if (!uniqueId) return [];
-
+    
 return DICEBEAR_STYLES.map(style => ({
       url: `https://api.dicebear.com/9.x/${style}/svg?seed=${generateSeed(style)}`,
       style
     }));
   }, [uniqueId, generateSeed]);
 
-  const validateAvatars = useCallback(async () => {
+  const validateAvatars = useCallback(() => {
     setIsLoading(true);
+    const filteredAvatars: { url: string; style: string }[] = [];
+    let loadedCount = 0;
+
+    avatarOptions.forEach(avatar => {
+      const img = new Image();
+
+      img.src = avatar.url;
+
+      img.onload = () => {
+        filteredAvatars.push(avatar);
+        loadedCount++;
+
+        if (loadedCount === avatarOptions.length) {
+          setValidAvatars(filteredAvatars);
+          setIsLoading(false);
+        }
+      };
+
+      img.onerror = () => {
+        loadedCount++;
+
+        if (loadedCount === avatarOptions.length) {
+          setValidAvatars(filteredAvatars);
+          setIsLoading(false);
+        }
+      };
+    });
   }, [avatarOptions]);
 
   const handleFileUpload = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -78,7 +102,7 @@ return DICEBEAR_STYLES.map(style => ({
 
     if (file.size > 5 * 1024 * 1024) {
       alert('File size should be less than 5MB');
-
+      
 return;
     }
 
@@ -105,16 +129,13 @@ return;
   }, [validateAvatars]);
 
   const toggleOptions = useCallback(() => {
-    const newShowOptions = !showOptions;
+    setShowOptions(prev => !prev);
 
-    setShowOptions(newShowOptions);
-
-    if (newShowOptions) {
+    if (!showOptions) {
       validateAvatars();
     }
   }, [showOptions, validateAvatars]);
 
-  // Add a reset function
   const handleReset = useCallback(() => {
     setSelectedAvatar('');
     onAvatarChange('');
@@ -175,15 +196,21 @@ return;
               Choose your avatar
             </h3>
 
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              {isLoading ? (
-                <div className="col-span-3 text-center py-4 text-gray-500">
-                  Loading avatars...
+            <div className="grid grid-cols-3 gap-4 mb-6 relative">
+              {isLoading && (
+                <div className="absolute inset-0 bg-white/70 flex items-center justify-center">
+                  <RefreshCw className="w-6 h-6 animate-spin text-orange-600" />
                 </div>
-              ) : validAvatars.length > 0 ? (
-                validAvatars.map((avatar, index) => (
-                  <div
+              )}
+
+              <AnimatePresence>
+                {validAvatars.map((avatar, index) => (
+                  <motion.div
                     key={`${avatar.style}-${index}`}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.3 }}
                     className="aspect-square rounded-full overflow-hidden cursor-pointer border-2 border-transparent hover:border-orange-600 transition-all"
                     onClick={() => handleAvatarSelect(avatar.url)}
                   >
@@ -192,13 +219,9 @@ return;
                       alt={`Avatar style ${avatar.style}`}
                       className="w-full h-full object-cover"
                     />
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-3 text-center py-4 text-gray-500">
-                  No avatars available. Please try again.
-                </div>
-              )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
 
             <div className="flex justify-between items-center border-t pt-4">

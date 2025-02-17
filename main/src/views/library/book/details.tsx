@@ -1,13 +1,17 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+
 import { useRouter } from 'next/navigation';
+
 import { Box, Button, Card, CardContent, CircularProgress, Grid, TextField, Typography } from '@mui/material';
 import { toast, ToastContainer } from 'react-toastify';
 import { usePrivy } from '@privy-io/react-auth';
 import { Library } from 'lucide-react';
+
 import { borrowBookRequest } from '@/contract/Interraction';
 import FallbackBookCover from '@/components/library/FallbackBookCover';
+import { generateAIResponse } from '@/app/server/actions/ai';
 
 interface Book {
   id: string;
@@ -68,24 +72,23 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
   const [summaryText, setSummaryText] = useState(''); // State for streaming summary text
   const router = useRouter();
 
-  // Hard-coded summary for demonstration
-  const fullSummary =
-    "This is a dynamically generated summary of the book. It is being streamed letter by letter to simulate an AI-powered summary generation process. Once the summary is fully generated, you can flip back to the book cover.";
-
-  // Function to simulate streaming the summary letter by letter
-  const generateSummary = () => {
+  // Function to generate summary using AI
+  const generateSummary = async () => {
     setIsGenerating(true);
     setSummaryText('');
-    let index = 0;
-    const interval = setInterval(() => {
-      if (index < fullSummary.length) {
-        setSummaryText((prev) => prev + fullSummary[index]);
-        index++;
-      } else {
-        clearInterval(interval);
-        setIsGenerating(false);
-      }
-    }, 50); // Adjust the speed of streaming here
+
+    try {
+      const prompt = `Generate a summary of about 80 words, with at least two paragraphs for the book titled "${Book.title}" by ${Book.author} with ISBN ${Book.isbn}. As a final summary, tell the user why they should read the book.`;
+      const summary = await generateAIResponse(prompt);
+
+      console.log('Generated Summary:', summary);
+      setSummaryText(summary);
+    } catch (error) {
+      console.error("Error generating summary:", error);
+      setSummaryText("Failed to generate summary. Please try again.")
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
   // Return home function
@@ -137,6 +140,7 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
 
       if (!response.ok) {
         const errorData = await response.json();
+
         throw new Error(errorData.error || 'Failed to submit request');
       }
 
@@ -262,9 +266,15 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
                       backgroundColor: '#333',
                     },
                   }}
-                  onClick={() => setShowSummary(!showSummary)}
+                  onClick={() => {
+                    setShowSummary(!showSummary);
+
+                    if (!showSummary && !summaryText) {
+                      generateSummary();
+                    }
+                  }}
                 >
-                  View Summary
+                  {showSummary ? 'Back to Cover' : 'View Summary'}
                 </Button>
               </Box>
 
@@ -289,41 +299,37 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
                 <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2 }}>
                   Summary
                 </Typography>
-                <Typography variant="body1" sx={{ textAlign: 'center', mb: 2 }}>
-                  {summaryText}
-                </Typography>
-                {!isGenerating && summaryText === '' && (
-                  <Button
-                    variant="contained"
-                    sx={{
-                      mt: 2,
-                      backgroundColor: 'black',
-                      color: 'white',
+                <Box
+                  sx={{
+                    maxHeight: '80%',
+                    overflowY: 'auto',
+                    width: '100%',
+                    px: 2,
+                    '&::-webkit-scrollbar': {
+                      width: '6px',
+                    },
+                    '&::-webkit-scrollbar-track': {
+                      background: '#f1f1f1',
+                      borderRadius: '10px',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                      background: '#888',
+                      borderRadius: '10px',
                       '&:hover': {
-                        backgroundColor: '#333',
+                        background: '#555',
                       },
-                    }}
-                    onClick={generateSummary}
-                  >
-                    Generate Summary
-                  </Button>
-                )}
-                {!isGenerating && summaryText !== '' && (
-                  <Button
-                    variant="contained"
-                    sx={{
-                      mt: 2,
-                      backgroundColor: 'black',
-                      color: 'white',
-                      '&:hover': {
-                        backgroundColor: '#333',
-                      },
-                    }}
-                    onClick={() => setShowSummary(!showSummary)}
-                  >
-                    Back to Cover
-                  </Button>
-                )}
+                    },
+                  }}
+                >
+                  <Typography variant="body1" sx={{ textAlign: 'left', mb: 2 }}>
+                    {summaryText.split('\n\n').map((paragraph, index) => (
+                      <React.Fragment key={index}>
+                        {paragraph}
+                        <br /><br />
+                      </React.Fragment>
+                    ))}
+                  </Typography>
+                </Box>
                 {isGenerating && <CircularProgress size={24} sx={{ mt: 2 }} />}
               </Box>
             </Box>
