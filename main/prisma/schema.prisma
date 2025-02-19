@@ -12,6 +12,7 @@ enum BorrowingStatus {
   Dispatched
   Delivered
   Returned
+  Declined
 }
 
 enum BookRequestStatus {

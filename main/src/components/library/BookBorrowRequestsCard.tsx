@@ -24,9 +24,8 @@ import {
 import { Calendar, Copy, History, Plus } from 'lucide-react';
 import { toast } from 'react-toastify';
 
-import { usePrivy } from '@privy-io/react-auth';
-
 import { borrowBookRequestLogAndConfirmation } from '@/contract/Interraction';
+import { sendBorrowRequestConfirmationNotificationToReader, sendBorrowUpdateNotificationToReader , sendBorrowDeclinedConfirmationNotificationToReader } from '@/app/server/actions/engage/library-reader';
 
 // import { borrowBookConfirmationAndStatusUpdate } from '@/contract/Interraction';
 
@@ -45,7 +44,7 @@ interface Book {
   createdAt: Date;
 }
 
-type BorrowingStatus = 'Preparing' | 'Dispatched' | 'Delivered' | 'Returned';
+type BorrowingStatus = 'Preparing' | 'Dispatched' | 'Delivered' | 'Returned' | 'Declined';
 
 interface BorrowingLog {
   id: string;
@@ -75,6 +74,7 @@ interface BorrowBookRequest {
 
 interface CuratorProps {
   id: string;
+  name: string;
 }
 
 interface BookBorrowRequestsCardProps {
@@ -82,7 +82,7 @@ interface BookBorrowRequestsCardProps {
   Curator: CuratorProps;
 }
 
-const statusOrder: BorrowingStatus[] = ['Preparing', 'Dispatched', 'Delivered', 'Returned'];
+const statusOrder: BorrowingStatus[] = ['Preparing', 'Dispatched', 'Delivered', 'Returned', 'Declined'];
 
 const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
   bookBorrowRequests: initialRequests,
@@ -94,14 +94,12 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
   const [isAcceptModalOpen, setIsAcceptModalOpen] = useState(false);
   const [isLogsModalOpen, setIsLogsModalOpen] = useState(false);
   const [isAddLogModalOpen, setIsAddLogModalOpen] = useState(false);
-  const [walletAddress, setWalletAddress] = useState('');
   const [confirmationNote, setConfirmationNote] = useState('');
   const [newLogStatus, setNewLogStatus] = useState<BorrowingStatus>('Preparing');
   const [newLogMessage, setNewLogMessage] = useState('');
   const [bookBorrowRequests, setBookBorrowRequests] = useState<BorrowBookRequest[]>(initialRequests);
   const [loading, setLoading] = useState(false);
   const [loadingBorrowStatus, setBorrowStatusLoading] = useState(false);
-  const { user } = usePrivy();
 
   const getNextStatus = (currentLogs: BorrowingLog[] | undefined): BorrowingStatus | null => {
     if (!currentLogs || currentLogs.length === 0) return 'Preparing';
@@ -125,12 +123,6 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
       logs.some(log => log.status === status)
     );
   };
-
-  useEffect(() => {
-    if (user && user.wallet) {
-      setWalletAddress(user.wallet.address);
-    }
-  }, [user]);
 
   useEffect(() => {
     if (selectedRequest) {
@@ -232,11 +224,11 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
 
       const logData = {
         status: newLogStatus,
-        wallet: walletAddress,
+        wallet: selectedRequest.wallet,
         note: newLogMessage.trim(),
-        borrowingId: selectedRequest?.id,
+        borrowingId: selectedRequest.id,
         curatorId: Curator.id,
-        bookId: selectedRequest?.book.id
+        bookId: selectedRequest.book.id
       };
 
 
@@ -247,6 +239,11 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
       });
 
       if (response.ok) {
+
+        await sendBorrowUpdateNotificationToReader(selectedRequest.book.title,
+          newLogStatus, newLogMessage, selectedRequest.id, Curator.name, selectedRequest.wallet
+        )
+
         toast.success('Borrowing status updated successfully');
         handleCloseAddLogModal();
         handleCloseLogsModal();
@@ -263,7 +260,7 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
     }
   };
 
-  const handleSubmitBorrowRequest = async () => {
+  const handleSubmitBorrowRequest = async (status: 'Preparing' | 'Declined') => {
 
     setLoading(true);
 
@@ -271,19 +268,19 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
 
       const BorrowBookConfirmation = {
         borrowingId: selectedRequest?.onChainBorrowingId,
-        status: statusOrder[0],
+        status: status,
         message: confirmationNote
       };
 
       await borrowBookRequestLogAndConfirmation(BorrowBookConfirmation);
 
       const submissionData = {
-        wallet: walletAddress,
+        wallet: selectedRequest?.wallet,
         note: confirmationNote,
         borrowingId: selectedRequest?.id,
         bookId: selectedRequest?.book.id,
         curatorId: Curator.id,
-        status: statusOrder[0], // Defaults to 'Preparing'
+        status: status, // Defaults to 'Preparing'
       };
 
       const response = await fetch(`/api/library/curator/${Curator.id}/books/accept-borrow-request`, {
@@ -293,6 +290,28 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
       });
 
       if (response.ok) {
+        if (selectedRequest) {
+          if (status === 'Preparing') {
+            await sendBorrowRequestConfirmationNotificationToReader(
+              selectedRequest.book.title,
+              selectedRequest.book.author,
+              selectedRequest.id,
+              Curator.name,
+              status,
+              selectedRequest.wallet ?? ""
+            )
+          } else {
+            await sendBorrowDeclinedConfirmationNotificationToReader(
+              selectedRequest.book.title,
+              selectedRequest.book.author,
+              selectedRequest.id,
+              Curator.name,
+              status,
+              selectedRequest.wallet ?? ""
+            )
+          }
+        }
+
         toast.success('Borrow request processed successfully');
         handleCloseAcceptModal();
         fetchBookBorrowRequests();
@@ -311,6 +330,7 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
       Dispatched: '#1E90FF',
       Delivered: '#32CD32',
       Returned: '#4B0082',
+      Declined: '#A73640'
     };
 
     return colors[status];
@@ -540,13 +560,24 @@ const BookBorrowRequestsCard: React.FC<BookBorrowRequestsCardProps> = ({
           </Button>
           <Button
             variant="contained"
-            onClick={handleSubmitBorrowRequest}
+            onClick={() => handleSubmitBorrowRequest('Declined')}
+            sx={{
+              backgroundColor: '#ff4444',
+              color: 'white',
+              '&:hover': { backgroundColor: '#cc0000' },
+            }}
+          >
+            {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Decline'}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => handleSubmitBorrowRequest('Preparing')}
             sx={{
               backgroundColor: 'black',
               color: 'white',
               '&:hover': { backgroundColor: '#333' },
             }}
-           >
+          >
             {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Confirm'}
           </Button>
         </DialogActions>

@@ -336,6 +336,8 @@ return;
         image: coverImage,
       };
 
+      console.log('Book Request Api Endpoint Data', requestData)
+
       // Make the request to add the book
       const response = await fetch(`/api/library/curator/${Curator.id}/add-book`, {
         method: 'POST',

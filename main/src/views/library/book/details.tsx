@@ -12,6 +12,7 @@ import { Library } from 'lucide-react';
 import { borrowBookRequest } from '@/contract/Interraction';
 import FallbackBookCover from '@/components/library/FallbackBookCover';
 import { generateAIResponse } from '@/app/server/actions/ai';
+import { sendBookBorrowRequestNotificationToLibrary } from '@/app/server/actions/engage/library-owner';
 
 interface Book {
   id: string;
@@ -36,6 +37,7 @@ interface BorrowBook {
 
 interface Curator {
   id: string;
+  wallet: string;
   onChainUniqueId: string;
   transactionHash: string;
   name: string;
@@ -145,6 +147,8 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
       }
 
       await response.json();
+
+      await sendBookBorrowRequestNotificationToLibrary(borrowerName, Book.title, Book.id, Curator.wallet)
 
       // Show success toast
       toast.success('Book borrowing request has been submitted successfully!', {

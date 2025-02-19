@@ -65,7 +65,7 @@ export type BorrowBookData = {
 };
 
 
-export type BorrowingStatus = 'Preparing' | 'Dispatched' | 'Delivered' | 'Returned';
+export type BorrowingStatus = 'Preparing' | 'Dispatched' | 'Delivered' | 'Returned' | 'Declined';
 
 export type BorrowingLog = {
   borrowingId: string;
@@ -103,7 +103,7 @@ export const registerCurator = async (
     const { libraryProtocol } = await getContracts();
 
     const tx = await libraryProtocol.registerCurator(data.name, {
-      gasLimit: 500000,
+      gasLimit: 1000000,
     });
 
     const receipt = await tx.wait();
@@ -341,6 +341,9 @@ export const bookRequestConfirmation = async (data: BookRequestLog): Promise<{ s
       data.requestId,
       data.status,
       data.message,
+      {
+        gasLimit: ethers.toBigInt(500000), // Convert to BigInt in ethers v6
+      }
     );
 
     await getProviderAndSigner();

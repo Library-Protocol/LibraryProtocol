@@ -31,6 +31,8 @@ import BookSearchGrid from '@/components/library/BookSaerchCard';
 import BorrowingTitle from '@/components/effects/BookTitle';
 
 import { bookRequest } from '@/contract/Interraction';
+import { sendBookRequestNotificationToReader } from '@/app/server/actions/engage/library-reader';
+import { sendBookRequestNotificationToLibrary } from '@/app/server/actions/engage/library-owner';
 
 
 interface Book {
@@ -169,7 +171,22 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
         throw new Error(errorData.error || 'Failed to submit request');
       }
 
-      await response.json();
+      const responseData = await response.json();
+
+      const bookRequestId = responseData.id as string;
+      const libraryName = Curator.name as string;
+      const libraryId = Curator.id as string;
+      const bookAuthor = author as string;
+
+      console.log('Specific Payload', {
+        'Book Title': bookTitle,
+        'Book RequestId': bookRequestId,
+        "author" : author,
+        "response data" : responseData,
+      });
+
+      await sendBookRequestNotificationToReader(bookTitle, bookAuthor, bookRequestId, libraryName, walletAddress);
+      await sendBookRequestNotificationToLibrary(bookTitle, bookRequestId, bookAuthor, libraryId, Curator.wallet);
 
       toast.success('Your book request has been submitted successfully!', {
         position: 'bottom-center',

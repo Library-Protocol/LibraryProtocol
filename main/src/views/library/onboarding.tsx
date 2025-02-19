@@ -14,6 +14,7 @@ import CustomizableCover from '@/components/effects/CoverImageCustomization';
 import { registerCurator } from '@/contract/Interraction';
 
 import type { CuratorRegistrationData } from '@/contract/Interraction';
+import { sendLibraryCreatedNotificationToReader } from '@/app/server/actions/engage/library-reader';
 
 interface RadarAutocompleteAddress {
   address: string;
@@ -150,6 +151,15 @@ const CreatorOnboarding = () => {
         throw new Error(data.error || 'Failed to create library');
       }
 
+      console.log('Data Payload', data);
+
+      console.log('Specific Payload', {
+        'library Name': data.curator.name,
+        'library Id': data.curator.id
+      });
+
+      await sendLibraryCreatedNotificationToReader(data.curator.name, data.curator.id, walletAddress);
+
       setStep(step + 1);
     } catch (error) {
       console.error('Failed to create library:', error);
@@ -186,8 +196,6 @@ const CreatorOnboarding = () => {
         query,
         limit: 10,
       });
-
-      console.log(result);
 
       if (result.addresses.length > 0) {
         setSearchResults(result.addresses as unknown as RadarAutocompleteAddress[]);
