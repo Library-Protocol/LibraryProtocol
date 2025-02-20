@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 
 import { CheckCircle } from 'lucide-react';
 import { usePrivy } from '@privy-io/react-auth'; // Import Privy
+
 import LibraryMascotWidget from '@/components/effects/MascotWidget';
 
 interface Book {

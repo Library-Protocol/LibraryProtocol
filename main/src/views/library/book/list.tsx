@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 
-import FallbackBookCover from '@/components/library/FallbackBookCover';
 import { usePrivy } from '@privy-io/react-auth';
+
+import FallbackBookCover from '@/components/library/FallbackBookCover';
 import LibraryMascotWidget from '@/components/effects/MascotWidget';
 
 interface BookType {

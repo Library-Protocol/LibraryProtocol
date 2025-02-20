@@ -23,6 +23,8 @@ import { ToastContainer, toast } from 'react-toastify';
 
 import { Home, Minus, Plus } from 'lucide-react';
 
+import { usePrivy } from '@privy-io/react-auth';
+
 import FallbackBookCover from '@/components/library/FallbackBookCover';
 
 import BookRequestsCard from '@/components/library/BookRequestsCard';
@@ -31,7 +33,6 @@ import BookSearchGrid from '@/components/library/BookSaerchCard';
 
 import BookBorrowRequestsCard from '@/components/library/BookBorrowRequestsCard';
 import { addBook } from '@/contract/Interraction';
-import { usePrivy } from '@privy-io/react-auth';
 import LibraryMascotWidget from '@/components/effects/MascotWidget';
 
 interface Book {

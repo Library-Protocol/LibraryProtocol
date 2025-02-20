@@ -7,8 +7,9 @@ import Link from 'next/link';
 import { Box, Grid, Card, Typography, Avatar, Button, IconButton, Modal, Divider, CardContent, Skeleton } from '@mui/material';
 import { Library, BookOpenCheck, Clock, BookMarked, Users, Bell, Home, Eye, MoveRight } from 'lucide-react';
 
-import FallbackBookCover from '@/components/library/FallbackBookCover';
 import { usePrivy } from '@privy-io/react-auth';
+
+import FallbackBookCover from '@/components/library/FallbackBookCover';
 import LibraryMascotWidget from '@/components/effects/MascotWidget';
 
 interface BookBorrowed {
