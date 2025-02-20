@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "BorrowingStatus" AS ENUM ('Preparing', 'Dispatched', 'Delivered', 'Returned');
+CREATE TYPE "BorrowingStatus" AS ENUM ('Preparing', 'Dispatched', 'Delivered', 'Returned', 'Declined');
 
 -- CreateEnum
 CREATE TYPE "BookRequestStatus" AS ENUM ('Pending', 'Approved', 'Rejected');

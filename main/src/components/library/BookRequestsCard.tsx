@@ -23,7 +23,8 @@ import { Calendar, Copy } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 import { bookRequestConfirmation } from '@/contract/Interraction';
-import { sendBookRequestConfirmationNotificationToReader, sendBookRequestRejectionNotificationToReader } from '@/app/server/actions/engage/library-reader';
+
+// import { bookRequestConfirmation } from '@/contract/Interraction';
 
 interface BookRequest {
   logs: any;
@@ -41,7 +42,6 @@ interface BookRequest {
 
 interface Curator {
   id: string;
-  name: string;
   onChainUniqueId: string;
 }
 
@@ -105,33 +105,6 @@ const BookRequestsCard = ({ bookRequests, Curator }: { bookRequests: BookRequest
       });
 
       if (!response.ok) throw new Error('Failed to process book request');
-
-      if (selectedRequest) {
-        if (newStatus === 'Approved') {
-          await sendBookRequestConfirmationNotificationToReader(
-            selectedRequest.title,
-            selectedRequest.author,
-            selectedRequest.isbn,
-            selectedRequest.id,
-            Curator.name,
-            newStatus,
-            selectedRequest.wallet ?? ""
-          );
-        } else {
-          console.log(`Book request for "${selectedRequest.title}" was rejected.`);
-          // Optionally, send a rejection notification to the user
-          await sendBookRequestRejectionNotificationToReader(
-            selectedRequest.title,
-            selectedRequest.author,
-            selectedRequest.isbn,
-            selectedRequest.id,
-            Curator.name,
-            newStatus,
-            selectedRequest.wallet ?? ""
-          );
-        }
-      }
-
 
       toast.success(`Book request ${isApproved ? 'approved' : 'rejected'} successfully`);
       handleCloseAcceptModal();

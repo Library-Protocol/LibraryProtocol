@@ -5,12 +5,6 @@ import { LibraryProtocolABI } from './arbitrum/libraryProtocolABI';
 import { libraryBookABI } from './arbitrum/libraryBookABI';
 import { libraryOwnerABI } from './arbitrum/libraryOwnerABI';
 
-
-// Environment variables for contract addresses
-// const LOA = process.env.LIBRARY_OWNER_ADDRESS; // Owner address (if needed)
-// const LBA = process.env.LIBRARY_BOOK_ADDRESS; // LPBook address
-// const LPA = process.env.LIBRARY_PROTOCOL_ADDRESS; // LibraryProtocol address
-
 const LOA = '0xD0bb87ec3c5a531B364eDC413593d3c273896b75'; // Owner address (if needed)
 const LBA = '0xCecD338bC4cBCae1f901F9E21b0Fc504fa36558c'; // LPBook address
 const LPA = '0xC4C7F950eBC2e30e5c893A0fBEE7dd6Ac1F57B07'; // LibraryProtocol address

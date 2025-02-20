@@ -33,6 +33,7 @@ import BorrowingTitle from '@/components/effects/BookTitle';
 import { bookRequest } from '@/contract/Interraction';
 import { sendBookRequestNotificationToReader } from '@/app/server/actions/engage/library-reader';
 import { sendBookRequestNotificationToLibrary } from '@/app/server/actions/engage/library-owner';
+import LibraryMascotWidget from '@/components/effects/MascotWidget';
 
 
 interface Book {
@@ -274,8 +275,7 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
               <img
                 src={`${ipfsUrl}${Curator.coverImage}`}
                 alt={Curator.name}
-                className="w-full h-full object-cover object-center"
-              />
+                className="w-full h-full object-cover object-center" />
             </Box>
           </Card>
         </Grid>
@@ -346,9 +346,8 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
                                 backgroundColor: 'black',
                                 color: 'white',
                               }}
-                              variant="outlined"
-                            />
-                           </Box>
+                              variant="outlined" />
+                          </Box>
                         </Paper>
                       ))
                     )}
@@ -404,8 +403,7 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
           BookCurator={Curator}
           Books={Books}
           failedLoads={failedLoads as Set<number>}
-          onImageError={handleImageError}
-        />
+          onImageError={handleImageError} />
       </Card>
 
       {/* Request Book Modal */}
@@ -420,8 +418,7 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
               value={isbn}
               onChange={(e) => setISBN(e.target.value)}
               error={!!error}
-              helperText={error}
-            />
+              helperText={error} />
             <TextField
               fullWidth
               label="Book Title"
@@ -429,16 +426,14 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
               value={bookTitle}
               onChange={(e) => setBookTitle(e.target.value)}
               error={!!error}
-              helperText={error}
-            />
+              helperText={error} />
             <TextField
               fullWidth
               label="Author"
               variant="outlined"
               value={author}
               onChange={(e) => setAuthor(e.target.value)}
-              error={!!error}
-            />
+              error={!!error} />
             <TextField
               fullWidth
               label="Additional Notes"
@@ -446,8 +441,7 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
               rows={3}
               variant="outlined"
               value={additionalNotes}
-              onChange={(e) => setAdditionalNotes(e.target.value)}
-            />
+              onChange={(e) => setAdditionalNotes(e.target.value)} />
           </Box>
         </DialogContent>
         <DialogActions>
@@ -466,13 +460,13 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
             variant="contained"
             onClick={handleSubmitRequest}
             disabled={loading}
-               sx={{
-                backgroundColor: 'black',
-                color: 'white',
-                '&:hover': { backgroundColor: '#333' },
-              }}
-              >
-              {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> :'Submit Request'}
+            sx={{
+              backgroundColor: 'black',
+              color: 'white',
+              '&:hover': { backgroundColor: '#333' },
+            }}
+          >
+            {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Submit Request'}
           </Button>
         </DialogActions>
       </Dialog>
