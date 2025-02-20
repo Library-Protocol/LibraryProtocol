@@ -1,153 +1,10 @@
-// 'use client';
-
-// import { useState, useEffect, useRef } from "react";
-// import { motion, AnimatePresence } from "framer-motion";
-// import Image from "next/image";
-// import { Tooltip } from "@mui/material";
-
-// const features = [
-//   { title: "Personalized Library Guide", emoji: "📚" },
-//   { title: "Book Search & Discovery", emoji: "🔍" },
-//   { title: "Borrowing & Lending Facilitator", emoji: "🔄" },
-//   { title: "AI Chat & Book Summarization", emoji: "🤖" },
-//   { title: "Gamification & Engagement", emoji: "🎮" },
-//   { title: "AI-Powered Discussions & Book Clubs", emoji: "💬" },
-//   { title: "Announcements", emoji: "📢" },
-//   { title: "Multi-Language Support & Translation", emoji: "🌍" },
-//   { title: "Author & Genre Insights", emoji: "✍️" },
-// ];
-
-// export default function LibraryMascotWidget() {
-//   const [expanded, setExpanded] = useState(false);
-//   const [showAlert, setShowAlert] = useState(false);
-//   const widgetRef = useRef(null); // Ref to track the widget DOM element
-
-//   // Toggle "Psst!" alert every 10 seconds when not expanded
-//   useEffect(() => {
-//     if (!expanded) {
-//       const interval = setInterval(() => {
-//         setShowAlert(true);
-//         setTimeout(() => setShowAlert(false), 2000); // Hide after 2 seconds
-//       }, 10000); // Show every 10 seconds
-//       return () => clearInterval(interval);
-//     }
-//   }, [expanded]);
-
-//   // Handle outside clicks to close the expanded menu
-//   useEffect(() => {
-//     const handleClickOutside = (event) => {
-//       if (widgetRef.current && !widgetRef.current.contains(event.target)) {
-//         setExpanded(false); // Close if click is outside the widget
-//       }
-//     };
-
-//     // Add event listener when expanded is true
-//     if (expanded) {
-//       document.addEventListener("mousedown", handleClickOutside);
-//     }
-
-//     // Cleanup event listener
-//     return () => {
-//       document.removeEventListener("mousedown", handleClickOutside);
-//     };
-//   }, [expanded]);
-
-//   return (
-//     <div className="fixed bottom-16 left-24 z-50" ref={widgetRef}>
-//       <div className="relative flex items-center justify-center">
-//         <AnimatePresence>
-//           {expanded && (
-//             <motion.div
-//               className="absolute w-64 h-64"
-//               style={{
-//                 left: '-136%',
-//                 transform: 'translateX(-50%)',
-//                 bottom: '-68px',
-//               }}
-//               initial={{ opacity: 0, scale: 0.5 }}
-//               animate={{ opacity: 1, scale: 1 }}
-//               exit={{ opacity: 0, scale: 0.5 }}
-//               transition={{ duration: 0.3 }}
-//             >
-//               {features.map((feature, index) => {
-//                 const angle = (index / features.length) * 2 * Math.PI;
-//                 const radius = 30;
-//                 const top = 50 + radius * Math.sin(angle);
-//                 const left = 50 + radius * Math.cos(angle);
-
-//                 return (
-//                   <Tooltip key={index} title={feature.title} placement="top">
-//                     <motion.div
-//                       className="absolute flex items-center justify-center w-10 h-10 bg-white rounded-full shadow-lg text-lg cursor-pointer border-2 border-gray-100"
-//                       style={{
-//                         top: `${top}%`,
-//                         left: `${left}%`,
-//                         transform: 'translate(-50%, -50%)',
-//                       }}
-//                       initial={{ opacity: 0, y: 10 }}
-//                       animate={{
-//                         opacity: 1,
-//                         y: 0,
-//                         transition: { delay: index * 0.05 },
-//                       }}
-//                     >
-//                       <span role="img" aria-label={feature.title}>{feature.emoji}</span>
-//                     </motion.div>
-//                   </Tooltip>
-//                 );
-//               })}
-//             </motion.div>
-//           )}
-//         </AnimatePresence>
-
-//         {/* Mascot with bounce animation and "Psst!" alert */}
-//         <motion.div
-//           onClick={() => setExpanded(!expanded)}
-//           whileHover={{ scale: 1.05 }}
-//           animate={{
-//             y: [0, -10, 0], // Gentle bounce
-//             transition: {
-//               duration: 1.5,
-//               repeat: Infinity,
-//               ease: "easeInOut",
-//             },
-//           }}
-//           whileTap={{ scale: 0.95 }}
-//           className="relative w-20 h-20 cursor-pointer"
-//         >
-//           <Image
-//             src="/mascot.png"
-//             alt="Library Assistant Mascot"
-//             width={80}
-//             height={80}
-//             className="object-cover rounded-full"
-//           />
-//           {/* Speech bubble with "Psst!" */}
-//           <AnimatePresence>
-//             {showAlert && !expanded && (
-//               <motion.div
-//                 className="absolute -top-8 -right-8 bg-yellow-200 text-black text-sm font-semibold px-2 py-1 rounded-lg shadow-md"
-//                 initial={{ opacity: 0, scale: 0.8, y: 10 }}
-//                 animate={{ opacity: 1, scale: 1, y: 0 }}
-//                 exit={{ opacity: 0, scale: 0.8, y: 10 }}
-//                 transition={{ duration: 0.3 }}
-//               >
-//                 Psst!
-//               </motion.div>
-//             )}
-//           </AnimatePresence>
-//         </motion.div>
-//       </div>
-//     </div>
-//   );
-// }
-
-
 'use client';
 
-import { useState, useEffect, useRef, SetStateAction } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+
 import Image from "next/image";
+
+import { motion, AnimatePresence } from "framer-motion";
 import { Tooltip } from "@mui/material";
 
 interface ChatMessage {
@@ -188,7 +45,9 @@ export default function LibraryMascotWidget() {
         setShowAlert(true);
         setTimeout(() => setShowAlert(false), 2000);
       }, 10000);
-      return () => clearInterval(interval);
+
+
+return () => clearInterval(interval);
     }
   }, [expanded, selectedFeature]);
 
@@ -219,6 +78,7 @@ export default function LibraryMascotWidget() {
   // Simulate AI chat response (hardcoded for now)
   const handleChatSubmit = (e: { preventDefault: () => void; }) => {
     e.preventDefault();
+
     if (chatInput.trim()) {
       setChatMessages([...chatMessages, { user: chatInput, ai: "Here's a sample response!" }]);
       setChatInput("");
@@ -236,8 +96,8 @@ export default function LibraryMascotWidget() {
             <h3 className="text-xl font-bold mb-4">Your Personalized Library Guide</h3>
             <p className="mb-2"><strong>Recommendations:</strong></p>
             <ul className="list-disc pl-5 mb-4">
-              <li>"The Great Gatsby" by F. Scott Fitzgerald</li>
-              <li>"Moby Dick" by Herman Melville</li>
+              <li>{"The Great Gatsby"} by F. Scott Fitzgerald</li>
+              <li>{"Moby Dick"} by Herman Melville</li>
             </ul>
             <button className="w-full px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
               Add All to Reading List
@@ -253,7 +113,7 @@ export default function LibraryMascotWidget() {
               placeholder="Search for a book (e.g., 'Dune')..."
               className="w-full p-2 border rounded mb-4"
             />
-            <p><strong>Top Result:</strong> "Dune" by Frank Herbert</p>
+            <p><strong>Top Result:</strong> {"Dune"} by Frank Herbert</p>
             <button className="w-full px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 mt-2">
               View Details
             </button>
@@ -263,7 +123,7 @@ export default function LibraryMascotWidget() {
         return (
           <div className="p-6">
             <h3 className="text-xl font-bold mb-4">Borrowing & Lending</h3>
-            <p><strong>Available Now:</strong> "1984" by George Orwell</p>
+            <p><strong>Available Now:</strong> {"1984"} by George Orwell</p>
             <p className="text-sm text-gray-600 mb-4">Due back: March 1, 2025</p>
             <button className="w-full px-4 py-2 bg-teal-500 text-white rounded hover:bg-teal-600">
               Borrow Book
@@ -299,7 +159,7 @@ export default function LibraryMascotWidget() {
               </button>
             </form>
             <button className="w-full px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 mt-2">
-              Summarize "Pride and Prejudice"
+              Summarize {"Pride and Prejudice"}
             </button>
           </div>
         );
@@ -321,7 +181,7 @@ export default function LibraryMascotWidget() {
         return (
           <div className="p-6">
             <h3 className="text-xl font-bold mb-4">Book Clubs</h3>
-            <p><strong>Active Discussion:</strong> "The Catcher in the Rye"</p>
+            <p><strong>Active Discussion:</strong> {"The Catcher in the Rye"}</p>
             <p className="text-sm text-gray-600 mb-4">Next meeting: Feb 25, 2025</p>
             <button className="w-full px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600">
               Join Discussion
@@ -343,7 +203,7 @@ export default function LibraryMascotWidget() {
         return (
           <div className="p-6">
             <h3 className="text-xl font-bold mb-4">Language & Translation</h3>
-            <p><strong>Translate:</strong> "Bonjour" → "Hello"</p>
+            <p><strong>Translate:</strong> {"Bonjour → Hello"}</p>
             <select className="w-full p-2 border rounded mb-4">
               <option>English</option>
               <option>Spanish</option>

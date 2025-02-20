@@ -33,8 +33,6 @@ import BorrowingTitle from '@/components/effects/BookTitle';
 import { bookRequest } from '@/contract/Interraction';
 import { sendBookRequestNotificationToReader } from '@/app/server/actions/engage/library-reader';
 import { sendBookRequestNotificationToLibrary } from '@/app/server/actions/engage/library-owner';
-import LibraryMascotWidget from '@/components/effects/MascotWidget';
-
 
 interface Book {
   id: string;
