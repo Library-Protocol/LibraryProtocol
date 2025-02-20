@@ -31,6 +31,8 @@ import BookSearchGrid from '@/components/library/BookSaerchCard';
 
 import BookBorrowRequestsCard from '@/components/library/BookBorrowRequestsCard';
 import { addBook } from '@/contract/Interraction';
+import { usePrivy } from '@privy-io/react-auth';
+import LibraryMascotWidget from '@/components/effects/MascotWidget';
 
 interface Book {
   id: string;
@@ -122,6 +124,7 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const [searchLoading, setSearchLoading] = useState(false);
   const [Books, setBooks] = useState<Book[]>(Curator.books);
   const [, setFileError] = useState('');
+  const { authenticated } = usePrivy(); // Get Privy authentication methods
 
   const handleDecrease = () => setCopies((prev) => Math.max(1, prev - 1));
   const handleIncrease = () => setCopies((prev) => prev + 0);
@@ -834,6 +837,7 @@ return;
             </Button>
           </DialogActions>
         </Dialog>
+        {authenticated && <LibraryMascotWidget />}
     </div>
   );
 };

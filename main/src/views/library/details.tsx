@@ -33,6 +33,7 @@ import BorrowingTitle from '@/components/effects/BookTitle';
 import { bookRequest } from '@/contract/Interraction';
 import { sendBookRequestNotificationToReader } from '@/app/server/actions/engage/library-reader';
 import { sendBookRequestNotificationToLibrary } from '@/app/server/actions/engage/library-owner';
+import LibraryMascotWidget from '@/components/effects/MascotWidget';
 
 interface Book {
   id: string;
@@ -89,7 +90,7 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [failedLoads, setFailedLoads] = useState(new Set<number>());
-  const { user } = usePrivy();
+  const { user, authenticated } = usePrivy();
   const [walletAddress, setWalletAddress] = useState('');
   const [Books] = useState<Book[]>(Curator.books);
   const [lendings, setLendings] = useState<Lending[]>([]);
@@ -468,6 +469,7 @@ const LibraryDetails: React.FC<LandingDetailsProps> = ({ Curator }) => {
           </Button>
         </DialogActions>
       </Dialog>
+    {authenticated && <LibraryMascotWidget />}
     </div>
   );
 };

@@ -8,6 +8,8 @@ import { Box, Grid, Card, Typography, Avatar, Button, IconButton, Modal, Divider
 import { Library, BookOpenCheck, Clock, BookMarked, Users, Bell, Home, Eye, MoveRight } from 'lucide-react';
 
 import FallbackBookCover from '@/components/library/FallbackBookCover';
+import { usePrivy } from '@privy-io/react-auth';
+import LibraryMascotWidget from '@/components/effects/MascotWidget';
 
 interface BookBorrowed {
   title: string;
@@ -40,6 +42,7 @@ const UserDashboard: React.FC<UserDashboardComponentProps> = ({ data }) => {
   const [loading, setLoading] = useState(true);
   const [selectedBook, setSelectedBook] = useState<BookBorrowed | null>(null);
   const [coverImages, setCoverImages] = useState<{ [isbn: number]: string | null }>({});
+  const { authenticated } = usePrivy(); // Get Privy authentication methods
 
   useEffect(() => {
     setTimeout(() => {
@@ -628,6 +631,7 @@ const UserDashboard: React.FC<UserDashboardComponentProps> = ({ data }) => {
           )}
         </Box>
       </Modal>
+      {authenticated && <LibraryMascotWidget />}
     </div>
   );
 };

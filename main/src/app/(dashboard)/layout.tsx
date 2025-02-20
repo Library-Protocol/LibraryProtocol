@@ -21,7 +21,6 @@ import ScrollToTop from '@core/components/scroll-to-top'
 // Util Imports
 import { getMode, getSystemMode } from '@core/utils/serverHelpers'
 import PrivyProviderWrapper from '@/components/wallet/PrivyProviderWrapper'
-import LibraryMascotWidget from '@/components/effects/MascotWidget'
 
 const Layout = async (props: ChildrenType) => {
   const { children } = props
@@ -52,7 +51,6 @@ const Layout = async (props: ChildrenType) => {
           <i className='tabler-arrow-up' />
         </Button>
       </ScrollToTop>
-      <LibraryMascotWidget />
       </PrivyProviderWrapper>
     </Providers>
   )

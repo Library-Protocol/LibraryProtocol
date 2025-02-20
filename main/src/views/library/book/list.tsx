@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 
 import FallbackBookCover from '@/components/library/FallbackBookCover';
+import { usePrivy } from '@privy-io/react-auth';
+import LibraryMascotWidget from '@/components/effects/MascotWidget';
 
 interface BookType {
   id: string;
@@ -110,6 +112,7 @@ const BookCard: React.FC<{ book: BookType & { curator: { id: string; name: strin
 
 const BooksPage: React.FC<LandingPageProps> = ({ data }) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const { authenticated } = usePrivy(); // Get Privy authentication methods
 
   // Flatten all books from all curators
   const allBooks = data.flatMap(curator =>
@@ -159,6 +162,8 @@ const BooksPage: React.FC<LandingPageProps> = ({ data }) => {
           <BookCard key={book.id} book={book} />
         ))}
       </div>
+
+      {authenticated && <LibraryMascotWidget />}
     </div>
   );
 };

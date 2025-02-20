@@ -13,6 +13,7 @@ import { borrowBookRequest } from '@/contract/Interraction';
 import FallbackBookCover from '@/components/library/FallbackBookCover';
 import { generateAIResponse } from '@/app/server/actions/ai';
 import { sendBookBorrowRequestNotificationToLibrary } from '@/app/server/actions/engage/library-owner';
+import LibraryMascotWidget from '@/components/effects/MascotWidget';
 
 interface Book {
   id: string;
@@ -66,7 +67,7 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
   const [returnDate, setReturnDate] = useState('');
   const [, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const { user } = usePrivy();
+  const { user, authenticated } = usePrivy();
   const [walletAddress, setWalletAddress] = useState('');
   const [imageError, setImageError] = useState(false);
   const [showSummary, setShowSummary] = useState(false); // State for summary visibility
@@ -478,6 +479,7 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
           </Grid>
         </Grid>
       </Grid>
+    {authenticated && <LibraryMascotWidget />}
     </div>
   );
 };
