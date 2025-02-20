@@ -92,7 +92,7 @@ const BookCard: React.FC<{ book: BookType & { curator: { id: string; name: strin
           className={`w-full px-4 py-2 rounded-md text-sm transition-colors ${
             book.availability
               ? 'bg-brown-600 hover:bg-brown-800 text-white'
-              : 'bg-brown-500 text-gray-500 cursor-not-allowed'
+              : 'bg-brown-500 text-white cursor-not-allowed'
           }`}
           disabled={!book.availability}
           onClick={() => {

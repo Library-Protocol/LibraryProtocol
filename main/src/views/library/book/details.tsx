@@ -384,98 +384,114 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
               </Card>
             </Grid>
 
-            {/* Borrow Book Form */}
-            <Grid item xs={12}>
-              <Card elevation={3}>
-                <CardContent sx={{ p: 4 }}>
-                  <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center' }}>
-                    Borrow this Book
-                  </Typography>
+           {/* Conditionally show message if book is borrowed */}
+            {!Book.availability ? (
+              <Grid item xs={12}>
+                <Card elevation={3} sx={{ textAlign: 'center', p: 3, height: 350 }}> {/* Custom height added */}
+                  <CardContent sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%' }}>
+                    <Typography variant="h6" sx={{ fontWeight: 'bold', color: 'red' }}>
+                      This book has been borrowed. Please check back soon.
+                    </Typography>
+                    <Button
+                      variant="contained"
+                      sx={{ mt: 2, backgroundColor: 'black', color: 'white', '&:hover': { backgroundColor: '#333' } }}
+                      href="/library/books"
+                    >
+                      Browse More Books
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Grid>
+            ) : (
+              /* Borrow Book Form */
+              <Grid item xs={12}>
+                <Card elevation={3}>
+                  <CardContent sx={{ p: 4 }}>
+                    <Typography variant="h5" gutterBottom sx={{ fontWeight: 'bold', textAlign: 'center' }}>
+                      Borrow this Book
+                    </Typography>
 
-                  {/* Borrower Name */}
-                  <TextField
-                    fullWidth
-                    label="Name"
-                    variant="outlined"
-                    value={borrowerName}
-                    onChange={(e) => setBorrowerName(e.target.value)}
-                    sx={{ mb: 2 }}
-                  />
-
-                  {/* Borrower Email */}
-                  <TextField
-                    fullWidth
-                    label="Email"
-                    variant="outlined"
-                    value={borrowerEmail}
-                    onChange={(e) => setBorrowerEmail(e.target.value)}
-                    sx={{ mb: 2 }}
-                  />
-
-                  {/* Delivery Address */}
-                  <TextField
-                    fullWidth
-                    label="Delivery Location"
-                    variant="outlined"
-                    value={deliveryAddress}
-                    onChange={(e) => setDeliveryAddress(e.target.value)}
-                    sx={{ mb: 2 }}
-                  />
-
-                  {/* Phone Number */}
-                  <TextField
-                    fullWidth
-                    label="Phone Number (Optional)"
-                    variant="outlined"
-                    value={borrowerPhone}
-                    onChange={(e) => setBorrowerPhone(e.target.value)}
-                    sx={{ mb: 2 }}
-                  />
-
-                  <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                    {/* Borrower Name */}
                     <TextField
                       fullWidth
-                      label="Borrow Date"
-                      type="date"
-                      InputLabelProps={{ shrink: true }}
-                      value={borrowDate}
-                      onChange={(e) => setBorrowDate(e.target.value)}
+                      label="Name"
+                      variant="outlined"
+                      value={borrowerName}
+                      onChange={(e) => setBorrowerName(e.target.value)}
+                      sx={{ mb: 2 }}
                     />
 
+                    {/* Borrower Email */}
                     <TextField
                       fullWidth
-                      label="Expected Return Date"
-                      type="date"
-                      InputLabelProps={{ shrink: true }}
-                      value={returnDate}
-                      onChange={(e) => setReturnDate(e.target.value)}
+                      label="Email"
+                      variant="outlined"
+                      value={borrowerEmail}
+                      onChange={(e) => setBorrowerEmail(e.target.value)}
+                      sx={{ mb: 2 }}
                     />
-                  </Box>
 
-                  {/* Submit Button */}
-                  <Button
-                    variant="contained"
-                    fullWidth
-                    onClick={handleSubmit}
-                    sx={{
-                      mt: 2,
-                      backgroundColor: 'black',
-                      color: 'white',
-                      '&:hover': {
-                        backgroundColor: '#333', // Slightly lighter black on hover
-                      },
-                    }}
-                    disabled={loading} // Disable the button while loading
-                  >
-                    {loading ? (
-                      <CircularProgress size={24} sx={{ color: 'white' }} />
-                    ) : (
-                      'Borrow Book'
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            </Grid>
+                    {/* Delivery Address */}
+                    <TextField
+                      fullWidth
+                      label="Delivery Location"
+                      variant="outlined"
+                      value={deliveryAddress}
+                      onChange={(e) => setDeliveryAddress(e.target.value)}
+                      sx={{ mb: 2 }}
+                    />
+
+                    {/* Phone Number */}
+                    <TextField
+                      fullWidth
+                      label="Phone Number (Optional)"
+                      variant="outlined"
+                      value={borrowerPhone}
+                      onChange={(e) => setBorrowerPhone(e.target.value)}
+                      sx={{ mb: 2 }}
+                    />
+
+                    <Box sx={{ display: 'flex', gap: 2, mb: 2 }}>
+                      <TextField
+                        fullWidth
+                        label="Borrow Date"
+                        type="date"
+                        InputLabelProps={{ shrink: true }}
+                        value={borrowDate}
+                        onChange={(e) => setBorrowDate(e.target.value)}
+                      />
+
+                      <TextField
+                        fullWidth
+                        label="Expected Return Date"
+                        type="date"
+                        InputLabelProps={{ shrink: true }}
+                        value={returnDate}
+                        onChange={(e) => setReturnDate(e.target.value)}
+                      />
+                    </Box>
+
+                    {/* Submit Button */}
+                    <Button
+                      variant="contained"
+                      fullWidth
+                      onClick={handleSubmit}
+                      sx={{
+                        mt: 2,
+                        backgroundColor: 'black',
+                        color: 'white',
+                        '&:hover': {
+                          backgroundColor: '#333',
+                        },
+                      }}
+                      disabled={loading}
+                    >
+                      {loading ? <CircularProgress size={24} sx={{ color: 'white' }} /> : 'Borrow Book'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Grid>
+            )}
           </Grid>
         </Grid>
       </Grid>

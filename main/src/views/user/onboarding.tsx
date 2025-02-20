@@ -446,11 +446,6 @@ const UserOnboarding = () => {
                       >
                         {loading ? 'Submitting...' : 'Continue'}
                       </Button>
-                      {step !== 1 && (
-                        <Button variant='text' fullWidth sx={{ color: '#5D4037' }} onClick={handleContinue}>
-                          Skip for now
-                        </Button>
-                      )}
                     </>
                   )}
                 </div>

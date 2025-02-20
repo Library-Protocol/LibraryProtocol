@@ -453,19 +453,6 @@ const CreatorOnboarding = () => {
                           </Typography>
                         )}
                       </div>
-
-                      {step !== 1 && (
-                        <Button
-                          variant='text'
-                          fullWidth
-                          sx={{
-                            color: '#6B7280'
-                          }}
-                          onClick={() => setStep(step + 1)}
-                        >
-                          Skip for now
-                        </Button>
-                      )}
                     </>
                   )}
                 </div>
