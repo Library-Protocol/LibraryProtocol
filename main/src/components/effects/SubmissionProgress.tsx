@@ -1,6 +1,7 @@
 // components/SubmissionProgress.tsx
 import React from 'react';
-import { Typography, Box, CircularProgress, Card, CardContent } from '@mui/material';
+
+import { Typography, CircularProgress, Card, CardContent } from '@mui/material';
 
 interface SubmissionProgressProps {
   currentStep: string;

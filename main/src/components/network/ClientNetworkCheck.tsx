@@ -2,9 +2,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useAccount } from 'wagmi';
+
+import { useAccount , useWalletClient } from 'wagmi';
 import { arbitrum } from 'wagmi/chains';
-import { useWalletClient } from 'wagmi';
 
 const NetworkCheck = () => {
   const { chain, isConnected } = useAccount();
@@ -22,6 +22,7 @@ const NetworkCheck = () => {
 
     if (isConnected) {
       const wrongNetwork = !chain || chain.id !== arbitrum.id;
+
       console.log('Network Check - Is Wrong Network:', wrongNetwork);
       setIsWrongNetwork(wrongNetwork);
     } else {
@@ -33,9 +34,12 @@ const NetworkCheck = () => {
   const handleSwitchNetwork = async () => {
     if (!walletClient) {
       setError('Wallet not available');
-      return;
+      
+return;
     }
+
     setIsSwitchLoading(true); // Start loading
+
     try {
       setError(null);
       await walletClient.request({
@@ -44,6 +48,7 @@ const NetworkCheck = () => {
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+
       setError('Switch failed: ' + errorMessage);
     } finally {
       setIsSwitchLoading(false); // Stop loading
@@ -53,9 +58,12 @@ const NetworkCheck = () => {
   const handleAddNetwork = async () => {
     if (!walletClient) {
       setError('Wallet not available');
-      return;
+      
+return;
     }
+
     setIsAddLoading(true); // Start loading
+
     try {
       setError(null);
       await walletClient.request({
@@ -74,6 +82,7 @@ const NetworkCheck = () => {
       });
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error';
+
       setError('Add failed: ' + errorMessage);
     } finally {
       setIsAddLoading(false); // Stop loading
@@ -82,7 +91,8 @@ const NetworkCheck = () => {
 
   if (!isWrongNetwork) {
     console.log('Network Check - Modal hidden');
-    return null;
+    
+return null;
   }
 
   return (

@@ -340,6 +340,7 @@ return;
       console.log('Book Metadata', metadataCID, imageCID)
 
       setSubmissionStep('Sending to Blockchain');
+
       const { hash, uniqueId, nftTokenId } = await addBook({
         ...addBookData,
         imageCID

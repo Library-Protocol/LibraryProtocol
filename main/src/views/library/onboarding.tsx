@@ -106,12 +106,14 @@ const CreatorOnboarding = () => {
 const handleSubmit = async () => {
   if (!isWalletFetched) {
     setSubmitError('Please wait while we fetch your wallet address.');
-    return;
+    
+return;
   }
 
   if (!libraryName || !country || !city || !state || !coverImage) {
     setSubmitError('Please fill in all required fields and customize your cover');
-    return;
+    
+return;
   }
 
   setIsSubmitting(true);
@@ -121,12 +123,14 @@ const handleSubmit = async () => {
   try {
     // First step: IPFS storage
     const { metadataCID, imageCID } = await createCuratorMetadata(libraryName, coverImage);
+
     console.log('Image CID:', imageCID);
     console.log('Metadata CID:', metadataCID);
 
     // Second step: Blockchain
     setSubmissionStep('Sending to Blockchain');
     const registrationData = { name: libraryName };
+
     const { hash, uniqueId, nftTokenId } = await registerCurator(
       registrationData,
       metadataCID,
@@ -135,6 +139,7 @@ const handleSubmit = async () => {
 
     // Third step: Submission
     setSubmissionStep('Submitting registration');
+
     const response = await fetch('/api/library/curator/onboarding', {
       method: 'POST',
       headers: {
@@ -169,6 +174,7 @@ const handleSubmit = async () => {
     setStep(step + 1);
   } catch (error) {
     console.error('Failed to create library:', error);
+
     // Error handling remains the same
     if (error instanceof Error) {
       if (error.message.includes('user rejected transaction')) {
