@@ -37,6 +37,7 @@ import BookBorrowRequestsCard from '@/components/library/BookBorrowRequestsCard'
 import { addBook } from '@/contract/Interraction';
 import LibraryMascotWidget from '@/components/effects/MascotWidget';
 import { createBookMetadata } from '@/utils/pinata';
+import SubmissionProgress from '@/components/effects/SubmissionProgress';
 
 interface Book {
   id: string;
@@ -129,6 +130,7 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const [Books, setBooks] = useState<Book[]>(Curator.books);
   const [, setFileError] = useState('');
   const { authenticated } = usePrivy(); // Get Privy authentication methods
+  const [submissionStep, setSubmissionStep] = useState<string | null>(null);
 
   const handleDecrease = () => setCopies((prev) => Math.max(1, prev - 1));
   const handleIncrease = () => setCopies((prev) => prev + 0);
@@ -310,6 +312,7 @@ return;
     setError(null);
     setLoading(true);
 
+    setSubmissionStep('Storing data on IPFS Node');
 
     try {
 
@@ -336,6 +339,7 @@ return;
 
       console.log('Book Metadata', metadataCID, imageCID)
 
+      setSubmissionStep('Sending to Blockchain');
       const { hash, uniqueId, nftTokenId } = await addBook({
         ...addBookData,
         imageCID
@@ -509,6 +513,8 @@ return;
         </Button>
       </Box>
       <ToastContainer />
+
+      {submissionStep && <SubmissionProgress currentStep={submissionStep} />}
 
       <Grid container spacing={3}>
         {/* Left Side: Image and Library Notice Card */}

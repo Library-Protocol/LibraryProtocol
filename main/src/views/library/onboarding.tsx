@@ -15,6 +15,7 @@ import { registerCurator } from '@/contract/Interraction';
 
 import { sendLibraryCreatedNotificationToReader } from '@/app/server/actions/engage/library-reader';
 import { createCuratorMetadata } from '@/utils/pinata';
+import SubmissionProgress from '@/components/effects/SubmissionProgress';
 
 interface RadarAutocompleteAddress {
   address: string;
@@ -60,7 +61,7 @@ const CreatorOnboarding = () => {
   const [isWalletFetched, setIsWalletFetched] = useState(false);
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [curatorPlatformFee] = useState<string>("0.001121");
-
+  const [submissionStep, setSubmissionStep] = useState<string | null>(null);
   const { user } = usePrivy();
 
   useEffect(() => {
@@ -101,84 +102,90 @@ const CreatorOnboarding = () => {
     fetchWalletAddress();
   }, [user]);
 
-  const handleSubmit = async () => {
-    if (!isWalletFetched) {
-      setSubmitError('Please wait while we fetch your wallet address.');
+ // Update the handleSubmit function
+const handleSubmit = async () => {
+  if (!isWalletFetched) {
+    setSubmitError('Please wait while we fetch your wallet address.');
+    return;
+  }
 
-      return;
+  if (!libraryName || !country || !city || !state || !coverImage) {
+    setSubmitError('Please fill in all required fields and customize your cover');
+    return;
+  }
+
+  setIsSubmitting(true);
+  setSubmitError('');
+  setSubmissionStep('Storing data on IPFS Node');
+
+  try {
+    // First step: IPFS storage
+    const { metadataCID, imageCID } = await createCuratorMetadata(libraryName, coverImage);
+    console.log('Image CID:', imageCID);
+    console.log('Metadata CID:', metadataCID);
+
+    // Second step: Blockchain
+    setSubmissionStep('Sending to Blockchain');
+    const registrationData = { name: libraryName };
+    const { hash, uniqueId, nftTokenId } = await registerCurator(
+      registrationData,
+      metadataCID,
+      curatorPlatformFee
+    );
+
+    // Third step: Submission
+    setSubmissionStep('Submitting registration');
+    const response = await fetch('/api/library/curator/onboarding', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        wallet: walletAddress,
+        name: libraryName,
+        country,
+        city,
+        state,
+        coverImage: imageCID,
+        transactionHash: hash,
+        onChainUniqueId: uniqueId,
+        nftTokenId,
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to create library');
     }
 
-    if (!libraryName || !country || !city || !state || !coverImage) {
-      setSubmitError('Please fill in all required fields and customize your cover');
+    console.log('Data Payload', data);
+    console.log('Specific Payload', {
+      'library Name': data.curator.name,
+      'library Id': data.curator.id
+    });
 
-      return;
-    }
-
-    setIsSubmitting(true);
-    setSubmitError('');
-
-    try {
-      const { metadataCID, imageCID } = await createCuratorMetadata(libraryName, coverImage);
-
-        console.log('Image CID:', imageCID);
-        console.log('Metadata CID:', metadataCID);
-
-        const registrationData = { name: libraryName };
-        const { hash, uniqueId, nftTokenId } = await registerCurator(registrationData, metadataCID, curatorPlatformFee);
-
-        const response = await fetch('/api/library/curator/onboarding', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                wallet: walletAddress,
-                name: libraryName,
-                country,
-                city,
-                state,
-                coverImage: imageCID, // Still base64 here; could use imageCID or metadataCID
-                transactionHash: hash,
-                onChainUniqueId: uniqueId,
-                nftTokenId,
-            }),
-        });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create library');
-      }
-
-      console.log('Data Payload', data);
-
-      console.log('Specific Payload', {
-        'library Name': data.curator.name,
-        'library Id': data.curator.id
-      });
-
-      await sendLibraryCreatedNotificationToReader(data.curator.name, data.curator.id, walletAddress);
-
-      setStep(step + 1);
-    } catch (error) {
-      console.error('Failed to create library:', error);
-
-      // Handle specific MetaMask errors
-      if (error instanceof Error) {
-        if (error.message.includes('user rejected transaction')) {
-          setSubmitError('Transaction was rejected. Please try again.');
-        } else if (error.message.includes('insufficient funds')) {
-          setSubmitError('Insufficient funds to complete the transaction.');
-        } else {
-          setSubmitError(error.message);
-        }
+    await sendLibraryCreatedNotificationToReader(data.curator.name, data.curator.id, walletAddress);
+    setStep(step + 1);
+  } catch (error) {
+    console.error('Failed to create library:', error);
+    // Error handling remains the same
+    if (error instanceof Error) {
+      if (error.message.includes('user rejected transaction')) {
+        setSubmitError('Transaction was rejected. Please try again.');
+      } else if (error.message.includes('insufficient funds')) {
+        setSubmitError('Insufficient funds to complete the transaction.');
       } else {
-        setSubmitError('Failed to create library. Please try again.');
+        setSubmitError(error.message);
       }
-    } finally {
-      setIsSubmitting(false);
+    } else {
+      setSubmitError('Failed to create library. Please try again.');
     }
-  };
+  } finally {
+    setIsSubmitting(false);
+    setSubmissionStep(null); // Hide the progress overlay
+  }
+};
 
   const handleSearchLocation = async (query: string) => {
     if (!query) {
@@ -283,6 +290,9 @@ const CreatorOnboarding = () => {
           <ArrowLeft className='w-6 h-6' />
         </IconButton>
       </Box>
+
+          {/* Add the progress overlay */}
+    {submissionStep && <SubmissionProgress currentStep={submissionStep} />}
 
       <div className='min-h-screen flex flex-col lg:flex-row bg-gray-50'>
         <div className='flex-1 flex items-center justify-center p-4 lg:p-8'>
