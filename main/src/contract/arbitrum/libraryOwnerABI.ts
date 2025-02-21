@@ -223,6 +223,12 @@ export const libraryOwnerABI = [
         "internalType": "uint256",
         "name": "libraryTokenId",
         "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "metadataCID",
+        "type": "string"
       }
     ],
     "name": "LibraryOwnerRegistered",
@@ -364,6 +370,11 @@ export const libraryOwnerABI = [
             "internalType": "uint256",
             "name": "libraryTokenId",
             "type": "uint256"
+          },
+          {
+            "internalType": "string",
+            "name": "metadataCID",
+            "type": "string"
           }
         ],
         "internalType": "struct LibraryOwnerContract.LibraryOwner",
@@ -439,6 +450,11 @@ export const libraryOwnerABI = [
         "internalType": "uint256",
         "name": "libraryTokenId",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "metadataCID",
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -494,6 +510,11 @@ export const libraryOwnerABI = [
       {
         "internalType": "string",
         "name": "_name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_metadataCID",
         "type": "string"
       }
     ],
@@ -574,6 +595,19 @@ export const libraryOwnerABI = [
       }
     ],
     "name": "setApprovalForAll",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "newBaseURI",
+        "type": "string"
+      }
+    ],
+    "name": "setBaseURI",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

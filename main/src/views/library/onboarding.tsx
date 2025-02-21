@@ -13,8 +13,8 @@ import { usePrivy } from '@privy-io/react-auth';
 import CustomizableCover from '@/components/effects/CoverImageCustomization';
 import { registerCurator } from '@/contract/Interraction';
 
-import type { CuratorRegistrationData } from '@/contract/Interraction';
 import { sendLibraryCreatedNotificationToReader } from '@/app/server/actions/engage/library-reader';
+import { createCuratorMetadata } from '@/utils/pinata';
 
 interface RadarAutocompleteAddress {
   address: string;
@@ -118,32 +118,31 @@ const CreatorOnboarding = () => {
     setSubmitError('');
 
     try {
-      // First, handle the blockchain registration
-      const registrationData: CuratorRegistrationData = {
-        name: libraryName,
-      };
+      const { metadataCID, imageCID } = await createCuratorMetadata(libraryName, coverImage);
 
-      // Wait for blockchain transaction to complete
-      const { hash, uniqueId, nftTokenId } = await registerCurator(registrationData);
+        console.log('Image CID:', imageCID);
+        console.log('Metadata CID:', metadataCID);
 
-      // If blockchain transaction is successful, proceed with your API call
-      const response = await fetch('/api/library/curator/onboarding', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          wallet: walletAddress,
-          name: libraryName,
-          country,
-          city,
-          state,
-          coverImage,
-          transactionHash: hash,
-          onChainUniqueId: uniqueId,
-          nftTokenId
-        }),
-      });
+        const registrationData = { name: libraryName };
+        const { hash, uniqueId, nftTokenId } = await registerCurator(registrationData, metadataCID, curatorPlatformFee);
+
+        const response = await fetch('/api/library/curator/onboarding', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                wallet: walletAddress,
+                name: libraryName,
+                country,
+                city,
+                state,
+                coverImage: imageCID, // Still base64 here; could use imageCID or metadataCID
+                transactionHash: hash,
+                onChainUniqueId: uniqueId,
+                nftTokenId,
+            }),
+        });
 
       const data = await response.json();
 

@@ -27,6 +27,7 @@ export async function sendNotification({ workflowIdentifier, recipient }: { work
 
     if (!response.ok) {
         const errorData = await response.json();
+
         throw new Error(`Failed to send notification: ${errorData.message || response.statusText}`);
     }
 

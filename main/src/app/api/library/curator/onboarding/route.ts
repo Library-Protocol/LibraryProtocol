@@ -1,3 +1,4 @@
+// pages/api/library/curator/onboarding.ts
 import { NextResponse } from 'next/server';
 
 import { PrismaClient } from '@prisma/client';
@@ -5,73 +6,40 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
-  try {
-    const { wallet, name, country, city, state, coverImage, transactionHash, onChainUniqueId, nftTokenId } = await request.json();
+    try {
+        const { wallet, name, country, city, state, coverImage, transactionHash, onChainUniqueId, nftTokenId } =
+            await request.json();
 
-    console.log('Route Response', wallet, name, country, city, state, coverImage, transactionHash, onChainUniqueId, nftTokenId)
-
-    if (!coverImage) {
-      return NextResponse.json({ error: 'Cover image is required' }, { status: 400 });
-    }
-
-    // Generate the filename from the name
-    const fileName = name.replace(/\s+/g, '_').toLowerCase() + '.png'; // Replace spaces with underscores and convert to lowercase
-
-    const base64Data = coverImage.replace(/^data:image\/\w+;base64,/, ''); // Remove base64 metadata
-    const buffer = Buffer.from(base64Data, 'base64'); // Convert to buffer
-    const blob = new Blob([buffer], { type: 'image/png' });
-    const file = new File([blob], fileName, { type: 'image/png' });
-
-    const data = new FormData();
-
-    data.append('file', file);
-
-    console.log('Data', data)
-
-    const upload = await fetch("https://api.pinata.cloud/pinning/pinFileToIPFS", {
-      method: "POST",
-      headers: {
-         Authorization: `Bearer ${process.env.PINATA_JWT}`
-      },
-      body: data,
-    });
-
-    const uploadRes = await upload.json();
-
-    if (!uploadRes || !uploadRes.IpfsHash) {
-      return NextResponse.json({ error: 'Failed to upload image to Pinata' }, { status: 500 });
-    }
-
-    const imageUrl = `${uploadRes.IpfsHash}`;
-
-    console.log('Image Url', imageUrl)
-
-    const curator = await prisma.curator.create({
-      data: {
-        name,
-        country,
-        city,
-        state,
-        wallet: wallet,
-        coverImage: imageUrl,
-        transactionHash,
-        onChainUniqueId,
-        nftTokenId,
-        user: {
-          connect: {
-            wallet: wallet
-          }
+        if (!wallet || !name || !country || !city || !state || !coverImage || !transactionHash || !onChainUniqueId || !nftTokenId) {
+            return NextResponse.json({ error: 'All fields are required' }, { status: 400 });
         }
-      },
-    });
 
-    return NextResponse.json({ success: true, curator });
-  } catch (error) {
-    console.error('Error in onboarding:', error);
+        const curator = await prisma.curator.create({
+            data: {
+                name,
+                country,
+                city,
+                state,
+                wallet,
+                coverImage,
+                transactionHash,
+                onChainUniqueId,
+                nftTokenId,
+                user: {
+                    connect: {
+                        wallet,
+                    },
+                },
+            },
+        });
 
-    return NextResponse.json(
-      { error: 'Failed to create library' },
-      { status: 500 }
-    );
-  }
+        return NextResponse.json({ success: true, curator });
+    } catch (error) {
+        console.error('Error in onboarding:', error);
+        
+return NextResponse.json(
+            { error: `Failed to create library: ${(error as Error).message || 'Unknown error'}` },
+            { status: 500 }
+        );
+    }
 }

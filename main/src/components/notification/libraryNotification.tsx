@@ -1,15 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
 import Link from 'next/link';
+
 import { Bell, X, Info } from 'lucide-react';
+
+import { Badge, Button, Dialog, DialogContent, DialogTitle } from '@mui/material';
+
 import {
   getNotifications,
   markNotificationAsRead,
-  markAllNotificationsAsRead,
 } from '@/app/server/actions/notification';
-import { Notification } from '../../types/notification';
-import { Badge, Button, Dialog, DialogContent, DialogTitle } from '@mui/material';
+import type { Notification } from '../../types/notification';
 
 
 const NotificationBell = () => {
@@ -20,15 +23,18 @@ const NotificationBell = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       const data = await getNotifications();
+
       setNotifications(data);
       setUnreadCount(data.filter((notification) => !notification.read).length);
     };
+
     fetchNotifications();
   }, []);
 
   const handleMarkAsRead = async (id: number) => {
     await markNotificationAsRead(id);
     const updatedNotifications = await getNotifications();
+
     setNotifications(updatedNotifications);
     setUnreadCount(updatedNotifications.filter((n) => !n.read).length);
   };
@@ -75,7 +81,7 @@ const NotificationBell = () => {
               alt="No notifications"
               className="w-32 h-32 mb-4" />
             <p className="text-gray-500 text-center">
-              Shh! It's quiet around here...
+              Shh! It&apos;s quiet around here...
             </p>
           </div>
         ) : (

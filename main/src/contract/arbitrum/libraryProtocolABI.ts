@@ -64,6 +64,44 @@ export const LibraryProtocolABI = [
     "type": "event"
   },
   {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "from",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "action",
+        "type": "string"
+      }
+    ],
+    "name": "PaymentReceived",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newTreasury",
+        "type": "address"
+      }
+    ],
+    "name": "TreasuryAddressUpdated",
+    "type": "event"
+  },
+  {
     "inputs": [
       {
         "internalType": "string",
@@ -109,6 +147,11 @@ export const LibraryProtocolABI = [
         "internalType": "uint256",
         "name": "_copies",
         "type": "uint256"
+      },
+      {
+        "internalType": "string",
+        "name": "_metadataCID",
+        "type": "string"
       }
     ],
     "name": "addBook",
@@ -260,6 +303,11 @@ export const LibraryProtocolABI = [
         "internalType": "address",
         "name": "bookAddress",
         "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "_treasuryAddress",
+        "type": "address"
       }
     ],
     "name": "initialize",
@@ -295,6 +343,19 @@ export const LibraryProtocolABI = [
   },
   {
     "inputs": [],
+    "name": "minimumCuratorFee",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
     "name": "owner",
     "outputs": [
       {
@@ -312,16 +373,52 @@ export const LibraryProtocolABI = [
         "internalType": "string",
         "name": "_name",
         "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_metadataCID",
+        "type": "string"
       }
     ],
     "name": "registerCurator",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   },
   {
     "inputs": [],
     "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_curatorFee",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "name": "setMinimumFees",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_newTreasury",
+        "type": "address"
+      }
+    ],
+    "name": "setTreasuryAddress",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -338,5 +435,29 @@ export const LibraryProtocolABI = [
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "treasuryAddress",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "withdraw",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "stateMutability": "payable",
+    "type": "receive"
   }
 ] as const

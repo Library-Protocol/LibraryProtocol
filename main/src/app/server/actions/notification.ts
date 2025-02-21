@@ -1,7 +1,7 @@
 // app/actions/notifications.ts
 'use server';
 
-import { Notification } from '../../../types/notification';
+import type { Notification } from '../../../types/notification';
 
 let notifications: Notification[] = [
   { id: 1, message: 'You have a new message', read: false, link: '/messages' },
@@ -16,6 +16,7 @@ export async function getNotifications(): Promise<Notification[]> {
 // Mark a notification as read
 export async function markNotificationAsRead(id: number): Promise<void> {
   const notification = notifications.find((n) => n.id === id);
+
   if (notification) {
     notification.read = true;
   }

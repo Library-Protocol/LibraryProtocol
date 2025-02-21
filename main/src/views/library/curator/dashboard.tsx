@@ -1,5 +1,7 @@
 'use client';
 
+import { title } from 'process';
+
 import React, { useState, useEffect } from 'react';
 
 import {
@@ -34,6 +36,7 @@ import BookSearchGrid from '@/components/library/BookSaerchCard';
 import BookBorrowRequestsCard from '@/components/library/BookBorrowRequestsCard';
 import { addBook } from '@/contract/Interraction';
 import LibraryMascotWidget from '@/components/effects/MascotWidget';
+import { createBookMetadata } from '@/utils/pinata';
 
 interface Book {
   id: string;
@@ -202,7 +205,6 @@ return;
 
   const [failedLoads, setFailedLoads] = useState(new Set());
 
-
   useEffect(() => {
     if (isbn.length === 13) {
       fetchBookData(Number(isbn));
@@ -215,7 +217,16 @@ return;
       const coverResponse = await fetch(coverUrl);
 
       if (coverResponse.ok) {
-        setCoverImage(coverUrl);
+        const imageBlob = await coverResponse.blob();
+        const reader = new FileReader();
+
+        reader.readAsDataURL(imageBlob);
+
+        reader.onloadend = () => {
+          if (typeof reader.result === 'string') {
+            setCoverImage(reader.result);
+          }
+        };
       } else {
         setCoverImage(null);
       }
@@ -230,11 +241,6 @@ return;
 
     try {
       const response = await fetch(`/api/openlibrary/search?isbn=${isbn}`);
-
-      // if (!response.ok) {
-      //   throw new Error('Failed to fetch book data');
-      // }
-
       const data = await response.json();
 
       if (data.error) {
@@ -316,12 +322,24 @@ return;
         additionalNotes: additionalNotes,
         onChainUniqueId: Curator.onChainUniqueId,
         isbn: Number(isbn),
-        copies: copies
+        copies: copies,
+        image: coverImage,
       };
 
       console.log('Book Data', addBookData)
 
-      const { hash, uniqueId, nftTokenId } = await addBook(addBookData);
+      if (!coverImage) {
+        throw new Error('Cover image is required');
+      }
+
+      const { metadataCID, imageCID } = await createBookMetadata(title, author, publisher, publishDate, Number(pagination), isbn, copies, coverImage);
+
+      console.log('Book Metadata', metadataCID, imageCID)
+
+      const { hash, uniqueId, nftTokenId } = await addBook({
+        ...addBookData,
+        imageCID
+      });
 
       console.log('Book Blockchain Data', hash, uniqueId, nftTokenId)
 

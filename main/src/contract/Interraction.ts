@@ -5,9 +5,9 @@ import { LibraryProtocolABI } from './arbitrum/libraryProtocolABI';
 import { libraryBookABI } from './arbitrum/libraryBookABI';
 import { libraryOwnerABI } from './arbitrum/libraryOwnerABI';
 
-const LOA = '0xD0bb87ec3c5a531B364eDC413593d3c273896b75'; // Owner address (if needed)
-const LBA = '0xCecD338bC4cBCae1f901F9E21b0Fc504fa36558c'; // LPBook address
-const LPA = '0xC4C7F950eBC2e30e5c893A0fBEE7dd6Ac1F57B07'; // LibraryProtocol address
+const LOA = '0x780f76717E71742D5d15194c7dbc7CCd98844248'; // Owner address (if needed)
+const LBA = '0xB36d810D491Bf2d958D2a1547A7095D70ad19b13'; // LPBook address
+const LPA = '0xD7333c322b8C457b55fC7B056A0c67e9515bA126'; // LibraryProtocol address
 
 // Get ethers provider and signer
 const getProviderAndSigner = async () => {
@@ -50,6 +50,7 @@ export type BookData = {
   isbn: number;
   onChainUniqueId: string;
   copies: number;
+  imageCID: string;
 };
 
 export type BorrowBookData = {
@@ -89,83 +90,123 @@ export type BookRequestLog = {
   message: string;
 }
 
-// Register a curator
 export const registerCurator = async (
-  data: CuratorRegistrationData
-): Promise<{ success: boolean; uniqueId?: string; hash?: string; nftTokenId?: string}> => {
+  data: CuratorRegistrationData,
+  metadataCID: string,
+  curatorPlatformFee: string
+): Promise<{
+  success: boolean;
+  uniqueId?: string;
+  hash?: string;
+  nftTokenId?: string;
+  name?: string;
+  metadataCID?: string;
+}> => {
   try {
-    const { libraryProtocol } = await getContracts();
+      const { libraryProtocol } = await getContracts();
+      const value = ethers.parseEther(curatorPlatformFee);
 
-    const tx = await libraryProtocol.registerCurator(data.name, {
-      gasLimit: 1000000,
-    });
+      console.log('libraryPayload', data.name, metadataCID, value);
 
-    const receipt = await tx.wait();
+      const tx = await libraryProtocol.registerCurator(data.name, metadataCID, {
+          gasLimit: 1000000,
+          value,
+      });
 
-    console.log("Transaction Receipt:", receipt);
+      const receipt = await tx.wait();
 
-    if (!receipt || !receipt.logs) {
-      throw new Error("Transaction failed");
-    }
+      console.log('Transaction Receipt:', receipt);
 
-    // ABI for LibraryOwnerRegistered event
-    const abi = [
-      "event LibraryOwnerRegistered(string uniqueId, address indexed wallet, string name, uint256 libraryTokenId)"
-    ];
+      if (!receipt || !receipt.logs) {
+          throw new Error('Transaction failed: No logs found');
+      }
 
-    const iface = new ethers.Interface(abi);
-    let foundUniqueId: string | undefined;
-    let nftTokenId: string
+      // ABI for LibraryOwnerRegistered event with all fields
+      const abi = [
+          'event LibraryOwnerRegistered(string uniqueId, address indexed wallet, string name, uint256 libraryTokenId, string metadataCID)',
+      ];
 
-    // Loop through logs and decode them
-    for (const log of receipt.logs) {
-      console.log("\n--- Log Entry ---");
-      console.log("Log Address:", log.address);
-      console.log("Log Topics:", log.topics);
-      console.log("Log Data:", log.data);
+      const iface = new ethers.Interface(abi);
+      let foundUniqueId: string | undefined;
+      let foundName: string | undefined;
+      let nftTokenId: string | undefined;
+      let foundMetadataCID: string | undefined;
 
-      try {
-        // Parse the log using ethers v6.3 syntax
-        const parsedLog = iface.parseLog(log);
+      // Loop through logs and decode them
+      for (const log of receipt.logs) {
+          console.log('\n--- Log Entry ---');
+          console.log('Log Address:', log.address);
+          console.log('Log Topics:', log.topics);
+          console.log('Log Data:', log.data);
 
-        if (parsedLog) {
-          console.log("Decoded Log:", parsedLog);
-          console.log("Event Name:", parsedLog.name);
-          console.log("Unique ID:", parsedLog.args.uniqueId);
-          console.log("Wallet Address:", parsedLog.args.wallet);
-          console.log("Library Owner Name:", parsedLog.args.name);
-          console.log("Library Token ID:", parsedLog.args.libraryTokenId.toString());
-          console.log("Hash:", receipt.hash);
+          try {
+              const parsedLog = iface.parseLog({
+                  topics: log.topics as string[],
+                  data: log.data,
+              });
 
-          foundUniqueId = parsedLog.args.uniqueId;
-          nftTokenId = parsedLog.args.libraryTokenId.toString();
+              if (parsedLog && parsedLog.name === 'LibraryOwnerRegistered') {
+                  foundUniqueId = parsedLog.args.uniqueId;
+                  foundName = parsedLog.args.name;
+                  nftTokenId = parsedLog.args.libraryTokenId.toString();
+                  foundMetadataCID = parsedLog.args.metadataCID;
+
+                  console.log('Decoded Event:', {
+                      uniqueId: foundUniqueId,
+                      wallet: parsedLog.args.wallet,
+                      name: foundName,
+                      libraryTokenId: nftTokenId,
+                      metadataCID: foundMetadataCID,
+                  });
+
+                  // Return all decoded fields
+                  return {
+                      success: true,
+                      uniqueId: foundUniqueId,
+                      hash: receipt.hash,
+                      nftTokenId: nftTokenId,
+                      name: foundName,
+                      metadataCID: foundMetadataCID,
+                  };
+              }
+          } catch (error) {
+              console.error('Error decoding log:', error);
+          }
+      }
+
+      // Fallback if event not found but transaction succeeded
+      console.warn('LibraryOwnerRegistered event not found in logs');
 
 return {
-            success: true,
-            uniqueId: foundUniqueId,
-            nftTokenId: nftTokenId,
-            hash: receipt.hash,
-          };
-        }
-      } catch (error) {
-        console.error("Error decoding log:", error);
-      }
-    }
-
-    return {
-      success: true,
-      hash: receipt.hash,
-    };
+          success: true,
+          hash: receipt.hash,
+      };
   } catch (error) {
-    console.error('Contract interaction failed:', error);
-    throw new Error(error instanceof Error ? error.message : 'Failed to register curator');
+      console.error('Contract interaction failed:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to register curator');
   }
 };
 
 // Add a book
-export const addBook = async (data: BookData): Promise<{ success: boolean; uniqueId?: string; hash?: string; nftTokenId?: string}> => {
+export const addBook = async (
+  data: BookData
+): Promise<{ success: boolean; uniqueId?: string; hash?: string; nftTokenId?: string }> => {
   try {
     const { libraryProtocol } = await getContracts();
+
+    console.log(
+      'libraryAddBookPayload',
+      data.title,
+      data.author,
+      data.publisher,
+      data.publishDate,
+      data.pagination,
+      data.additionalNotes,
+      data.onChainUniqueId,
+      data.isbn,
+      data.copies,
+      data.imageCID
+    );
 
     const tx = await libraryProtocol.addBook(
       data.title,
@@ -177,68 +218,70 @@ export const addBook = async (data: BookData): Promise<{ success: boolean; uniqu
       data.onChainUniqueId,
       data.isbn,
       data.copies,
+      data.imageCID,
       {
-        gasLimit: ethers.toBigInt(1000000), // Convert to BigInt in ethers v6
+        gasLimit: 1000000, // BigInt in ethers v6
       }
     );
 
-    console.log('Transaction Sent Payload', tx)
+    console.log('Transaction Sent Payload', tx);
 
     const receipt: TransactionReceipt = await tx.wait();
 
-    console.log('Transaction Response Payload', receipt)
+    console.log('Transaction Response Payload', receipt);
 
     if (!receipt || !receipt.logs) {
-      throw new Error('Transaction failed');
+      throw new Error('Transaction failed: No logs found');
     }
 
+    // ABI for the BookAdded event based on your Solidity function
     const abi = [
-      "event BookAdded(string uniqueId, string title, string libraryOwnerId, uint256 isbn, uint256 bookTokenId, uint256 libraryTokenId, uint256 copies)"
+      'event BookAdded(string uniqueId, string title, string libraryOwnerId, uint256 isbn, uint256 bookTokenId, uint256 libraryTokenId, uint256 copies, string metadataCID)'
     ];
 
     const iface = new ethers.Interface(abi);
-    let foundUniqueId: string | undefined;
-    let nftTokenId: string
 
-    // Loop through logs and decode them
+    // Find and decode the BookAdded event
     for (const log of receipt.logs) {
-      console.log("\n--- Log Entry ---");
-      console.log("Log Address:", log.address);
-      console.log("Log Topics:", log.topics);
-      console.log("Log Data:", log.data);
+      console.log('\n--- Log Entry ---');
+      console.log('Log Address:', log.address);
+      console.log('Log Topics:', log.topics);
+      console.log('Log Data:', log.data);
 
       try {
-        // Parse the log using ethers v6.3 syntax
         const parsedLog = iface.parseLog(log);
 
-        if (parsedLog) {
-          console.log("Decoded Log:", parsedLog);
-          console.log("Event Name:", parsedLog.name);
-          console.log("Unique ID:", parsedLog.args.uniqueId);
-          console.log("Title:", parsedLog.args.title);
-          console.log("Library Owner Id:", parsedLog.args.libraryOwnerId);
-          console.log("ISBN:", parsedLog.args.isbn);
-          console.log("bookTokenId:", parsedLog.args.bookTokenId);
-          console.log("libraryTokenId:", parsedLog.args.libraryTokenId);
-          console.log("Copies:", parsedLog.args.copies);
-          console.log("Hash:", receipt.hash);
+        if (parsedLog && parsedLog.name === 'BookAdded') {
+          console.log('Decoded Log:', parsedLog);
+          console.log('Event Name:', parsedLog.name);
+          console.log('Unique ID:', parsedLog.args.uniqueId);
+          console.log('Title:', parsedLog.args.title);
+          console.log('Library Owner Id:', parsedLog.args.libraryOwnerId);
+          console.log('ISBN:', parsedLog.args.isbn.toString());
+          console.log('bookTokenId:', parsedLog.args.bookTokenId.toString());
+          console.log('libraryTokenId:', parsedLog.args.libraryTokenId.toString());
+          console.log('Copies:', parsedLog.args.copies.toString());
+          console.log('Metadata CID:', parsedLog.args.metadataCID);
+          console.log('Hash:', receipt.hash);
 
-          foundUniqueId = parsedLog.args.uniqueId;
-          nftTokenId = parsedLog.args.bookTokenId.toString();
-
-return {
+          // Return the required values
+          return {
             success: true,
-            uniqueId: foundUniqueId,
-            nftTokenId: nftTokenId,
+            uniqueId: parsedLog.args.uniqueId,
             hash: receipt.hash,
+            nftTokenId: parsedLog.args.bookTokenId.toString(), // Convert BigInt to string
           };
         }
       } catch (error) {
-        console.error("Error decoding log:", error);
+        console.error('Error decoding log:', error);
+        // Continue to next log if parsing fails (e.g., for TransferSingle event)
       }
     }
 
-    return {
+    // Fallback if BookAdded event is not found
+    console.warn('BookAdded event not found in logs');
+    
+return {
       success: true,
       hash: receipt.hash,
     };
@@ -246,7 +289,7 @@ return {
     console.error('Contract interaction failed:', error);
     throw new Error(error instanceof Error ? error.message : 'Failed to add book');
   }
-};
+}
 
 export const bookRequest = async (data: BookRequest): Promise<{ success: boolean; requestId?: string; uniqueId?: string; hash?: string;}> => {
   try {

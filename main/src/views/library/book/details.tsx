@@ -403,6 +403,7 @@ const BookDetails: React.FC<BookDetailsProps> = ({ Book, Curator }) => {
                 </Card>
               </Grid>
             ) : (
+
               /* Borrow Book Form */
               <Grid item xs={12}>
                 <Card elevation={3}>
