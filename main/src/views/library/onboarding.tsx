@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 
@@ -106,13 +106,13 @@ const CreatorOnboarding = () => {
 const handleSubmit = async () => {
   if (!isWalletFetched) {
     setSubmitError('Please wait while we fetch your wallet address.');
-    
+
 return;
   }
 
   if (!libraryName || !country || !city || !state || !coverImage) {
     setSubmitError('Please fill in all required fields and customize your cover');
-    
+
 return;
   }
 
@@ -225,7 +225,7 @@ return;
   };
 
   const debouncedSearch = useCallback(
-    debounce((query: string) => handleSearchLocation(query), 500),
+    debounce((query: string) => handleSearchLocation(query), 800),
     []
   );
 

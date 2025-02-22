@@ -1,9 +1,9 @@
+'use client';
+
 import React, { useState, useRef, useEffect } from 'react';
 
-import { Box, Select, MenuItem, Typography } from '@mui/material';
-
+import { Box, Slider, Select, MenuItem, Typography } from '@mui/material';
 import { SketchPicker } from 'react-color';
-
 import html2canvas from 'html2canvas';
 
 interface CoverImageCustomizationProps {
@@ -19,80 +19,90 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
   onImageChange,
   showCustomization = true,
 }) => {
-  // State for cover customization
-  const [primaryColor, setPrimaryColor] = useState('#7A808D');
+  const [primaryColor, setPrimaryColor] = useState('#1a365d');
   const [secondaryColor, setSecondaryColor] = useState('#2d3748');
   const [useGradient, setUseGradient] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [overlayOpacity] = useState(100);
-  const [titleSize] = useState(75);
+  const [overlayOpacity, setOverlayOpacity] = useState(100);
+  const [titleSize, setTitleSize] = useState(72);
   const [coverStyle, setCoverStyle] = useState<CoverStyle>('modern');
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null); // State for uploaded image
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
-  // const [overlayOpacity, setOverlayOpacity] = useState(100);
-  // const [titleSize, setTitleSize] = useState(72);
-
-  // Reference to the cover element for image generation
   const coverRef = useRef<HTMLDivElement>(null);
+  const offscreenRef = useRef<HTMLDivElement | null>(null);
 
-  // Function to handle image upload
+  // Create an offscreen container for rendering
+  useEffect(() => {
+    if (!offscreenRef.current) {
+      const offscreen = document.createElement('div');
+
+      offscreen.style.position = 'absolute';
+      offscreen.style.left = '-9999px'; // Move offscreen
+      document.body.appendChild(offscreen);
+      offscreenRef.current = offscreen;
+    }
+
+
+return () => {
+      if (offscreenRef.current) {
+        document.body.removeChild(offscreenRef.current);
+        offscreenRef.current = null;
+      }
+    };
+  }, []);
+
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
-
     if (file) {
-
       const reader = new FileReader();
 
-      reader.onload = (e) => {
-
-        setUploadedImage(e.target?.result as string);
-      };
-
+      reader.onload = (e) => setUploadedImage(e.target?.result as string);
       reader.readAsDataURL(file);
     }
   };
 
-  // Function to generate and handle image changes
   const handleChange = async () => {
-    if (coverRef.current) {
-      try {
-        const canvas = await html2canvas(coverRef.current, {
-          scale: 2, // Higher quality
-          useCORS: true,
-          backgroundColor: null,
-          logging: false, // Disable logs
+    if (!coverRef.current || !offscreenRef.current) return;
 
-        });
+    try {
+      // Clone the content into the offscreen container
+      offscreenRef.current.innerHTML = '';
+      const clone = coverRef.current.cloneNode(true) as HTMLDivElement;
 
-        const imageData = canvas.toDataURL('image/png', 1.0); // Max quality
+      offscreenRef.current.appendChild(clone);
 
-        onImageChange?.(imageData);
-      } catch (error) {
-        console.error('Error converting to image:', error);
-      }
+      await new Promise((resolve) => requestAnimationFrame(resolve));
+
+      const canvas = await html2canvas(clone, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: null,
+        logging: true,
+      });
+
+      const imageData = canvas.toDataURL('image/png', 1.0);
+
+      onImageChange?.(imageData);
+    } catch (error) {
+      console.error('Error converting to image:', error);
     }
   };
 
-  // Generate initial image when component mounts and when library name changes
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      handleChange();
-    }, 100); // Small delay to ensure rendering is complete
+    const timeoutId = setTimeout(() => handleChange(), 100);
 
-    return () => clearTimeout(timeoutId);
+
+return () => clearTimeout(timeoutId);
   }, [libraryName]);
 
-  // Debounced handler for style changes
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      handleChange();
-    }, 300);
+    const timeoutId = setTimeout(() => handleChange(), 500);
 
-    return () => clearTimeout(timeoutId);
+
+return () => clearTimeout(timeoutId);
   }, [primaryColor, secondaryColor, useGradient, overlayOpacity, titleSize, coverStyle, uploadedImage]);
 
-  // Get dynamic styles for the cover
   const getCoverStyles = () => {
     const containerStyles: React.CSSProperties = {
       position: 'relative',
@@ -101,7 +111,6 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
       borderRadius: '12px',
       overflow: 'hidden',
       transition: 'all 0.3s ease',
-      // backgroundColor: '#ffffff',
     };
 
     const backgroundStyles: React.CSSProperties = {
@@ -147,7 +156,6 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
   return (
     <div className="w-full h-full flex flex-col space-y-8 p-8">
       <div className={`w-full h-full flex flex-row ${showCustomization ? 'space-x-8' : ''} p-8`}>
-        {/* Cover Preview */}
         <div className={showCustomization ? 'flex-1' : 'w-full'}>
           <div ref={coverRef} style={containerStyles} className="shadow-lg">
             <div style={backgroundStyles} />
@@ -162,6 +170,8 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
                   letterSpacing: coverStyle === 'minimal' ? '0.1em' : 'normal',
                   maxWidth: '80%',
                   wordWrap: 'break-word',
+                  whiteSpace: 'normal',
+                  overflow: 'visible',
                 }}
               >
                 {(libraryName || 'My') + ' Library'}
@@ -169,9 +179,23 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
             </div>
           </div>
         </div>
-
-        {/* Customization Controls */}
         {showCustomization && (
+          <div className="w-full max-w-md space-y-4 mx-auto">
+            {/* Customization controls unchanged */}
+            <div className="flex flex-col space-y-2">
+              <Typography>Cover Style</Typography>
+              <Select<CoverStyle>
+                value={coverStyle}
+                onChange={(e) => setCoverStyle(e.target.value as CoverStyle)}
+                fullWidth
+              >
+                <MenuItem value="modern">Modern</MenuItem>
+                <MenuItem value="classic">Classic</MenuItem>
+                <MenuItem value="minimal">Minimal</MenuItem>
+              </Select>
+            </div>
+            {/* Other controls omitted for brevity */}
+            {showCustomization && (
           <div className="w-full max-w-md space-y-4 mx-auto">
             {/* Image Upload */}
 
@@ -243,7 +267,7 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
                 />
               </div>
             )}
-{/*
+
             <div>
               <Typography>Background Opacity</Typography>
               <Slider
@@ -266,7 +290,7 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
                 valueLabelDisplay="auto"
                 disabled
               />
-            </div> */}
+            </div>
 
             <div className="flex flex-col space-y-2">
               <Typography>Upload Cover Image (Optional)</Typography>
@@ -289,6 +313,8 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
               </Typography>
               )}
             </div>
+          </div>
+        )}
           </div>
         )}
       </div>
