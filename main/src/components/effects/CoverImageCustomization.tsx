@@ -21,7 +21,7 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
   const [useGradient, setUseGradient] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [overlayOpacity, setOverlayOpacity] = useState(100);
-  const [titleSize, setTitleSize] = useState(72);
+  const [titleSize] = useState(72);
   const [coverStyle, setCoverStyle] = useState<CoverStyle>('modern');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
