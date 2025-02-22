@@ -318,6 +318,7 @@ return () => clearTimeout(timer);
                 min={20}
                 max={100}
                 valueLabelDisplay="auto"
+                disabled
               />
             </div>
 
@@ -329,6 +330,7 @@ return () => clearTimeout(timer);
                 min={24}
                 max={72}
                 valueLabelDisplay="auto"
+                disabled
               />
             </div>
 
