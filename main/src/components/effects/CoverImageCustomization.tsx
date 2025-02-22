@@ -1,10 +1,10 @@
-'use client';
-
 import React, { useState, useRef, useEffect } from 'react';
 
 import { Box, Slider, Select, MenuItem, Typography } from '@mui/material';
 import { SketchPicker } from 'react-color';
 import html2canvas from 'html2canvas';
+
+import useDebounce from '@/utils/useDebounce';
 
 interface CoverImageCustomizationProps {
   libraryName: string;
@@ -19,90 +19,90 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
   onImageChange,
   showCustomization = true,
 }) => {
+  // State for cover customization
   const [primaryColor, setPrimaryColor] = useState('#1a365d');
   const [secondaryColor, setSecondaryColor] = useState('#2d3748');
   const [useGradient, setUseGradient] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [overlayOpacity, setOverlayOpacity] = useState(100);
+  const [overlayOpacity, setOverlayOpacity] = useState(50);
   const [titleSize, setTitleSize] = useState(72);
   const [coverStyle, setCoverStyle] = useState<CoverStyle>('modern');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
 
+  // Debounced values for performance
+  const debouncedPrimaryColor = useDebounce(primaryColor, 300);
+  const debouncedSecondaryColor = useDebounce(secondaryColor, 300);
+  const debouncedUseGradient = useDebounce(useGradient, 300);
+  const debouncedOverlayOpacity = useDebounce(overlayOpacity, 300);
+  const debouncedTitleSize = useDebounce(titleSize, 300);
+  const debouncedCoverStyle = useDebounce(coverStyle, 300);
+  const debouncedUploadedImage = useDebounce(uploadedImage, 300);
+
   const coverRef = useRef<HTMLDivElement>(null);
-  const offscreenRef = useRef<HTMLDivElement | null>(null);
 
-  // Create an offscreen container for rendering
-  useEffect(() => {
-    if (!offscreenRef.current) {
-      const offscreen = document.createElement('div');
-
-      offscreen.style.position = 'absolute';
-      offscreen.style.left = '-9999px'; // Move offscreen
-      document.body.appendChild(offscreen);
-      offscreenRef.current = offscreen;
-    }
-
-
-return () => {
-      if (offscreenRef.current) {
-        document.body.removeChild(offscreenRef.current);
-        offscreenRef.current = null;
-      }
-    };
-  }, []);
-
+  // Function to handle image upload
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
 
     if (file) {
       const reader = new FileReader();
 
-      reader.onload = (e) => setUploadedImage(e.target?.result as string);
+      reader.onload = (e) => {
+        setUploadedImage(e.target?.result as string);
+      };
+
       reader.readAsDataURL(file);
     }
   };
 
-  const handleChange = async () => {
-    if (!coverRef.current || !offscreenRef.current) return;
+  // Function to generate image
+  const generateImage = async () => {
+    if (coverRef.current) {
+      try {
+        const canvas = await html2canvas(coverRef.current, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: null,
+          logging: false,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: 700,
+          windowHeight: 1000,
+        });
 
-    try {
-      // Clone the content into the offscreen container
-      offscreenRef.current.innerHTML = '';
-      const clone = coverRef.current.cloneNode(true) as HTMLDivElement;
+        const imageData = canvas.toDataURL('image/png', 1.0);
 
-      offscreenRef.current.appendChild(clone);
-
-      await new Promise((resolve) => requestAnimationFrame(resolve));
-
-      const canvas = await html2canvas(clone, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: null,
-        logging: true,
-      });
-
-      const imageData = canvas.toDataURL('image/png', 1.0);
-
-      onImageChange?.(imageData);
-    } catch (error) {
-      console.error('Error converting to image:', error);
+        onImageChange?.(imageData);
+      } catch (error) {
+        console.error('Error generating canvas:', error);
+      }
     }
   };
 
+  // Initial render and library name change
   useEffect(() => {
-    const timeoutId = setTimeout(() => handleChange(), 100);
+    const timer = setTimeout(() => {
+      generateImage();
+    }, 100);
 
 
-return () => clearTimeout(timeoutId);
+return () => clearTimeout(timer);
   }, [libraryName]);
 
+  // Handle changes with debounced values
   useEffect(() => {
-    const timeoutId = setTimeout(() => handleChange(), 500);
+    generateImage();
+  }, [
+    debouncedPrimaryColor,
+    debouncedSecondaryColor,
+    debouncedUseGradient,
+    debouncedOverlayOpacity,
+    debouncedTitleSize,
+    debouncedCoverStyle,
+    debouncedUploadedImage,
+  ]);
 
-
-return () => clearTimeout(timeoutId);
-  }, [primaryColor, secondaryColor, useGradient, overlayOpacity, titleSize, coverStyle, uploadedImage]);
-
+  // Get dynamic styles for the cover
   const getCoverStyles = () => {
     const containerStyles: React.CSSProperties = {
       position: 'relative',
@@ -156,6 +156,7 @@ return () => clearTimeout(timeoutId);
   return (
     <div className="w-full h-full flex flex-col space-y-8 p-8">
       <div className={`w-full h-full flex flex-row ${showCustomization ? 'space-x-8' : ''} p-8`}>
+        {/* Cover Preview */}
         <div className={showCustomization ? 'flex-1' : 'w-full'}>
           <div ref={coverRef} style={containerStyles} className="shadow-lg">
             <div style={backgroundStyles} />
@@ -170,8 +171,6 @@ return () => clearTimeout(timeoutId);
                   letterSpacing: coverStyle === 'minimal' ? '0.1em' : 'normal',
                   maxWidth: '80%',
                   wordWrap: 'break-word',
-                  whiteSpace: 'normal',
-                  overflow: 'visible',
                 }}
               >
                 {(libraryName || 'My') + ' Library'}
@@ -179,27 +178,10 @@ return () => clearTimeout(timeoutId);
             </div>
           </div>
         </div>
+
+        {/* Customization Controls */}
         {showCustomization && (
           <div className="w-full max-w-md space-y-4 mx-auto">
-            {/* Customization controls unchanged */}
-            <div className="flex flex-col space-y-2">
-              <Typography>Cover Style</Typography>
-              <Select<CoverStyle>
-                value={coverStyle}
-                onChange={(e) => setCoverStyle(e.target.value as CoverStyle)}
-                fullWidth
-              >
-                <MenuItem value="modern">Modern</MenuItem>
-                <MenuItem value="classic">Classic</MenuItem>
-                <MenuItem value="minimal">Minimal</MenuItem>
-              </Select>
-            </div>
-            {/* Other controls omitted for brevity */}
-            {showCustomization && (
-          <div className="w-full max-w-md space-y-4 mx-auto">
-            {/* Image Upload */}
-
-
             <div className="flex flex-col space-y-2">
               <Typography>Cover Style</Typography>
               <Select<CoverStyle>
@@ -276,7 +258,6 @@ return () => clearTimeout(timeoutId);
                 min={20}
                 max={100}
                 valueLabelDisplay="auto"
-                disabled
               />
             </div>
 
@@ -294,27 +275,25 @@ return () => clearTimeout(timeoutId);
 
             <div className="flex flex-col space-y-2">
               <Typography>Upload Cover Image (Optional)</Typography>
-                <label
+              <label
                 htmlFor="cover-image-upload"
                 className="cursor-pointer bg-black hover:bg-gray-800 text-white py-2 px-4 rounded-md transition-colors duration-200 text-center"
-                >
+              >
                 Choose Image
                 <input
-                id="cover-image-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                className="hidden"
+                  id="cover-image-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                  className="hidden"
                 />
-                </label>
+              </label>
               {uploadedImage && (
-              <Typography variant="caption" className="text-gray-600">
-                Cover image uploaded successfully
-              </Typography>
+                <Typography variant="caption" className="text-gray-600">
+                  Cover image uploaded successfully
+                </Typography>
               )}
             </div>
-          </div>
-        )}
           </div>
         )}
       </div>
