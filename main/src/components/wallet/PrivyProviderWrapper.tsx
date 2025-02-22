@@ -28,7 +28,7 @@
 'use client'
 
 import { PrivyProvider } from '@privy-io/react-auth'
-import { arbitrumSepolia } from 'viem/chains'
+import { arbitrum } from 'viem/chains'
 
 if (!process.env.NEXT_PUBLIC_PRIVY_APP_ID) {
   throw new Error('NEXT_PUBLIC_PRIVY_APP_ID is not defined')
@@ -49,7 +49,7 @@ export default function PrivyProviderWrapper({
           accentColor: '#795548',
           logo: 'https://backend.sovereignfrontier.xyz/assets/logo/image.png',
         },
-        defaultChain: arbitrumSepolia,
+        defaultChain: arbitrum,
         embeddedWallets: {
           createOnLogin: 'users-without-wallets',
         },

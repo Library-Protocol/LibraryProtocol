@@ -20,14 +20,17 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
   showCustomization = true,
 }) => {
   // State for cover customization
-  const [primaryColor, setPrimaryColor] = useState('#1a365d');
+  const [primaryColor, setPrimaryColor] = useState('#7A808D');
   const [secondaryColor, setSecondaryColor] = useState('#2d3748');
   const [useGradient, setUseGradient] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [overlayOpacity, setOverlayOpacity] = useState(50);
-  const [titleSize, setTitleSize] = useState(72);
+  const [overlayOpacity] = useState(100);
+  const [titleSize] = useState(75);
   const [coverStyle, setCoverStyle] = useState<CoverStyle>('modern');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null); // State for uploaded image
+
+  // const [overlayOpacity, setOverlayOpacity] = useState(100);
+  // const [titleSize, setTitleSize] = useState(72);
 
   // Reference to the cover element for image generation
   const coverRef = useRef<HTMLDivElement>(null);
@@ -240,7 +243,7 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
                 />
               </div>
             )}
-
+{/*
             <div>
               <Typography>Background Opacity</Typography>
               <Slider
@@ -249,6 +252,7 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
                 min={20}
                 max={100}
                 valueLabelDisplay="auto"
+                disabled
               />
             </div>
 
@@ -262,7 +266,7 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
                 valueLabelDisplay="auto"
                 disabled
               />
-            </div>
+            </div> */}
 
             <div className="flex flex-col space-y-2">
               <Typography>Upload Cover Image (Optional)</Typography>
