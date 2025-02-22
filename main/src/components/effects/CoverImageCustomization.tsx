@@ -2,9 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 
 import { Box, Slider, Select, MenuItem, Typography } from '@mui/material';
 import { SketchPicker } from 'react-color';
-import html2canvas from 'html2canvas';
-
-import useDebounce from '@/utils/useDebounce';
 
 interface CoverImageCustomizationProps {
   libraryName: string;
@@ -19,24 +16,14 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
   onImageChange,
   showCustomization = true,
 }) => {
-  // State for cover customization
   const [primaryColor, setPrimaryColor] = useState('#1a365d');
   const [secondaryColor, setSecondaryColor] = useState('#2d3748');
   const [useGradient, setUseGradient] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
-  const [overlayOpacity, setOverlayOpacity] = useState(50);
+  const [overlayOpacity, setOverlayOpacity] = useState(100);
   const [titleSize, setTitleSize] = useState(72);
   const [coverStyle, setCoverStyle] = useState<CoverStyle>('modern');
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-
-  // Debounced values for performance
-  const debouncedPrimaryColor = useDebounce(primaryColor, 300);
-  const debouncedSecondaryColor = useDebounce(secondaryColor, 300);
-  const debouncedUseGradient = useDebounce(useGradient, 300);
-  const debouncedOverlayOpacity = useDebounce(overlayOpacity, 300);
-  const debouncedTitleSize = useDebounce(titleSize, 300);
-  const debouncedCoverStyle = useDebounce(coverStyle, 300);
-  const debouncedUploadedImage = useDebounce(uploadedImage, 300);
 
   const coverRef = useRef<HTMLDivElement>(null);
 
@@ -55,54 +42,127 @@ const CustomizableCover: React.FC<CoverImageCustomizationProps> = ({
     }
   };
 
-  // Function to generate image
-  const generateImage = async () => {
+  // Function to generate image data
+  const generateImageData = () => {
     if (coverRef.current) {
-      try {
-        const canvas = await html2canvas(coverRef.current, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: null,
-          logging: false,
-          scrollX: 0,
-          scrollY: 0,
-          windowWidth: 700,
-          windowHeight: 1000,
-        });
+      // Create a canvas to draw the content
+      const canvas = document.createElement('canvas');
 
-        const imageData = canvas.toDataURL('image/png', 1.0);
+      canvas.width = 700;
+      canvas.height = 1000;
+      const ctx = canvas.getContext('2d');
 
-        onImageChange?.(imageData);
-      } catch (error) {
-        console.error('Error generating canvas:', error);
+      if (ctx) {
+        // Draw background
+        if (useGradient) {
+          const gradient = ctx.createLinearGradient(0, 0, 700, 1000);
+
+          gradient.addColorStop(0, primaryColor);
+          gradient.addColorStop(1, secondaryColor);
+          ctx.fillStyle = gradient;
+        } else {
+          ctx.fillStyle = primaryColor;
+        }
+
+        ctx.globalAlpha = overlayOpacity / 100;
+        ctx.fillRect(0, 0, 700, 1000);
+
+        // Draw uploaded image if present
+        if (uploadedImage) {
+          const img = new Image();
+
+          img.crossOrigin = 'Anonymous';
+
+          img.onload = () => {
+            ctx.globalAlpha = overlayOpacity / 100;
+            ctx.drawImage(img, 0, 0, 700, 1000);
+            drawText(ctx);
+            const imageData = canvas.toDataURL('image/png');
+
+            onImageChange?.(imageData);
+          };
+
+          img.src = uploadedImage;
+        } else {
+          drawText(ctx);
+          const imageData = canvas.toDataURL('image/png');
+
+          onImageChange?.(imageData);
+        }
       }
     }
   };
 
-  // Initial render and library name change
+  // Helper function to draw text on canvas
+  const drawText = (ctx: CanvasRenderingContext2D) => {
+    ctx.globalAlpha = 1.0;
+    ctx.fillStyle = 'white';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = `bold ${titleSize}px ${
+      coverStyle === 'classic' ? 'serif' : 'sans-serif'
+    }`;
+
+    if (coverStyle === 'minimal') {
+      ctx.letterSpacing = '0.1em';
+    }
+
+    const text = (libraryName || 'My') + ' Library';
+    const maxWidth = 560; // 80% of 700px
+
+    wrapText(ctx, text, 350, 500, maxWidth, titleSize * 1.2);
+  };
+
+  // Helper function to wrap text
+  const wrapText = (
+    ctx: CanvasRenderingContext2D,
+    text: string,
+    x: number,
+    y: number,
+    maxWidth: number,
+    lineHeight: number
+  ) => {
+    const words = text.split(' ');
+    let line = '';
+    let lineCount = 0;
+
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + ' ';
+      const metrics = ctx.measureText(testLine);
+      const testWidth = metrics.width;
+
+      if (testWidth > maxWidth && n > 0) {
+        ctx.fillText(line, x, y + (lineCount * lineHeight));
+        line = words[n] + ' ';
+        lineCount++;
+      } else {
+        line = testLine;
+      }
+    }
+
+    ctx.fillText(line, x, y + (lineCount * lineHeight));
+  };
+
+  // Update image data when properties change
   useEffect(() => {
     const timer = setTimeout(() => {
-      generateImage();
-    }, 100);
+      generateImageData();
+    }, 300);
 
 
 return () => clearTimeout(timer);
-  }, [libraryName]);
-
-  // Handle changes with debounced values
-  useEffect(() => {
-    generateImage();
   }, [
-    debouncedPrimaryColor,
-    debouncedSecondaryColor,
-    debouncedUseGradient,
-    debouncedOverlayOpacity,
-    debouncedTitleSize,
-    debouncedCoverStyle,
-    debouncedUploadedImage,
+    libraryName,
+    primaryColor,
+    secondaryColor,
+    useGradient,
+    overlayOpacity,
+    titleSize,
+    coverStyle,
+    uploadedImage,
   ]);
 
-  // Get dynamic styles for the cover
+  // Get dynamic styles for the cover preview
   const getCoverStyles = () => {
     const containerStyles: React.CSSProperties = {
       position: 'relative',
@@ -269,7 +329,6 @@ return () => clearTimeout(timer);
                 min={24}
                 max={72}
                 valueLabelDisplay="auto"
-                disabled
               />
             </div>
 
