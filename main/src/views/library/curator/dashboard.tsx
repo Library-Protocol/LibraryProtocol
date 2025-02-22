@@ -339,7 +339,7 @@ return;
 
       console.log('Book Metadata', metadataCID, imageCID)
 
-      setSubmissionStep('Sending to Blockchain');
+      setSubmissionStep('Magically adding your book onchain');
 
       const { hash, uniqueId, nftTokenId } = await addBook({
         ...addBookData,
@@ -390,6 +390,8 @@ return;
       // Extract the books from the response
       const updatedBooks = await updatedBooksResponse.json();
       const books = updatedBooks.books; // Access the 'books' field
+
+      setSubmissionStep(null);
 
       // Update the state with the new list of books
       setBooks(books);

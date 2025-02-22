@@ -128,7 +128,7 @@ return;
     console.log('Metadata CID:', metadataCID);
 
     // Second step: Blockchain
-    setSubmissionStep('Sending to Blockchain');
+    setSubmissionStep('Magically putting library onchain');
     const registrationData = { name: libraryName };
 
     const { hash, uniqueId, nftTokenId } = await registerCurator(
@@ -171,6 +171,8 @@ return;
     });
 
     await sendLibraryCreatedNotificationToReader(data.curator.name, data.curator.id, walletAddress);
+
+    setSubmissionStep(null);
     setStep(step + 1);
   } catch (error) {
     console.error('Failed to create library:', error);
