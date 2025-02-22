@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-import { Box, Slider, Select, MenuItem, Typography } from '@mui/material';
+import { Box, Select, MenuItem, Typography } from '@mui/material';
 
 import { SketchPicker } from 'react-color';
 
