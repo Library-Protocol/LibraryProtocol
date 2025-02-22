@@ -318,19 +318,6 @@ return () => clearTimeout(timer);
                 min={20}
                 max={100}
                 valueLabelDisplay="auto"
-                disabled
-              />
-            </div>
-
-            <div>
-              <Typography>Title Size</Typography>
-              <Slider
-                value={titleSize}
-                onChange={(_, value) => setTitleSize(value as number)}
-                min={24}
-                max={72}
-                valueLabelDisplay="auto"
-                disabled
               />
             </div>
 
