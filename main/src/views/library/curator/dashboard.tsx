@@ -129,6 +129,15 @@ const CuratorDashboard: React.FC<LandingDetailsProps> = ({ Curator }) => {
   const [failedLoads, setFailedLoads] = useState(new Set<number>());
   const [cameraPermissionGranted, setCameraPermissionGranted] = useState<boolean | null>(null);
 
+  const [formErrors, setFormErrors] = useState({
+    isbn: '',
+    bookTitle: '',
+    author: '',
+    publisher: '',
+    publishDate: '',
+    pagination: '',
+  });
+
   // Scanner cleanup
   useEffect(() => {
     return () => {
@@ -404,11 +413,49 @@ return;
     }
   };
 
-  const handleSubmitRequest = async () => {
-    if (!bookTitle) {
-      setError('Book title is required');
 
-return;
+  const handlePaginationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // Only allow numbers
+    const numericValue = value.replace(/[^0-9]/g, '');
+
+    setPagination(numericValue);
+
+    if (!numericValue) {
+      setFormErrors(prev => ({
+        ...prev,
+        pagination: 'Pagination must be a number'
+      }));
+    } else {
+      setFormErrors(prev => ({
+        ...prev,
+        pagination: ''
+      }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {
+      isbn: isbn ? '' : 'ISBN is required',
+      bookTitle: bookTitle ? '' : 'Book Title is required',
+      author: author ? '' : 'Author is required',
+      publisher: publisher ? '' : 'Publisher is required',
+      publishDate: publishDate ? '' : 'Publish Date is required',
+      pagination: pagination ? '' : 'Pagination is required',
+    };
+
+    if (pagination && !/^\d+$/.test(pagination)) {
+      errors.pagination = 'Pagination must be a number (No. of pages in the book)';
+    }
+
+    setFormErrors(errors);
+
+return Object.values(errors).every(error => error === '');
+  };
+
+  const handleSubmitRequest = async () => {
+    if (!validateForm()) {
+      return;
     }
 
     setError(null);
@@ -683,83 +730,100 @@ return;
         <DialogContent>
           <Box sx={{ pt: 2, display: 'flex', gap: 4 }}>
             <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={9}>
-                  <TextField
-                    fullWidth
-                    label="ISBN"
-                    variant="outlined"
-                    value={isbn}
-                    onChange={(e) => setIsbn(e.target.value)}
-                    error={!!error}
-                    helperText={error || 'Enter ISBN or scan it'}
-                    InputProps={{
-                      endAdornment: searchLoading ? (
-                        <InputAdornment position="end">
-                          <CircularProgress size={20} />
-                        </InputAdornment>
-                      ) : null,
-                    }}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={3}>
-                  <Button
-                    fullWidth
-                    variant="outlined"
-                    onClick={isScanning ? stopScanner : startScanner}
-                    sx={{ height: '56px' }}
-                  >
-                    {isScanning ? 'Stop Scanning' : 'Scan'}
-                  </Button>
-                </Grid>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={9}>
+                <TextField
+                  required
+                  fullWidth
+                  label="ISBN"
+                  variant="outlined"
+                  value={isbn}
+                  onChange={(e) => setIsbn(e.target.value)}
+                  error={!!formErrors.isbn}
+                  helperText={formErrors.isbn || 'Enter ISBN or scan it'}
+                  InputProps={{
+                    endAdornment: searchLoading ? (
+                      <InputAdornment position="end">
+                        <CircularProgress size={20} />
+                      </InputAdornment>
+                    ) : null,
+                  }}
+                />
               </Grid>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Book Title"
-                    variant="outlined"
-                    value={bookTitle}
-                    onChange={(e) => setBookTitle(e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Author"
-                    variant="outlined"
-                    value={author}
-                    onChange={(e) => setAuthor(e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Publisher"
-                    variant="outlined"
-                    value={publisher}
-                    onChange={(e) => setPublisher(e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Publish Date"
-                    variant="outlined"
-                    value={publishDate}
-                    onChange={(e) => setPublishDate(e.target.value)}
-                  />
-                </Grid>
-                <Grid item xs={12} sm={12}>
-                  <TextField
-                    fullWidth
-                    label="Pagination"
-                    variant="outlined"
-                    value={pagination}
-                    onChange={(e) => setPagination(e.target.value)}
-                  />
-                </Grid>
+              <Grid item xs={12} sm={3}>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={isScanning ? stopScanner : startScanner}
+                  sx={{ height: '56px' }}
+                >
+                  {isScanning ? 'Stop Scanning' : 'Scan'}
+                </Button>
               </Grid>
+            </Grid>
+            <Grid container spacing={2}>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Book Title"
+                  variant="outlined"
+                  value={bookTitle}
+                  onChange={(e) => setBookTitle(e.target.value)}
+                  error={!!formErrors.bookTitle}
+                  helperText={formErrors.bookTitle}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Author"
+                  variant="outlined"
+                  value={author}
+                  onChange={(e) => setAuthor(e.target.value)}
+                  error={!!formErrors.author}
+                  helperText={formErrors.author}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Publisher"
+                  variant="outlined"
+                  value={publisher}
+                  onChange={(e) => setPublisher(e.target.value)}
+                  error={!!formErrors.publisher}
+                  helperText={formErrors.publisher}
+                />
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Publish Date"
+                  variant="outlined"
+                  value={publishDate}
+                  onChange={(e) => setPublishDate(e.target.value)}
+                  error={!!formErrors.publishDate}
+                  helperText={formErrors.publishDate}
+                />
+              </Grid>
+              <Grid item xs={12} sm={12}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Pagination"
+                  variant="outlined"
+                  value={pagination}
+                  onChange={handlePaginationChange}
+                  error={!!formErrors.pagination}
+                  helperText={formErrors.pagination}
+                  inputProps={{ inputMode: 'numeric', pattern: '[0-9]*' }}
+                />
+              </Grid>
+            </Grid>
               <Box
                 display="flex"
                 alignItems="center"
