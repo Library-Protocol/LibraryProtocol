@@ -22,7 +22,7 @@ import { Plus, ArrowLeft } from 'lucide-react'
 import { usePrivy } from '@privy-io/react-auth'
 
 import AvatarSelector from '@/components/effects/AvatarSelector'
-import ConnectWalletButton from '@/components/wallet/ConnectWalletButton'
+import ConnectWalletButton from '@/components/wallet/AuthControlButton'
 
 const interests = [
   'Fiction books',

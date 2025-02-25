@@ -38,6 +38,8 @@ import { addBook } from '@/contract/Interraction';
 import LibraryMascotWidget from '@/components/effects/MascotWidget';
 import { createBookMetadata } from '@/utils/pinata';
 import SubmissionProgress from '@/components/effects/SubmissionProgress';
+import ISBNInputWithScanner from '@/components/effects/ISBNScanner';
+import ISBNInput from '@/components/effects/ISBNScanner';
 
 interface Book {
   id: string;
@@ -658,6 +660,13 @@ return;
       <DialogContent>
         <Box sx={{ pt: 2, display: 'flex', gap: 4 }}>
           <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <ISBNInput
+              isbn={isbn}
+              setIsbn={setIsbn}
+              error={error || undefined}
+              searchLoading={searchLoading}
+              fetchBookData={fetchBookData}
+            />
             <TextField
               fullWidth
               label="ISBN"

@@ -36,6 +36,7 @@
     "ethers": "^6.13.5",
     "framer-motion": "^11.17.0",
     "html2canvas": "^1.4.1",
+    "html5-qrcode": "^2.3.8",
     "jsonwebtoken": "^9.0.2",
     "lodash": "^4.17.21",
     "lucide-react": "^0.471.1",

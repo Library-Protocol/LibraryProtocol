@@ -2,17 +2,28 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
-import { Card, CardContent, Button, LinearProgress, Typography, Box, IconButton, TextField, CircularProgress, MenuItem, ListItemText } from '@mui/material';
+import {
+  Card,
+  CardContent,
+  Button,
+  LinearProgress,
+  Typography,
+  Box,
+  IconButton,
+  TextField,
+  CircularProgress,
+  MenuItem,
+  ListItemText,
+  Snackbar, // Add Snackbar
+  Alert,   // Add Alert for better styling
+} from '@mui/material';
 import { ArrowLeft } from 'lucide-react';
 import Radar from 'radar-sdk-js';
-
 import debounce from 'lodash/debounce';
-
 import { usePrivy } from '@privy-io/react-auth';
 
 import CustomizableCover from '@/components/effects/CoverImageCustomization';
 import { registerCurator } from '@/contract/Interraction';
-
 import { sendLibraryCreatedNotificationToReader } from '@/app/server/actions/engage/library-reader';
 import { createCuratorMetadata } from '@/utils/pinata';
 import SubmissionProgress from '@/components/effects/SubmissionProgress';
@@ -56,12 +67,13 @@ const CreatorOnboarding = () => {
   const [map, setMap] = useState<RadarMap | null>(null);
   const [marker, setMarker] = useState<RadarMarker | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState('');
+  const [submitError, setSubmitError] = useState<string | null>(null); // Changed to null for cleaner state
   const [walletAddress, setWalletAddress] = useState('');
   const [isWalletFetched, setIsWalletFetched] = useState(false);
   const [coverImage, setCoverImage] = useState<string | null>(null);
-  const [curatorPlatformFee] = useState<string>("0.001121");
+  const [curatorPlatformFee] = useState<string>("0.00");
   const [submissionStep, setSubmissionStep] = useState<string | null>(null);
+  const [openSnackbar, setOpenSnackbar] = useState(false); // State for Snackbar visibility
   const { user } = usePrivy();
 
   useEffect(() => {
@@ -86,11 +98,11 @@ const CreatorOnboarding = () => {
     const fetchWalletAddress = async () => {
       try {
         setIsLoading(true);
-        setSubmitError('');
+        setSubmitError(null);
 
         if (user && user.wallet) {
           setWalletAddress(user.wallet.address);
-          setIsWalletFetched(true); // Mark wallet as fetched
+          setIsWalletFetched(true);
         }
       } catch (err) {
         setSubmitError((err as Error).message || 'Failed to fetch wallet address');
@@ -102,105 +114,96 @@ const CreatorOnboarding = () => {
     fetchWalletAddress();
   }, [user]);
 
- // Update the handleSubmit function
-const handleSubmit = async () => {
-  if (!isWalletFetched) {
-    setSubmitError('Please wait while we fetch your wallet address.');
+  // Show Snackbar when submitError changes
+  useEffect(() => {
+    if (submitError) {
+      setOpenSnackbar(true);
+    }
+  }, [submitError]);
 
+  const handleSubmit = async () => {
+    if (!isWalletFetched) {
+      setSubmitError('Please wait while we fetch your wallet address.');
+      
 return;
-  }
-
-  if (!libraryName || !country || !city || !state || !coverImage) {
-    setSubmitError('Please fill in all required fields and customize your cover');
-
-return;
-  }
-
-  setIsSubmitting(true);
-  setSubmitError('');
-  setSubmissionStep('Storing data on IPFS Node');
-
-  try {
-    // First step: IPFS storage
-    const { metadataCID, imageCID } = await createCuratorMetadata(libraryName, coverImage);
-
-    console.log('Image CID:', imageCID);
-    console.log('Metadata CID:', metadataCID);
-
-    // Second step: Blockchain
-    setSubmissionStep('Magically putting library onchain');
-    const registrationData = { name: libraryName };
-
-    const { hash, uniqueId, nftTokenId } = await registerCurator(
-      registrationData,
-      metadataCID,
-      curatorPlatformFee
-    );
-
-    // Third step: Submission
-    setSubmissionStep('Submitting registration');
-
-    const response = await fetch('/api/library/curator/onboarding', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        wallet: walletAddress,
-        name: libraryName,
-        country,
-        city,
-        state,
-        coverImage: imageCID,
-        transactionHash: hash,
-        onChainUniqueId: uniqueId,
-        nftTokenId,
-      }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to create library');
     }
 
-    console.log('Data Payload', data);
-    console.log('Specific Payload', {
-      'library Name': data.curator.name,
-      'library Id': data.curator.id
-    });
+    if (!libraryName || !country || !city || !state || !coverImage) {
+      setSubmitError('Please fill in all required fields and customize your cover');
+      
+return;
+    }
 
-    await sendLibraryCreatedNotificationToReader(data.curator.name, data.curator.id, walletAddress);
+    setIsSubmitting(true);
+    setSubmitError(null);
+    setSubmissionStep('Storing data on IPFS Node');
 
-    setSubmissionStep(null);
-    setStep(step + 1);
-  } catch (error) {
-    console.error('Failed to create library:', error);
+    try {
+      const { metadataCID, imageCID } = await createCuratorMetadata(libraryName, coverImage);
 
-    // Error handling remains the same
-    if (error instanceof Error) {
-      if (error.message.includes('user rejected transaction')) {
-        setSubmitError('Transaction was rejected. Please try again.');
-      } else if (error.message.includes('insufficient funds')) {
-        setSubmitError('Insufficient funds to complete the transaction.');
-      } else {
-        setSubmitError(error.message);
+      setSubmissionStep('Magically putting library onchain');
+      const registrationData = { name: libraryName };
+
+      const { hash, uniqueId, nftTokenId } = await registerCurator(
+        registrationData,
+        metadataCID,
+        curatorPlatformFee
+      );
+
+      setSubmissionStep('Submitting registration');
+
+      const response = await fetch('/api/library/curator/onboarding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          wallet: walletAddress,
+          name: libraryName,
+          country,
+          city,
+          state,
+          coverImage: imageCID,
+          transactionHash: hash,
+          onChainUniqueId: uniqueId,
+          nftTokenId,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create library');
       }
-    } else {
-      setSubmitError('Failed to create library. Please try again.');
+
+      await sendLibraryCreatedNotificationToReader(data.curator.name, data.curator.id, walletAddress);
+
+      setSubmissionStep(null);
+      setStep(step + 1);
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message.includes('user rejected transaction')) {
+          setSubmitError('Transaction was rejected. Please try again.');
+        } else if (error.message.includes('insufficient funds')) {
+          setSubmitError('Insufficient funds to complete the transaction.');
+        } else {
+          setSubmitError(error.message);
+        }
+      } else {
+        setSubmitError('Failed to create library. Please try again.');
+      }
+    } finally {
+      setIsSubmitting(false);
+      setSubmissionStep(null);
     }
-  } finally {
-    setIsSubmitting(false);
-    setSubmissionStep(null); // Hide the progress overlay
-  }
-};
+  };
 
   const handleSearchLocation = async (query: string) => {
     if (!query) {
       setSearchResults([]);
       setIsSearching(false);
-
-      return;
+      
+return;
     }
 
     setIsSearching(true);
@@ -219,7 +222,6 @@ return;
         setSearchResults([]);
       }
     } catch (err) {
-
       setLocationError('Failed to search location. Please try again.');
     } finally {
       setIsSearching(false);
@@ -250,17 +252,23 @@ return;
     setCity(selectedLocation.city || '');
     setState(selectedLocation.state || '');
     updateMap(selectedLocation.latitude, selectedLocation.longitude);
-    setSearchResults([]); // Clear results after selection
+    setSearchResults([]);
     setSearchQuery(`${selectedLocation.city}, ${selectedLocation.state}, ${selectedLocation.country}`);
   };
 
   const SuccessStep = () => (
     <>
-     <Typography variant="body1" className="text-center mb-6">
-        Congratulations! You’ve successfully onboarded as a <strong>Library Owner</strong>. Start adding books to share with the community, or borrow from other library owners !
+      <Typography variant="body1" className="text-center mb-6">
+        Congratulations! You’ve successfully onboarded as a <strong>Library Owner</strong>. Start adding books to share with the community, or borrow from other library owners!
       </Typography>
     </>
   );
+
+  // Handle Snackbar close
+  const handleCloseSnackbar = () => {
+    setOpenSnackbar(false);
+    setSubmitError(null); // Clear the error after closing
+  };
 
   return (
     <>
@@ -272,7 +280,7 @@ return;
           right: 0,
           zIndex: 1100,
           backgroundColor: 'white',
-          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)'
+          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
         }}
       >
         <LinearProgress
@@ -282,8 +290,8 @@ return;
             height: 4,
             backgroundColor: '#ffffff',
             '.MuiLinearProgress-bar': {
-              backgroundColor: '#000000'
-            }
+              backgroundColor: '#000000',
+            },
           }}
         />
         <IconButton
@@ -291,7 +299,7 @@ return;
             position: 'absolute',
             top: 8,
             left: 8,
-            zIndex: 1200
+            zIndex: 1200,
           }}
           onClick={() => window.location.href = '/'}
         >
@@ -299,8 +307,7 @@ return;
         </IconButton>
       </Box>
 
-          {/* Add the progress overlay */}
-    {submissionStep && <SubmissionProgress currentStep={submissionStep} />}
+      {submissionStep && <SubmissionProgress currentStep={submissionStep} />}
 
       <div className='min-h-screen flex flex-col lg:flex-row bg-gray-50'>
         <div className='flex-1 flex items-center justify-center p-4 lg:p-8'>
@@ -344,7 +351,7 @@ return;
                             zIndex: 1000,
                             mt: 1,
                             maxHeight: '200px',
-                            overflowY: 'auto'
+                            overflowY: 'auto',
                           }}
                         >
                           {searchResults.map((result, index) => (
@@ -372,33 +379,27 @@ return;
                       fullWidth
                       label="Country"
                       value={country}
-                      InputProps={{
-                      readOnly: true,
-                      }}
+                      InputProps={{ readOnly: true }}
                       className="mb-4"
                     />
                     <TextField
                       fullWidth
                       label="City"
                       value={city}
-                      InputProps={{
-                      readOnly: true,
-                      }}
+                      InputProps={{ readOnly: true }}
                       className="mb-4"
                     />
                     <TextField
                       fullWidth
                       label="State"
                       value={state}
-                      InputProps={{
-                      readOnly: true,
-                      }}
+                      InputProps={{ readOnly: true }}
                       className="mb-4"
                     />
                     <TextField
                       fullWidth
                       label="Platform Fee"
-                      value={curatorPlatformFee} // Keep it as a string
+                      value={curatorPlatformFee}
                       InputProps={{
                         readOnly: true,
                         startAdornment: (
@@ -432,8 +433,8 @@ return;
                         borderColor: 'white',
                         '&:hover': {
                           backgroundColor: 'black',
-                          borderColor: 'white'
-                        }
+                          borderColor: 'white',
+                        },
                       }}
                     >
                       Return Home
@@ -453,8 +454,8 @@ return;
                             alignSelf: 'flex-end',
                             '&:hover': {
                               backgroundColor: 'black',
-                              borderColor: 'white'
-                            }
+                              borderColor: 'white',
+                            },
                           }}
                         >
                           {isSubmitting ? (
@@ -463,12 +464,6 @@ return;
                             'Continue'
                           )}
                         </Button>
-
-                        {submitError && (
-                          <Typography variant='body2' color='error'>
-                            {submitError}
-                          </Typography>
-                        )}
                       </div>
                     </>
                   )}
@@ -478,17 +473,32 @@ return;
           </div>
         </div>
 
-        {/* Conditionally render CustomizableCover */}
         {step === 1 && (
           <div className='flex-1 flex items-center justify-center p-4 lg:p-8 bg-gray-200'>
             <CustomizableCover
               libraryName={libraryName}
               onImageChange={(imageData) => setCoverImage(imageData)}
-              showCustomization={true} // This hides the customization controls
+              showCustomization={true}
             />
           </div>
         )}
       </div>
+
+      {/* Add Snackbar for error display */}
+      <Snackbar
+        open={openSnackbar}
+        autoHideDuration={10000} // Closes after 6 seconds
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} // Position at top-right
+      >
+        <Alert
+          onClose={handleCloseSnackbar}
+          severity="error"
+          sx={{ width: '100%' }}
+        >
+          {submitError}
+        </Alert>
+      </Snackbar>
     </>
   );
 };

@@ -1,3 +1,5 @@
+// Code: EngageSpotNotification
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -34,9 +36,6 @@ const EngageSpotNotification = () => {
   }, [user]);
 
   const theme = {
-    // colors: {
-    //   brandingPrimary: "#5D4037",
-    // },
     notificationButton: {
       iconFill: "#5D4037",
       iconSize: "40px",
@@ -44,6 +43,7 @@ const EngageSpotNotification = () => {
   };
 
   return (
+    console.log("EngageSpotNotification", apiKey, userId, userToken),
     <Engagespot
       apiKey={apiKey as string}
       userId={userId || 'guest'}
