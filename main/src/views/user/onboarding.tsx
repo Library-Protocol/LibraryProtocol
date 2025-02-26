@@ -52,6 +52,21 @@ const interests = [
   'Independent bookstores'
 ]
 
+interface ProfileStepProps {
+  profileImage: string;
+  wallet: string;
+  name: string;
+  email: string;
+  bio: string;
+  socialMedia: Array<{ platform: string; handle: string }>;
+  setName: (name: string) => void;
+  setEmail: (email: string) => void;
+  setBio: (bio: string) => void;
+  setAvatar: (avatar: string) => void;
+  handleSocialMediaChange: (index: number, field: string, value: string) => void;
+  errors: { [key: string]: string };
+}
+
 const ProfileStep = React.memo(
   ({
     profileImage,
@@ -64,58 +79,54 @@ const ProfileStep = React.memo(
     setEmail,
     setBio,
     setAvatar,
-    handleSocialMediaChange
-  }: {
-    profileImage: string
-    wallet: string
-    name: string
-    email: string
-    bio: string
-    socialMedia: any[]
-    setName: (value: string) => void
-    setEmail: (value: string) => void
-    setBio: (value: string) => void
-    setAvatar: (value: string) => void
-    handleSocialMediaChange: (index: number, field: string, value: string) => void
-  }) => (
+    handleSocialMediaChange,
+    errors
+  }: ProfileStepProps) => (
     <>
       <div className='flex justify-center mb-6'>
-      <AvatarSelector
-  onAvatarChange={setAvatar}
-  uniqueId={wallet}
-  initialImage={profileImage} // Pass the current avatar as initialImage
-/>
+        <AvatarSelector
+          onAvatarChange={setAvatar}
+          uniqueId={wallet}
+          initialImage={profileImage}
+        />
       </div>
 
       <div className='space-y-6'>
         <div>
           <TextField
             fullWidth
-            label='Name (Required)'
+            label='Name'
             variant='outlined'
             placeholder='Type your name...'
             size='small'
             value={name}
             onChange={e => setName(e.target.value)}
+            required
+            error={!!errors.name}
+            helperText={errors.name}
           />
         </div>
 
         <div>
           <TextField
             fullWidth
-            label='Email (Optional)'
+            label='Email'
             variant='outlined'
-            placeholder='Type your name...'
+            placeholder='Type your email...'
             size='small'
             value={email}
             onChange={e => setEmail(e.target.value)}
+            required
+            error={!!errors.email}
+            helperText={errors.email}
+            type='email'
           />
         </div>
 
         <div>
           <TextField
             fullWidth
-            label='Bio'
+            label='Bio (Optional)'
             variant='outlined'
             placeholder='Say something about yourself...'
             multiline
@@ -127,20 +138,15 @@ const ProfileStep = React.memo(
         </div>
 
         <div>
-          <InputLabel className='mb-2 text-sm'>Where else can you be found? (optional)</InputLabel>
-          {/* Social Media Fields */}
+          <InputLabel className='mb-2 text-sm'>Social Media (Optional)</InputLabel>
           {socialMedia.map((media, index) => (
             <div key={index} className='flex gap-2 mt-4'>
               <FormControl size='small' className='w-[140px]'>
                 <Select
                   value={media.platform}
-                  onChange={e => handleSocialMediaChange(index, 'platform', e.target.value as string)}
+                  onChange={e => handleSocialMediaChange(index, 'platform', e.target.value)}
                 >
-                  <MenuItem value='instagram'>Instagram</MenuItem>
-                  <MenuItem value='twitter'>Twitter</MenuItem>
-                  <MenuItem value='linkedin'>LinkedIn</MenuItem>
-                  <MenuItem value='facebook'>Facebook</MenuItem>
-                  <MenuItem value='tiktok'>TikTok</MenuItem>
+                  <MenuItem value='twitter'>X</MenuItem>
                 </Select>
               </FormControl>
               <TextField
@@ -158,18 +164,20 @@ const ProfileStep = React.memo(
   )
 )
 
+interface InterestsStepProps {
+  selectedInterests: string[];
+  showAllInterests: boolean;
+  handleInterestToggle: (interest: string) => void;
+  handleShowAllInterests: () => void;
+}
+
 const InterestsStep = React.memo(
   ({
     selectedInterests,
     showAllInterests,
     handleInterestToggle,
     handleShowAllInterests
-  }: {
-    selectedInterests: string[]
-    showAllInterests: boolean
-    handleInterestToggle: (interest: string) => void
-    handleShowAllInterests: () => void
-  }) => {
+  }: InterestsStepProps) => {
     const displayedInterests = showAllInterests ? interests : interests.slice(0, 20)
 
     return (
@@ -196,7 +204,12 @@ const InterestsStep = React.memo(
             />
           ))}
           {!showAllInterests && interests.length > 20 && (
-            <Chip icon={<Plus size={16} />} label='' variant='outlined' onClick={handleShowAllInterests} />
+            <Chip
+              icon={<Plus size={16} />}
+              label=''
+              variant='outlined'
+              onClick={handleShowAllInterests}
+            />
           )}
         </div>
       </>
@@ -224,19 +237,21 @@ const UserOnboarding = () => {
   const [name, setName] = useState('')
   const [bio, setBio] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
   const [wallet, setWalletAddress] = useState('')
-  const [profileImage, setAvatar] = useState('');
+  const [profileImage, setAvatar] = useState('')
   const { user } = usePrivy()
 
   const [socialMedia, setSocialMedia] = useState([
-    { platform: 'instagram', handle: '' },
     { platform: 'twitter', handle: '' },
-    { platform: 'linkedin', handle: '' }
   ])
 
   const handleInterestToggle = useCallback((interest: string) => {
-    setSelectedInterests(prev => (prev.includes(interest) ? prev.filter(i => i !== interest) : [...prev, interest]))
+    setSelectedInterests(prev =>
+      prev.includes(interest)
+        ? prev.filter(i => i !== interest)
+        : [...prev, interest]
+    )
   }, [])
 
   const handleShowAllInterests = useCallback(() => {
@@ -250,40 +265,44 @@ const UserOnboarding = () => {
   useEffect(() => {
     const fetchWalletAddress = async () => {
       try {
-        setError('')
-
         if (user?.wallet) {
           setWalletAddress(user.wallet.address)
         }
-      } catch (err) {
-        setError((err as Error).message || 'Failed to fetch wallet address')
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch wallet address'
+
+        setErrors({ general: errorMessage })
       }
     }
 
     fetchWalletAddress()
   }, [user])
 
-  const handleLetsDoThis = () => {
-    if (wallet) {
-      window.location.href = `/user/dashboard/${wallet}`
-    } else {
-      setError('Wallet address not found. Please connect your wallet.')
+  const validateForm = () => {
+    const newErrors: { [key: string]: string } = {}
+
+    if (!name.trim()) {
+      newErrors.name = 'Name is required'
     }
+
+    if (!email.trim()) {
+      newErrors.email = 'Email is required'
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Please enter a valid email'
+    }
+
+    setErrors(newErrors)
+
+return Object.keys(newErrors).length === 0
   }
 
   const handleContinue = async () => {
     if (step === 1) {
-      if (!name.trim()) {
-        setError('Name is required')
-
-        return
-      }
-
-      setError('')
+      if (!validateForm()) return
       setStep(2)
     } else if (step === 2) {
       setLoading(true)
-      setError('')
+      setErrors({})
 
       try {
         const onboardingData = {
@@ -292,7 +311,7 @@ const UserOnboarding = () => {
           email,
           name,
           bio,
-          socialMedia,
+          socialMedia: socialMedia.filter(media => media.handle.trim() !== ''),
           interests: selectedInterests
         }
 
@@ -309,10 +328,10 @@ const UserOnboarding = () => {
         } else {
           const errorData = await response.json()
 
-          setError(errorData.message || 'Failed to save onboarding data')
+          setErrors({ general: errorData.message || 'Failed to save onboarding data' })
         }
       } catch (error) {
-        setError('An error occurred while submitting. Please try again.')
+        setErrors({ general: 'An error occurred while submitting. Please try again.' })
       } finally {
         setLoading(false)
       }
@@ -325,7 +344,7 @@ const UserOnboarding = () => {
 
       updated[index] = { ...updated[index], [field]: value }
 
-      return updated
+return updated
     })
   }, [])
 
@@ -358,12 +377,12 @@ const UserOnboarding = () => {
             sx={{
               position: 'absolute',
               top: 8,
-              left: 8, // Move to the far right
+              left: 8,
               zIndex: 1200,
-              color: '#000000',
+              color: '#000000'
             }}
             onClick={handleBackToHome}
-            startIcon={<ArrowLeft className="w-6 h-6" />} // Add the icon
+            startIcon={<ArrowLeft className="w-6 h-6" />}
           >
             Back
           </Button>
@@ -372,7 +391,7 @@ const UserOnboarding = () => {
               position: 'absolute',
               top: 8,
               right: 8,
-              zIndex: 1200,
+              zIndex: 1200
             }}
           >
             <ConnectWalletButton />
@@ -399,6 +418,7 @@ const UserOnboarding = () => {
                     setBio={setBio}
                     setAvatar={setAvatar}
                     handleSocialMediaChange={handleSocialMediaChange}
+                    errors={errors}
                   />
                 ) : step === 2 ? (
                   <InterestsStep
@@ -412,17 +432,16 @@ const UserOnboarding = () => {
                 )}
 
                 <div className='mt-6 space-y-2'>
-                  {error && (
+                  {errors.general && (
                     <Typography color='error' className='text-center'>
-                      {error}
+                      {errors.general}
                     </Typography>
                   )}
-
                   {step === 3 ? (
                     <Button
                       variant='contained'
                       fullWidth
-                      onClick={handleLetsDoThis}
+                      onClick={() => window.location.href = `/user/dashboard/${wallet}`}
                       sx={{
                         backgroundColor: '#ffffff',
                         color: '#000000',
@@ -432,21 +451,19 @@ const UserOnboarding = () => {
                       Let&apos;s do this
                     </Button>
                   ) : (
-                    <>
-                      <Button
-                        variant='contained'
-                        fullWidth
-                        onClick={handleContinue}
-                        disabled={loading}
-                        sx={{
-                          backgroundColor: '#2B1810',
-                          color: '#F8F2EB',
-                          '&:hover': { backgroundColor: '#5D4037' }
-                        }}
-                      >
-                        {loading ? 'Submitting...' : 'Continue'}
-                      </Button>
-                    </>
+                    <Button
+                      variant='contained'
+                      fullWidth
+                      onClick={handleContinue}
+                      disabled={loading}
+                      sx={{
+                        backgroundColor: '#2B1810',
+                        color: '#F8F2EB',
+                        '&:hover': { backgroundColor: '#5D4037' }
+                      }}
+                    >
+                      {loading ? 'Submitting...' : 'Continue'}
+                    </Button>
                   )}
                 </div>
               </CardContent>
