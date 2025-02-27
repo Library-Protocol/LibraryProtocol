@@ -54,6 +54,7 @@ const getProviderAndSigner = async () => {
       new Promise((resolve, reject) => {
         if (window.ethereum) return resolve(true);
         let attempts = 0;
+
         const interval = setInterval(() => {
           if (window.ethereum) {
             clearInterval(interval);
@@ -62,6 +63,7 @@ const getProviderAndSigner = async () => {
             clearInterval(interval);
             reject(new Error(WALLET_ERROR_MESSAGES.METAMASK_NOT_FOUND));
           }
+
           attempts++;
         }, 500);
       });
@@ -72,6 +74,7 @@ const getProviderAndSigner = async () => {
 
     // Explicitly request account access if not connected
     let accounts = await provider.listAccounts();
+
     if (accounts.length === 0) {
       try {
         await window.ethereum.request({ method: 'eth_requestAccounts' });
@@ -83,6 +86,7 @@ const getProviderAndSigner = async () => {
 
     // Verify Arbitrum network
     const network = await provider.getNetwork();
+
     if (Number(network.chainId) !== ARBITRUM_CHAIN_ID) {
       try {
         await window.ethereum.request({
@@ -95,9 +99,12 @@ const getProviderAndSigner = async () => {
     }
 
     const signer = await provider.getSigner();
-    return { provider, signer };
+
+    
+return { provider, signer };
   } catch (error) {
     const errorMessage = handleWalletError(error);
+
     throw new Error(errorMessage);
   }
 };
@@ -113,6 +120,7 @@ const getContracts = async () => {
 
     // Pre-flight check: Ensure wallet is still connected
     const accounts = await provider.listAccounts();
+
     if (accounts.length === 0) {
       throw new Error(WALLET_ERROR_MESSAGES.WALLET_DISCONNECTED);
     }
@@ -124,6 +132,7 @@ const getContracts = async () => {
     return { provider, libraryProtocol, libraryBook, libraryOwner };
   } catch (error) {
     const errorMessage = handleWalletError(error);
+
     throw new Error(errorMessage);
   }
 };
@@ -178,26 +187,31 @@ export const registerCurator = async (
   try {
     const { provider, libraryProtocol } = await getContracts();
     const accounts = await provider.listAccounts();
+
     if (accounts.length === 0) throw new Error(WALLET_ERROR_MESSAGES.WALLET_DISCONNECTED);
 
     const value = ethers.parseEther(curatorPlatformFee);
     const gasEstimate = await libraryProtocol.getFunction('registerCurator').estimateGas(data.name, metadataCID, { value });
+
     const tx = await libraryProtocol.registerCurator(data.name, metadataCID, {
       gasLimit: gasEstimate * 120n / 100n, // 20% buffer
       value,
     });
 
     const receipt = await tx.wait();
+
     if (!receipt || !receipt.logs) throw new Error('Transaction failed: No logs found');
 
     const abi = [
       'event LibraryOwnerRegistered(string uniqueId, address indexed wallet, string name, uint256 libraryTokenId, string metadataCID)',
     ];
+
     const iface = new ethers.Interface(abi);
 
     for (const log of receipt.logs) {
       try {
         const parsedLog = iface.parseLog({ topics: log.topics as string[], data: log.data });
+
         if (parsedLog && parsedLog.name === 'LibraryOwnerRegistered') {
           return {
             success: true,
@@ -216,6 +230,7 @@ export const registerCurator = async (
     return { success: true, hash: receipt.hash };
   } catch (error) {
     const errorMessage = handleWalletError(error);
+
     throw new Error(errorMessage);
   }
 };
@@ -227,6 +242,7 @@ export const addBook = async (
   try {
     const { provider, libraryProtocol } = await getContracts();
     const accounts = await provider.listAccounts();
+
     if (accounts.length === 0) throw new Error(WALLET_ERROR_MESSAGES.WALLET_DISCONNECTED);
 
     const gasEstimate = await libraryProtocol.getFunction('addBook').estimateGas(
@@ -257,16 +273,19 @@ export const addBook = async (
     );
 
     const receipt: TransactionReceipt = await tx.wait();
+
     if (!receipt || !receipt.logs) throw new Error('Transaction failed: No logs found');
 
     const abi = [
       'event BookAdded(string uniqueId, string title, string libraryOwnerId, uint256 isbn, uint256 bookTokenId, uint256 libraryTokenId, uint256 copies, string metadataCID)',
     ];
+
     const iface = new ethers.Interface(abi);
 
     for (const log of receipt.logs) {
       try {
         const parsedLog = iface.parseLog(log);
+
         if (parsedLog && parsedLog.name === 'BookAdded') {
           return {
             success: true,
@@ -283,6 +302,7 @@ export const addBook = async (
     return { success: true, hash: receipt.hash };
   } catch (error) {
     const errorMessage = handleWalletError(error);
+
     throw new Error(errorMessage);
   }
 };
@@ -294,6 +314,7 @@ export const bookRequest = async (
   try {
     const { provider, libraryProtocol } = await getContracts();
     const accounts = await provider.listAccounts();
+
     if (accounts.length === 0) throw new Error(WALLET_ERROR_MESSAGES.WALLET_DISCONNECTED);
 
     const gasEstimate = await libraryProtocol.getFunction('addBookRequest').estimateGas(
@@ -316,16 +337,19 @@ export const bookRequest = async (
     );
 
     const receipt: TransactionReceipt = await tx.wait();
+
     if (!receipt || !receipt.logs) throw new Error('Transaction failed');
 
     const abi = [
       'event BookRequestAdded(string id, address wallet, uint256 isbn, string title, string author, string libraryOwnerId, string status)',
     ];
+
     const iface = new ethers.Interface(abi);
 
     for (const log of receipt.logs) {
       try {
         const parsedLog = iface.parseLog(log);
+
         if (parsedLog) {
           return {
             success: true,
@@ -341,6 +365,7 @@ export const bookRequest = async (
     return { success: true, hash: receipt.hash };
   } catch (error) {
     const errorMessage = handleWalletError(error);
+
     throw new Error(errorMessage);
   }
 };
@@ -350,6 +375,7 @@ export const bookRequestConfirmation = async (data: BookRequestLog): Promise<{ s
   try {
     const { provider, libraryProtocol } = await getContracts();
     const accounts = await provider.listAccounts();
+
     if (accounts.length === 0) throw new Error(WALLET_ERROR_MESSAGES.WALLET_DISCONNECTED);
 
     const gasEstimate = await libraryProtocol.getFunction('addBookRequestLog').estimateGas(
@@ -363,11 +389,13 @@ export const bookRequestConfirmation = async (data: BookRequestLog): Promise<{ s
     });
 
     const receipt: TransactionReceipt = await tx.wait();
+
     if (!receipt || !receipt.logs) throw new Error('Transaction failed');
 
     return { success: true };
   } catch (error) {
     const errorMessage = handleWalletError(error);
+
     throw new Error(errorMessage);
   }
 };
@@ -379,6 +407,7 @@ export const borrowBookRequest = async (
   try {
     const { provider, libraryProtocol } = await getContracts();
     const accounts = await provider.listAccounts();
+
     if (accounts.length === 0) throw new Error(WALLET_ERROR_MESSAGES.WALLET_DISCONNECTED);
 
     const gasEstimate = await libraryProtocol.getFunction('addBorrowBook').estimateGas(
@@ -392,16 +421,19 @@ export const borrowBookRequest = async (
     });
 
     const receipt: TransactionReceipt = await tx.wait();
+
     if (!receipt || !receipt.logs) throw new Error('Transaction failed');
 
     const abi = [
       'event BookBorrowed(string borrowingId, string bookId, string bookTitle, string libraryOwnerId, address borrower, uint256 borrowDate, uint256 returnDate)',
     ];
+
     const iface = new ethers.Interface(abi);
 
     for (const log of receipt.logs) {
       try {
         const parsedLog = iface.parseLog(log);
+
         if (parsedLog) {
           return {
             success: true,
@@ -417,6 +449,7 @@ export const borrowBookRequest = async (
     return { success: true, hash: receipt.hash };
   } catch (error) {
     const errorMessage = handleWalletError(error);
+
     throw new Error(errorMessage);
   }
 };
@@ -428,6 +461,7 @@ export const borrowBookRequestLogAndConfirmation = async (
   try {
     const { provider, libraryProtocol } = await getContracts();
     const accounts = await provider.listAccounts();
+
     if (accounts.length === 0) throw new Error(WALLET_ERROR_MESSAGES.WALLET_DISCONNECTED);
 
     const gasEstimate = await libraryProtocol.getFunction('addBorrowBookLog').estimateGas(
@@ -441,11 +475,13 @@ export const borrowBookRequestLogAndConfirmation = async (
     });
 
     const receipt: TransactionReceipt = await tx.wait();
+
     if (!receipt || !receipt.logs) throw new Error('Transaction failed');
 
     return { success: true };
   } catch (error) {
     const errorMessage = handleWalletError(error);
+
     throw new Error(errorMessage);
   }
 };
