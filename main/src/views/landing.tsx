@@ -97,7 +97,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ curators }) => {
   const sortedCurators = [...curators].sort((a, b) => {
     if (a.isVerified && !b.isVerified) return -1;
     if (!a.isVerified && b.isVerified) return 1;
-    
+
 return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
   });
 
@@ -243,3 +243,4 @@ return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
 };
 
 export default LandingPage;
+
