@@ -3,6 +3,8 @@
 import React, { useState, useEffect } from 'react';
 
 import { usePrivy } from '@privy-io/react-auth';
+import { Box, Typography, TextField, Button, Pagination, Skeleton, IconButton } from '@mui/material';
+import { ArrowLeft } from 'lucide-react';
 
 import FallbackBookCover from '@/components/library/FallbackBookCover';
 import LibraryMascotWidget from '@/components/effects/MascotWidget';
@@ -43,20 +45,15 @@ const BookCard: React.FC<{ book: BookType & { curator: { id: string; name: strin
 
   useEffect(() => {
     const fetchCoverImage = async () => {
-      // If book.image is already set (base64), skip fetching
       if (book.image) return;
-
       if (!book.isbn) return;
 
       try {
         const coverUrl = `https://covers.openlibrary.org/b/isbn/${book.isbn}-L.jpg?default=false`;
-        const coverResponse = await fetch(coverUrl);
+        const response = await fetch(coverUrl);
 
-        if (coverResponse.ok) {
-          setCoverImage(coverUrl);
-        } else {
-          setCoverImage(null);
-        }
+        if (response.ok) setCoverImage(coverUrl);
+        else setCoverImage(null);
       } catch (error) {
         console.error('Error fetching cover image:', error);
         setCoverImage(null);
@@ -67,105 +64,291 @@ const BookCard: React.FC<{ book: BookType & { curator: { id: string; name: strin
   }, [book.isbn, book.image]);
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden transform transition-all hover:shadow-lg">
-      {/* Book Cover */}
-      <div className="relative h-60">
+    <Box
+      sx={{
+        bgcolor: 'white',
+        borderRadius: 2,
+        boxShadow: 3,
+        overflow: 'hidden',
+        transition: 'transform 0.2s, box-shadow 0.2s',
+        '&:hover': { transform: 'scale(1.02)', boxShadow: 6 },
+        width: '100%',
+        maxWidth: '176px',
+        mx: 'auto',
+      }}
+    >
+      <Box sx={{ position: 'relative', height: '240px' }}>
         {coverImage ? (
-         <img
-         src={coverImage}
-         alt={book.title}
-         className="w-full h-full object-cover object-center"
-       />
+          <img src={coverImage} alt={book.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          <FallbackBookCover title={book.title} author={book.author} width={'176px'} height={'240px'} />
+          <FallbackBookCover title={book.title} author={book.author} width="176px" height="240px" />
         )}
-
-        {/* Curator Name Badge */}
-        <div className="absolute top-2 left-2 px-2 py-1 bg-gray-800 bg-opacity-75 rounded-full text-white text-xs font-medium">
+        <Box
+          sx={{
+            position: 'absolute',
+            top: 8,
+            left: 8,
+            px: 1.5,
+            py: 0.5,
+            bgcolor: 'rgba(55, 65, 81, 0.75)',
+            borderRadius: '9999px',
+            color: 'white',
+            fontSize: '0.75rem',
+            fontWeight: 'medium',
+          }}
+        >
           {book.curator.name}
-        </div>
-      </div>
-
-      {/* Borrow Button */}
-      <div className="p-3">
-        <button
-          className={`w-full px-4 py-2 rounded-md text-sm transition-colors ${
-            book.availability
-              ? 'bg-brown-600 hover:bg-brown-800 text-white'
-              : 'bg-brown-500 text-white cursor-not-allowed'
-          }`}
+        </Box>
+      </Box>
+      <Box sx={{ p: 2 }}>
+        <Button
+          fullWidth
+          variant="contained"
           disabled={!book.availability}
-          onClick={() => {
-            if (book.availability) {
-              window.location.href = `/library/curator/${book.curator.id}/book/${book.isbn}`;
-            }
+          onClick={() => book.availability && (window.location.href = `/library/curator/${book.curator.id}/book/${book.isbn}`)}
+          sx={{
+            bgcolor: book.availability ? 'brown.600' : 'brown.500',
+            color: 'white',
+            '&:hover': { bgcolor: book.availability ? 'brown.800' : 'brown.500' },
+            py: 1,
+            fontSize: '0.875rem',
           }}
         >
           {book.availability ? 'Borrow Now' : 'Unavailable'}
-        </button>
-        <p className="text-xs text-black truncate mt-2" title={book.curator.location}>
-            {book.curator.location}
-          </p>
-      </div>
-    </div>
+        </Button>
+        <Typography
+          variant="caption"
+          sx={{ color: 'grey.800', mt: 1, display: 'block', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}
+          title={book.curator.location}
+        >
+          {book.curator.location}
+        </Typography>
+      </Box>
+    </Box>
   );
 };
 
+// Skeleton Loader Component
+const BookSkeleton: React.FC = () => (
+  <Box
+    sx={{
+      width: '100%',
+      maxWidth: '176px',
+      mx: 'auto',
+      bgcolor: 'white',
+      borderRadius: 2,
+      boxShadow: 3,
+      overflow: 'hidden',
+    }}
+  >
+    <Skeleton variant="rectangular" width="100%" height={240} />
+    <Box sx={{ p: 2 }}>
+      <Skeleton variant="rectangular" width="100%" height={36} sx={{ borderRadius: 1 }} />
+      <Skeleton variant="text" width="80%" sx={{ mt: 1 }} />
+    </Box>
+  </Box>
+);
+
 const BooksPage: React.FC<LandingPageProps> = ({ data }) => {
   const [searchQuery, setSearchQuery] = useState('');
-  const { authenticated } = usePrivy(); // Get Privy authentication methods
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasData, setHasData] = useState(false);
+  const { authenticated } = usePrivy();
+  const booksPerPage = { xs: 4, sm: 12 }; // 4 on mobile, 12 on larger screens
 
-  // Flatten all books from all curators
-  const allBooks = data.flatMap(curator =>
-    curator.books.map(book => ({
+  // Flatten all books from curators
+  const allBooks = data?.flatMap(curator =>
+    curator.books?.map(book => ({
       ...book,
-      curator: {
-        id: curator.id,
-        name: curator.name,
-        location: `${curator.city}, ${curator.state}, ${curator.country}`
-      }
+      curator: { id: curator.id, name: curator.name, location: `${curator.city}, ${curator.state}, ${curator.country}` },
     }))
-  );
+  ) || [];
+
+  // Check if data is available
+  useEffect(() => {
+    console.log("Curators data:", data);
+    console.log("All books data:", allBooks);
+
+    const dataExists = Array.isArray(data) && data.length > 0 && Array.isArray(allBooks) && allBooks.length > 0;
+
+    setHasData(dataExists);
+
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [data, allBooks]);
 
   // Filter books based on search query
   const filteredBooks = searchQuery
     ? allBooks.filter(book =>
-        book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        book.author.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        book.curator.name.toLowerCase().includes(searchQuery.toLowerCase())
+        [book.title, book.author, book.curator.name].some(field =>
+          field?.toLowerCase().includes(searchQuery.toLowerCase())
+        )
       )
     : allBooks;
 
+  // Pagination logic with responsive books per page
+  const getBooksPerPage = () => (window.innerWidth < 600 ? booksPerPage.xs : booksPerPage.sm);
+  const [currentBooksPerPage, setCurrentBooksPerPage] = useState(getBooksPerPage());
+
+  useEffect(() => {
+    const handleResize = () => setCurrentBooksPerPage(getBooksPerPage());
+
+    window.addEventListener('resize', handleResize);
+    
+return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  const totalPages = Math.ceil(filteredBooks.length / currentBooksPerPage);
+  const indexOfLastItem = currentPage * currentBooksPerPage;
+  const indexOfFirstItem = indexOfLastItem - currentBooksPerPage;
+  const paginatedBooks = filteredBooks.slice(indexOfFirstItem, indexOfLastItem);
+
+  const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Determine what content to show
+  const renderContent = () => {
+    if (isLoading) {
+      return Array.from({ length: currentBooksPerPage }).map((_, index) => <BookSkeleton key={index} />);
+    } else if (!hasData) {
+      return (
+        <Typography variant="body1" sx={{ gridColumn: '1 / -1', textAlign: 'center', color: 'grey.600' }}>
+          No books are currently available in the library.
+        </Typography>
+      );
+    } else if (searchQuery && filteredBooks.length === 0) {
+      return (
+        <Typography variant="body1" sx={{ gridColumn: '1 / -1', textAlign: 'center', color: 'grey.600' }}>
+          No books found matching your search.
+        </Typography>
+      );
+    } else {
+      return paginatedBooks.map((book) => <BookCard key={book.id} book={book} />);
+    }
+  };
+
   return (
-    <div className="relative max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
-      {/* Page Header */}
-      <div className="max-w-7xl mx-auto text-center mb-12">
-        <h1 className="text-4xl font-bold text-gray-900">Borrow a Book</h1>
-        <p className="mt-4 text-lg text-gray-700">
+    <Box sx={{ maxWidth: '1200px', mx: 'auto', px: { xs: 2, sm: 4, lg: 8 }, py: 4, position: 'relative' }}>
+      {/* Back Arrow */}
+      <IconButton
+        onClick={() => window.location.href = '/'}
+        sx={{
+          position: 'absolute',
+          top: { xs: 8, sm: 16 },
+          left: { xs: 8, sm: 16 },
+          zIndex: 1200,
+          bgcolor: 'grey.100',
+          '&:hover': { bgcolor: 'grey.200' },
+        }}
+      >
+        <ArrowLeft size={24} />
+      </IconButton>
+
+      {/* Header */}
+      <Box sx={{ textAlign: 'center', mb: 6 }}>
+        <Typography variant="h4" sx={{ fontWeight: 'bold', color: 'grey.900' }}>
+          Borrow a Book
+        </Typography>
+        <Typography variant="body1" sx={{ mt: 2, color: 'grey.700', fontSize: { xs: '1rem', sm: '1.125rem' } }}>
           Explore our collection of books and borrow your next read.
-        </p>
-      </div>
+        </Typography>
+      </Box>
 
       {/* Search Bar */}
-      <div className="max-w-3xl mx-auto mb-12">
-        <input
-          type="text"
+      <Box sx={{ maxWidth: '600px', mx: 'auto', mb: 6 }}>
+        <TextField
+          fullWidth
           placeholder="Search for books, authors, or libraries..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full px-6 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500 text-gray-900 placeholder-gray-400"
+          variant="outlined"
+          size="small"
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: 2,
+              bgcolor: 'white',
+              '& fieldset': { borderColor: 'grey.300' },
+              '&:hover fieldset': { borderColor: 'grey.500' },
+              '&.Mui-focused fieldset': { borderColor: 'grey.500' },
+            },
+            '& .MuiInputBase-input': { py: 1.5, fontSize: '1rem' },
+          }}
         />
-      </div>
+      </Box>
+
+      {/* Featured Section */}
+      <Box
+        sx={{
+          display: 'flex',
+          flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: { sm: 'space-between' },
+          alignItems: { sm: 'center' },
+          mb: { xs: 4, md: 6 },
+        }}
+      >
+        <Typography
+          variant="h5"
+          sx={{
+            fontWeight: 'bold',
+            mb: { xs: 2, sm: 0 },
+            fontSize: { xs: '1.25rem', md: '1.5rem', lg: '1.875rem' },
+          }}
+        >
+          Available Books
+        </Typography>
+        {hasData && (
+          <Typography variant="body2" sx={{ color: 'grey.500', fontSize: '0.875rem' }}>
+            Showing {filteredBooks.length > 0 ? `${indexOfFirstItem + 1}-${Math.min(indexOfLastItem, filteredBooks.length)} of ` : ''}{filteredBooks.length}
+          </Typography>
+        )}
+      </Box>
 
       {/* Book Grid */}
-      <div className="max-w-7xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-        {filteredBooks.map((book) => (
-          <BookCard key={book.id} book={book} />
-        ))}
-      </div>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: {
+            xs: 'repeat(2, 1fr)',
+            sm: 'repeat(3, 1fr)',
+            md: 'repeat(4, 1fr)',
+            lg: 'repeat(5, 1fr)',
+            xl: 'repeat(6, 1fr)',
+          },
+          gap: { xs: 2, sm: 3 },
+          justifyItems: 'center',
+        }}
+      >
+        {renderContent()}
+      </Box>
+
+      {/* Pagination */}
+      {!isLoading && hasData && totalPages > 1 && (
+        <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
+          <Pagination
+            count={totalPages}
+            page={currentPage}
+            onChange={handlePageChange}
+            color="primary"
+            size="medium"
+            sx={{
+              '& .MuiPaginationItem-root': {
+                fontSize: { xs: '0.875rem', sm: '1rem' },
+                minWidth: { xs: 32, sm: 36 },
+                height: { xs: 32, sm: 36 },
+              },
+            }}
+          />
+        </Box>
+      )}
 
       {authenticated && <LibraryMascotWidget />}
-    </div>
+    </Box>
   );
 };
 

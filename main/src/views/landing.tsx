@@ -71,7 +71,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ curators }) => {
 
       setIsMobile(mobile);
       // Adjust items per page based on screen size
-      setItemsPerPage(mobile ? 6 : window.innerWidth < 1024 ? 9 : 10);
+      setItemsPerPage(mobile ? 4 : window.innerWidth < 1024 ? 9 : 10);
     };
 
     // Initial check
@@ -258,8 +258,8 @@ const LandingPage: React.FC<LandingPageProps> = ({ curators }) => {
           </div>
         ) : (
           <>
-            <div className="flex justify-between items-center mb-4 md:mb-6">
-              <h2 className="text-xl md:text-2xl lg:text-3xl font-bold">Featured Libraries</h2>
+            <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 md:mb-6">
+              <h2 className="text-xl md:text-2xl lg:text-3xl font-bold mb-2 sm:mb-0">Featured Libraries</h2>
               <p className="text-sm text-gray-500">
                 Showing {indexOfFirstItem + 1}-{Math.min(indexOfLastItem, sortedCurators.length)} of {sortedCurators.length}
               </p>
@@ -270,7 +270,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ curators }) => {
                 <a
                   key={curator.id}
                   href={`/library/curator/${curator.id}`}
-                  className="relative bg-gray-200 rounded-xl md:rounded-[12px] overflow-hidden hover:scale-105 transform transition-all duration-300 w-full h-[180px] sm:h-[220px] md:h-[300px] lg:h-[350px]"
+                  className="relative bg-gray-200 rounded-xl md:rounded-[12px] overflow-hidden hover:scale-105 transform transition-all duration-300 w-full h-[220px] sm:h-[240px] md:h-[300px] lg:h-[350px]"
                 >
                   {/* Verification Badge - Top Left, White */}
                   {curator.isVerified && (
@@ -304,80 +304,93 @@ const LandingPage: React.FC<LandingPageProps> = ({ curators }) => {
               ))}
             </div>
 
-            {/* Pagination Controls */}
+            {/* Pagination Controls - Improved for mobile */}
             {totalPages > 1 && (
-              <div className="flex justify-center mt-6 md:mt-8">
-                <nav className="inline-flex shadow-sm rounded-md">
+              <div className="flex justify-center mt-8 mb-4">
+                <nav className="flex flex-wrap items-center gap-2 md:gap-0 md:inline-flex md:shadow-sm md:rounded-md">
                   <Button
                     onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                     disabled={currentPage === 1}
                     variant="outlined"
-                    className="px-2 md:px-3 py-1 md:py-2 text-sm rounded-l-md border-r-0"
+                    size="small"
+                    className="h-10 w-10 md:w-auto px-1 md:px-3 rounded-md md:rounded-l-md md:rounded-r-none md:border-r-0"
                     aria-label="Previous page"
                   >
-                    <ChevronLeft className="h-4 w-4" />
+                    <ChevronLeft className="h-5 w-5" />
                   </Button>
 
-                  {/* Show ellipsis for first page if not included in page numbers */}
-                  {startPage > 1 && (
-                    <>
-                      <Button
-                        onClick={() => handlePageChange(1)}
-                        variant={currentPage === 1 ? "contained" : "outlined"}
-                        className="hidden md:flex px-3 py-2 text-sm border-r-0"
-                      >
-                        1
-                      </Button>
-                      {startPage > 2 && (
-                        <span className="hidden md:inline-flex items-center px-3 py-2 text-sm bg-white border border-gray-300 border-r-0">
-                          ...
-                        </span>
-                      )}
-                    </>
-                  )}
+                  {/* Mobile optimized page numbers */}
+                  <div className="flex space-x-2 md:space-x-0">
+                    {/* Show ellipsis for first page if not included in page numbers */}
+                    {startPage > 1 && (
+                      <>
+                        <Button
+                          onClick={() => handlePageChange(1)}
+                          variant={currentPage === 1 ? "contained" : "outlined"}
+                          size="small"
+                          className="h-10 w-10 md:w-auto px-0 md:px-3 rounded-md md:rounded-none md:border-r-0"
+                        >
+                          1
+                        </Button>
+                        {startPage > 2 && (
+                          <span className="hidden md:inline-flex items-center px-3 py-2 text-sm h-10 bg-white border border-gray-300 border-r-0">
+                            ...
+                          </span>
+                        )}
+                      </>
+                    )}
 
-                  {/* Page Numbers */}
-                  {pageNumbers.map(number => (
-                    <Button
-                      key={number}
-                      onClick={() => handlePageChange(number)}
-                      variant={currentPage === number ? "contained" : "outlined"}
-                      className="px-2 md:px-3 py-1 md:py-2 text-sm border-r-0"
-                    >
-                      {number}
-                    </Button>
-                  ))}
-
-                  {/* Show ellipsis for last page if not included in page numbers */}
-                  {endPage < totalPages && (
-                    <>
-                      {endPage < totalPages - 1 && (
-                        <span className="hidden md:inline-flex items-center px-3 py-2 text-sm bg-white border border-gray-300 border-r-0">
-                          ...
-                        </span>
-                      )}
+                    {/* Page Numbers */}
+                    {pageNumbers.map(number => (
                       <Button
-                        onClick={() => handlePageChange(totalPages)}
-                        variant={currentPage === totalPages ? "text" : "outlined"}
-                        className="hidden md:flex px-3 py-2 text-sm border-r-0"
+                        key={number}
+                        onClick={() => handlePageChange(number)}
+                        variant={currentPage === number ? "contained" : "outlined"}
+                        size="small"
+                        className="h-10 w-10 md:w-auto px-0 md:px-3 rounded-md md:rounded-none md:border-r-0"
                       >
-                        {totalPages}
+                        {number}
                       </Button>
-                    </>
-                  )}
+                    ))}
+
+                    {/* Show ellipsis for last page if not included in page numbers */}
+                    {endPage < totalPages && (
+                      <>
+                        {endPage < totalPages - 1 && (
+                          <span className="hidden md:inline-flex items-center px-3 py-2 text-sm h-10 bg-white border border-gray-300 border-r-0">
+                            ...
+                          </span>
+                        )}
+                        <Button
+                          onClick={() => handlePageChange(totalPages)}
+                          variant={currentPage === totalPages ? "contained" : "outlined"}
+                          size="small"
+                          className="h-10 w-10 md:w-auto px-0 md:px-3 rounded-md md:rounded-none md:border-r-0"
+                        >
+                          {totalPages}
+                        </Button>
+                      </>
+                    )}
+                  </div>
 
                   <Button
                     onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
                     disabled={currentPage === totalPages}
                     variant="outlined"
-                    className="px-2 md:px-3 py-1 md:py-2 text-sm rounded-r-md"
+                    size="small"
+                    className="h-10 w-10 md:w-auto px-1 md:px-3 rounded-md md:rounded-l-none md:rounded-r-md"
                     aria-label="Next page"
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-5 w-5" />
                   </Button>
                 </nav>
               </div>
             )}
+
+            {/* Mobile pagination info */}
+            <div className="md:hidden text-center text-sm text-gray-500 mb-6">
+              Page {currentPage} of {totalPages}
+            </div>
           </>
         )}
       </div>

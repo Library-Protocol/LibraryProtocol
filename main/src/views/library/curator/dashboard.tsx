@@ -276,15 +276,15 @@ return;
       if (!allowedTypes.includes(file.type)) {
         setFileError('Only JPEG, JPG, and PNG files are allowed.');
 
-return;
+        return;
       }
 
       const maxSize = 5 * 1024 * 1024; // 5MB
 
-      if (file.size > maxSize) {
+              if (file.size > maxSize) {
         setFileError('File size must be less than 5MB.');
 
-return;
+        return;
       }
 
       setFileError('');

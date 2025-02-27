@@ -14,8 +14,8 @@ import {
   CircularProgress,
   MenuItem,
   ListItemText,
-  Snackbar, // Add Snackbar
-  Alert,   // Add Alert for better styling
+  Snackbar,
+  Alert,
 } from '@mui/material';
 import { ArrowLeft } from 'lucide-react';
 import Radar from 'radar-sdk-js';
@@ -61,19 +61,19 @@ const CreatorOnboarding = () => {
   const [state, setState] = useState('');
   const [locationError, setLocationError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [, setIsLoading] = useState(false);
+  const [,setIsLoading] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState<RadarAutocompleteAddress[]>([]);
   const [map, setMap] = useState<RadarMap | null>(null);
   const [marker, setMarker] = useState<RadarMarker | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null); // Changed to null for cleaner state
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [walletAddress, setWalletAddress] = useState('');
   const [isWalletFetched, setIsWalletFetched] = useState(false);
   const [coverImage, setCoverImage] = useState<string | null>(null);
   const [curatorPlatformFee] = useState<string>("0.00");
   const [submissionStep, setSubmissionStep] = useState<string | null>(null);
-  const [openSnackbar, setOpenSnackbar] = useState(false); // State for Snackbar visibility
+  const [openSnackbar, setOpenSnackbar] = useState(false);
   const { user } = usePrivy();
 
   useEffect(() => {
@@ -96,10 +96,10 @@ const CreatorOnboarding = () => {
 
   useEffect(() => {
     const fetchWalletAddress = async () => {
-      try {
-        setIsLoading(true);
-        setSubmitError(null);
+      setIsLoading(true);
+      setSubmitError(null);
 
+      try {
         if (user && user.wallet) {
           setWalletAddress(user.wallet.address);
           setIsWalletFetched(true);
@@ -114,23 +114,20 @@ const CreatorOnboarding = () => {
     fetchWalletAddress();
   }, [user]);
 
-  // Show Snackbar when submitError changes
   useEffect(() => {
-    if (submitError) {
-      setOpenSnackbar(true);
-    }
+    if (submitError) setOpenSnackbar(true);
   }, [submitError]);
 
   const handleSubmit = async () => {
     if (!isWalletFetched) {
       setSubmitError('Please wait while we fetch your wallet address.');
-      
+
 return;
     }
 
     if (!libraryName || !country || !city || !state || !coverImage) {
       setSubmitError('Please fill in all required fields and customize your cover');
-      
+
 return;
     }
 
@@ -154,9 +151,7 @@ return;
 
       const response = await fetch('/api/library/curator/onboarding', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           wallet: walletAddress,
           name: libraryName,
@@ -172,26 +167,20 @@ return;
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create library');
-      }
-
+      if (!response.ok) throw new Error(data.error || 'Failed to create library');
       await sendLibraryCreatedNotificationToReader(data.curator.name, data.curator.id, walletAddress);
-
       setSubmissionStep(null);
       setStep(step + 1);
     } catch (error) {
-      if (error instanceof Error) {
-        if (error.message.includes('user rejected transaction')) {
-          setSubmitError('Transaction was rejected. Please try again.');
-        } else if (error.message.includes('insufficient funds')) {
-          setSubmitError('Insufficient funds to complete the transaction.');
-        } else {
-          setSubmitError(error.message);
-        }
-      } else {
-        setSubmitError('Failed to create library. Please try again.');
-      }
+      setSubmitError(
+        error instanceof Error
+          ? error.message.includes('user rejected transaction')
+            ? 'Transaction was rejected. Please try again.'
+            : error.message.includes('insufficient funds')
+            ? 'Insufficient funds to complete the transaction.'
+            : error.message
+          : 'Failed to create library. Please try again.'
+      );
     } finally {
       setIsSubmitting(false);
       setSubmissionStep(null);
@@ -202,25 +191,19 @@ return;
     if (!query) {
       setSearchResults([]);
       setIsSearching(false);
-      
+
 return;
     }
 
     setIsSearching(true);
 
     try {
-      const result = await Radar.autocomplete({
-        query,
-        limit: 10,
-      });
+      const result = await Radar.autocomplete({ query, limit: 10 });
 
-      if (result.addresses.length > 0) {
-        setSearchResults(result.addresses as unknown as RadarAutocompleteAddress[]);
-        setLocationError('');
-      } else {
-        setLocationError('No results found for the entered location.');
-        setSearchResults([]);
-      }
+      setSearchResults(result.addresses.length > 0
+        ? result.addresses as unknown as RadarAutocompleteAddress[]
+        : []);
+      setLocationError(result.addresses.length > 0 ? '' : 'No results found for the entered location.');
     } catch (err) {
       setLocationError('Failed to search location. Please try again.');
     } finally {
@@ -228,10 +211,7 @@ return;
     }
   };
 
-  const debouncedSearch = useCallback(
-    debounce((query: string) => handleSearchLocation(query), 800),
-    []
-  );
+  const debouncedSearch = useCallback(debounce(handleSearchLocation, 800), []);
 
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const query = e.target.value;
@@ -257,249 +237,203 @@ return;
   };
 
   const SuccessStep = () => (
-    <>
-      <Typography variant="body1" className="text-center mb-6">
-        Congratulations! You’ve successfully onboarded as a <strong>Library Owner</strong>. Start adding books to share with the community, or borrow from other library owners!
-      </Typography>
-    </>
+    <Typography variant="body1" sx={{ textAlign: 'center', my: 4 }}>
+      Congratulations! You’ve successfully onboarded as a <strong>Library Owner</strong>. Start adding books to share with the community, or borrow from other library owners!
+    </Typography>
   );
 
-  // Handle Snackbar close
   const handleCloseSnackbar = () => {
     setOpenSnackbar(false);
-    setSubmitError(null); // Clear the error after closing
+    setSubmitError(null);
   };
 
   return (
-    <>
-      <Box
-        sx={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 1100,
-          backgroundColor: 'white',
-          boxShadow: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-        }}
-      >
+    <Box sx={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', bgcolor: 'grey.50' }}>
+      {/* Header with Progress Bar */}
+      <Box sx={{ position: 'sticky', top: 0, zIndex: 1100, bgcolor: 'white', boxShadow: 1 }}>
         <LinearProgress
-          variant='determinate'
+          variant="determinate"
           value={step === 1 ? 50 : 100}
-          sx={{
-            height: 4,
-            backgroundColor: '#ffffff',
-            '.MuiLinearProgress-bar': {
-              backgroundColor: '#000000',
-            },
-          }}
+          sx={{ height: 4, bgcolor: 'white', '& .MuiLinearProgress-bar': { bgcolor: 'black' } }}
         />
         <IconButton
-          sx={{
-            position: 'absolute',
-            top: 8,
-            left: 8,
-            zIndex: 1200,
-          }}
           onClick={() => window.location.href = '/'}
+          sx={{ position: 'absolute', top: 8, left: 8 }}
         >
-          <ArrowLeft className='w-6 h-6' />
+          <ArrowLeft size={24} />
         </IconButton>
       </Box>
 
       {submissionStep && <SubmissionProgress currentStep={submissionStep} />}
 
-      <div className='min-h-screen flex flex-col lg:flex-row bg-gray-50'>
-        <div className='flex-1 flex items-center justify-center p-4 lg:p-8'>
-          <div className='w-full max-w-lg'>
-            <h1 className='text-3xl font-semibold text-center mb-8 text-gray-800'>
-              {step === 1 ? 'Set up your library profile' : 'Success!'}
-            </h1>
-            <Card>
-              <CardContent className='pt-6'>
+      {/* Main Content */}
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: { xs: 'column', lg: 'row' }, p: { xs: 2, sm: 4, lg: 8 } }}>
+        {/* Form Section */}
+        <Box sx={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', mb: { xs: 4, lg: 0 } }}>
+          <Box sx={{ width: '100%', maxWidth: { xs: '100%', sm: 480 } }}>
+            <Typography variant="h4" sx={{ fontWeight: 600, textAlign: 'center', mb: 4, color: 'grey.800' }}>
+              {step === 1 ? 'Set Up Your Library Profile' : 'Success!'}
+            </Typography>
+            <Card sx={{ borderRadius: 2, boxShadow: 3 }}>
+              <CardContent sx={{ pt: 4, px: { xs: 2, sm: 4 } }}>
                 {step === 1 ? (
-                  <div className='space-y-6'>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                     <TextField
                       fullWidth
-                      label='Library Name'
+                      label="Library Name"
                       value={libraryName}
                       onChange={(e) => setLibraryName(e.target.value)}
-                      className='mb-4'
+                      variant="outlined"
+                      size="small"
                     />
-
-                    <div className='relative'>
+                    <Box sx={{ position: 'relative' }}>
                       <TextField
                         fullWidth
-                        label='Add Location For Your Library...'
+                        label="Add Location For Your Library..."
                         value={searchQuery}
                         onChange={handleSearchInputChange}
+                        variant="outlined"
+                        size="small"
                         InputProps={{
-                          endAdornment: isSearching && (
-                            <CircularProgress size={20} color="inherit" />
-                          ),
+                          endAdornment: isSearching && <CircularProgress size={20} />,
                         }}
                       />
-
                       {searchResults.length > 0 && (
                         <Box
                           sx={{
                             position: 'absolute',
                             width: '100%',
-                            bgcolor: 'background.paper',
+                            bgcolor: 'white',
                             boxShadow: 3,
                             borderRadius: 1,
-                            zIndex: 1000,
                             mt: 1,
-                            maxHeight: '200px',
+                            maxHeight: 200,
                             overflowY: 'auto',
+                            zIndex: 1000,
                           }}
                         >
                           {searchResults.map((result, index) => (
                             <MenuItem
                               key={index}
                               onClick={() => handleLocationSelect(result)}
-                              sx={{ py: 1 }}
+                              sx={{ py: 1.5, fontSize: { xs: '0.875rem', sm: '1rem' } }}
                             >
-                              <ListItemText
-                                primary={`${result.city}, ${result.state}, ${result.country}`}
-                              />
+                              <ListItemText primary={`${result.city}, ${result.state}, ${result.country}`} />
                             </MenuItem>
                           ))}
                         </Box>
                       )}
-                    </div>
-
+                    </Box>
                     {locationError && (
-                      <Typography variant='body2' color='error' className='mt-2'>
+                      <Typography variant="body2" color="error.main" sx={{ mt: 1 }}>
                         {locationError}
                       </Typography>
                     )}
-
-                    <TextField
-                      fullWidth
-                      label="Country"
-                      value={country}
-                      InputProps={{ readOnly: true }}
-                      className="mb-4"
-                    />
-                    <TextField
-                      fullWidth
-                      label="City"
-                      value={city}
-                      InputProps={{ readOnly: true }}
-                      className="mb-4"
-                    />
-                    <TextField
-                      fullWidth
-                      label="State"
-                      value={state}
-                      InputProps={{ readOnly: true }}
-                      className="mb-4"
-                    />
+                    <TextField fullWidth label="Country" value={country} InputProps={{ readOnly: true }} variant="outlined" size="small" />
+                    <TextField fullWidth label="City" value={city} InputProps={{ readOnly: true }} variant="outlined" size="small" />
+                    <TextField fullWidth label="State" value={state} InputProps={{ readOnly: true }} variant="outlined" size="small" />
                     <TextField
                       fullWidth
                       label="Platform Fee"
                       value={curatorPlatformFee}
                       InputProps={{
                         readOnly: true,
-                        startAdornment: (
-                          <Typography variant="body1" sx={{ mr: 1 }}>
-                            ETH
-                          </Typography>
-                        ),
+                        startAdornment: <Typography sx={{ mr: 1 }}>ETH</Typography>,
                       }}
-                      className="mb-4"
+                      variant="outlined"
+                      size="small"
                     />
-                    <div className='mt-6'>
-                      <Typography variant='h6' className='mb-2'>
-                        Map
-                      </Typography>
-                      <div id="map" style={{ width: '100%', height: '300px' }} />
-                    </div>
-                  </div>
+                    <Box>
+                      <Typography variant="h6" sx={{ mb: 2 }}>Map</Typography>
+                      <Box id="map" sx={{ width: '100%', height: { xs: 200, sm: 300 }, borderRadius: 1, overflow: 'hidden' }} />
+                    </Box>
+                  </Box>
                 ) : (
                   <SuccessStep />
                 )}
-
-                <div className='mt-6 space-y-2'>
+                <Box sx={{ mt: 4, display: 'flex', justifyContent: 'flex-end' }}>
                   {step === 2 ? (
                     <Button
-                      variant='outlined'
+                      variant="contained"
                       fullWidth
                       onClick={() => window.location.href = '/'}
                       sx={{
-                        backgroundColor: 'black',
+                        bgcolor: 'black',
                         color: 'white',
-                        borderColor: 'white',
-                        '&:hover': {
-                          backgroundColor: 'black',
-                          borderColor: 'white',
-                        },
+                        '&:hover': { bgcolor: 'grey.900' },
+                        py: 1.5,
+                        fontSize: { xs: '0.875rem', sm: '1rem' },
                       }}
                     >
                       Return Home
                     </Button>
                   ) : (
-                    <>
-                      <div className='flex flex-col space-y-2'>
-                        <Button
-                          variant='outlined'
-                          onClick={handleSubmit}
-                          disabled={isSubmitting}
-                          sx={{
-                            backgroundColor: 'black',
-                            color: 'white',
-                            borderColor: 'white',
-                            width: 'auto',
-                            alignSelf: 'flex-end',
-                            '&:hover': {
-                              backgroundColor: 'black',
-                              borderColor: 'white',
-                            },
-                          }}
-                        >
-                          {isSubmitting ? (
-                            <CircularProgress size={24} color="inherit" />
-                          ) : (
-                            'Continue'
-                          )}
-                        </Button>
-                      </div>
-                    </>
+                    <Button
+                      variant="contained"
+                      onClick={handleSubmit}
+                      disabled={isSubmitting}
+                      sx={{
+                        bgcolor: 'black',
+                        color: 'white',
+                        '&:hover': { bgcolor: 'grey.900' },
+                        py: 1.5,
+                        px: 4,
+                        fontSize: { xs: '0.875rem', sm: '1rem' },
+                      }}
+                    >
+                      {isSubmitting ? <CircularProgress size={24} color="inherit" /> : 'Continue'}
+                    </Button>
                   )}
-                </div>
+                </Box>
               </CardContent>
             </Card>
-          </div>
-        </div>
+          </Box>
+        </Box>
 
+        {/* Cover Image Section (Hidden on Mobile when Step 1) */}
         {step === 1 && (
-          <div className='flex-1 flex items-center justify-center p-4 lg:p-8 bg-gray-200'>
+          <Box
+            sx={{
+              flex: 1,
+              display: { xs: 'none', lg: 'flex' },
+              justifyContent: 'center',
+              alignItems: 'center',
+              bgcolor: 'grey.200',
+              p: 4,
+            }}
+          >
             <CustomizableCover
               libraryName={libraryName}
               onImageChange={(imageData) => setCoverImage(imageData)}
               showCustomization={true}
             />
-          </div>
+          </Box>
         )}
-      </div>
+      </Box>
 
-      {/* Add Snackbar for error display */}
+      {/* Mobile Cover Image Section */}
+      {step === 1 && (
+        <Box sx={{ display: { xs: 'flex', lg: 'none' }, justifyContent: 'center', p: 2, bgcolor: 'grey.200' }}>
+          <CustomizableCover
+            libraryName={libraryName}
+            onImageChange={(imageData) => setCoverImage(imageData)}
+            showCustomization={true}
+          />
+        </Box>
+      )}
+
+      {/* Snackbar for Errors */}
       <Snackbar
         open={openSnackbar}
-        autoHideDuration={10000} // Closes after 6 seconds
+        autoHideDuration={10000}
         onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }} // Position at top-right
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity="error"
-          sx={{ width: '100%' }}
-        >
+        <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
           {submitError}
         </Alert>
       </Snackbar>
-    </>
+    </Box>
   );
 };
 
