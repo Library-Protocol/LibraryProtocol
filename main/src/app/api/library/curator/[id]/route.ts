@@ -16,7 +16,31 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     const curator = await prisma.curator.findUnique({
       where: { id: curatorId },
       include: {
-        books: true,
+        books: {
+          select: {
+            id: true,
+            title: true,
+            onChainUniqueId: true,
+            transactionHash: true,
+            author: true,
+            publisher: true,
+            publishDate: true,
+            pagination: true,
+            additionalNotes: true,
+            isbn: true,
+            availability: true,
+            image: false,
+            curator: true,
+            curatorId: true,
+            createdAt: true,
+            nftTokenId: true,
+            borrowings: {
+              select: {
+                id: true
+              }
+            },
+          }
+        }
       },
     })
 

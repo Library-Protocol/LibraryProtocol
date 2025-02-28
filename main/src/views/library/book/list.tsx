@@ -167,8 +167,6 @@ const BooksPage: React.FC<LandingPageProps> = ({ data }) => {
 
   // Check if data is available
   useEffect(() => {
-    console.log("Curators data:", data);
-    console.log("All books data:", allBooks);
 
     const dataExists = Array.isArray(data) && data.length > 0 && Array.isArray(allBooks) && allBooks.length > 0;
 

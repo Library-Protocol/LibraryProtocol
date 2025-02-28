@@ -78,7 +78,7 @@ const BookSearchGrid: React.FC<BookSearchGridProps> = ({
       if (book.title.toLowerCase().includes(query)) return true;
       const titleWords = book.title.toLowerCase().split(' ');
 
-      
+
 return titleWords.some((word) => word.startsWith(query));
     });
   }, [Books, debouncedQuery]);
