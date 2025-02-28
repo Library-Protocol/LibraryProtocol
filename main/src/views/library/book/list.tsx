@@ -155,7 +155,7 @@ const BooksPage: React.FC<LandingPageProps> = ({ data }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasData, setHasData] = useState(false);
   const { authenticated } = usePrivy();
-  const booksPerPage = { xs: 4, sm: 12 }; // 4 on mobile, 12 on larger screens
+  const booksPerPage = { xs: 6, sm: 12 }; // 4 on mobile, 12 on larger screens
 
   // Flatten all books from curators
   const allBooks = data?.flatMap(curator =>
@@ -198,7 +198,7 @@ const BooksPage: React.FC<LandingPageProps> = ({ data }) => {
     const handleResize = () => setCurrentBooksPerPage(getBooksPerPage());
 
     window.addEventListener('resize', handleResize);
-    
+
 return () => window.removeEventListener('resize', handleResize);
   }, []);
 
