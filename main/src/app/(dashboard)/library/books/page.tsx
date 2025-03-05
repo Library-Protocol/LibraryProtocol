@@ -22,7 +22,6 @@ function LibraryBooksPage() {
         if (response.ok) {
           const res = await response.json()
 
-          console.log('book response', res)
           setBooks(res)
         } else {
           const res = await response.json()
