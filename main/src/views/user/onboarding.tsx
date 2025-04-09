@@ -16,7 +16,8 @@ import {
   Chip,
   LinearProgress,
   Typography,
-  Box
+  Box,
+  CircularProgress
 } from '@mui/material'
 import { Plus, ArrowLeft } from 'lucide-react'
 import { usePrivy } from '@privy-io/react-auth'
@@ -65,6 +66,7 @@ interface ProfileStepProps {
   setAvatar: (avatar: string) => void;
   handleSocialMediaChange: (index: number, field: string, value: string) => void;
   errors: { [key: string]: string };
+  checkingEmail: boolean;
 }
 
 const ProfileStep = React.memo(
@@ -80,7 +82,8 @@ const ProfileStep = React.memo(
     setBio,
     setAvatar,
     handleSocialMediaChange,
-    errors
+    errors,
+    checkingEmail
   }: ProfileStepProps) => (
     <>
       <div className='flex justify-center mb-6'>
@@ -120,6 +123,11 @@ const ProfileStep = React.memo(
             error={!!errors.email}
             helperText={errors.email}
             type='email'
+            InputProps={{
+              endAdornment: checkingEmail && (
+                <CircularProgress size={20} color="inherit" />
+              )
+            }}
           />
         </div>
 
@@ -240,6 +248,8 @@ const UserOnboarding = () => {
   const [errors, setErrors] = useState<{ [key: string]: string }>({})
   const [wallet, setWalletAddress] = useState('')
   const [profileImage, setAvatar] = useState('')
+  const [checkingEmail, setCheckingEmail] = useState(false)
+  const [emailAvailable, setEmailAvailable] = useState(false)
   const { user } = usePrivy()
 
   const [socialMedia, setSocialMedia] = useState([
@@ -278,6 +288,65 @@ const UserOnboarding = () => {
     fetchWalletAddress()
   }, [user])
 
+  // Email verification logic
+  useEffect(() => {
+    const emailRegex = /\S+@\S+\.\S+/;
+
+    if (email && emailRegex.test(email)) {
+      const checkEmailAvailability = async () => {
+        setCheckingEmail(true)
+        setEmailAvailable(false)
+        setErrors(prev => ({ ...prev, email: '' }))
+
+        try {
+          // Delay to prevent too many requests while typing
+          await new Promise(resolve => setTimeout(resolve, 500))
+
+          const response = await fetch('/api/user/onboarding/check-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          })
+
+          const data = await response.json()
+
+          if (response.ok) {
+            if (data.exists && data.onboardingCompleted) {
+              setErrors(prev => ({
+                ...prev,
+                email: 'An account with this email already exists'
+              }))
+              setEmailAvailable(false)
+            } else {
+              setEmailAvailable(true)
+            }
+          } else {
+            setErrors(prev => ({
+              ...prev,
+              email: data.message || 'Error checking email'
+            }))
+            setEmailAvailable(false)
+          }
+        } catch (error) {
+          setErrors(prev => ({
+            ...prev,
+            email: 'Failed to verify email availability'
+          }))
+          setEmailAvailable(false)
+        } finally {
+          setCheckingEmail(false)
+        }
+      }
+
+      const timeoutId = setTimeout(checkEmailAvailability, 300)
+
+      
+return () => clearTimeout(timeoutId)
+    } else {
+      setEmailAvailable(false)
+    }
+  }, [email])
+
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {}
 
@@ -289,10 +358,12 @@ const UserOnboarding = () => {
       newErrors.email = 'Email is required'
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       newErrors.email = 'Please enter a valid email'
+    } else if (!emailAvailable) {
+      newErrors.email = errors.email || 'Email is not available'
     }
 
-    setErrors(newErrors)
-
+    setErrors(prev => ({ ...prev, ...newErrors }))
+    
 return Object.keys(newErrors).length === 0
   }
 
@@ -343,10 +414,15 @@ return Object.keys(newErrors).length === 0
       const updated = [...prev]
 
       updated[index] = { ...updated[index], [field]: value }
-
+      
 return updated
     })
   }, [])
+
+  // Determine if continue button should be enabled
+  const isContinueEnabled = step === 1
+    ? (name.trim() && email.trim() && emailAvailable && !checkingEmail)
+    : true
 
   return (
     <div className='min-h-screen flex items-center justify-center'>
@@ -419,6 +495,7 @@ return updated
                     setAvatar={setAvatar}
                     handleSocialMediaChange={handleSocialMediaChange}
                     errors={errors}
+                    checkingEmail={checkingEmail}
                   />
                 ) : step === 2 ? (
                   <InterestsStep
@@ -455,7 +532,7 @@ return updated
                       variant='contained'
                       fullWidth
                       onClick={handleContinue}
-                      disabled={loading}
+                      disabled={loading || !isContinueEnabled}
                       sx={{
                         backgroundColor: '#2B1810',
                         color: '#F8F2EB',

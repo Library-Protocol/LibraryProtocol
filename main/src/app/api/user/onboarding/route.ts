@@ -95,3 +95,55 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Failed to save user data' }, { status: 500 })
   }
 }
+
+
+// import { NextResponse } from 'next/server';
+// import { PrismaClient } from '@prisma/client';
+
+// // Initialize Prisma Client
+// const prisma = new PrismaClient();
+
+// // Types
+// interface UserInput {
+//   wallet: string;
+//   name: string;
+//   email?: string;
+//   bio?: string;
+//   profileImage?: string;
+//   country?: string;
+//   city?: string;
+//   state?: string;
+// }
+
+// // Main Handler
+// export async function POST(request: Request) {
+//   try {
+//     // Parse request body
+//     const body: UserInput = await request.json();
+//     const { wallet, name, email, bio, profileImage, country, city, state } = body;
+
+//     // Validate required fields
+//     if (!wallet || !name) {
+//       return NextResponse.json({ error: 'Wallet and name are required' }, { status: 400 });
+//     }
+
+//     // Upsert user
+//     const user = await prisma.user.upsert({
+//       where: { wallet },
+//       update: { name, email, bio, profileImage, country, city, state },
+//       create: { wallet, name, email, bio, profileImage, country, city, state },
+//     });
+
+//     // Return success response
+//     return NextResponse.json({ success: true, user }, { status: 200 });
+//   } catch (error) {
+//     // Extract error message and log it
+//     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+//     console.error('Error in onboarding:', errorMessage);
+
+//     // Return error response with the specific message
+//     return NextResponse.json({ error: errorMessage }, { status: 500 });
+//   } finally {
+//     await prisma.$disconnect(); // Clean up Prisma connection
+//   }
+// }

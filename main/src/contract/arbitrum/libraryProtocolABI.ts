@@ -50,6 +50,32 @@ export const LibraryProtocolABI = [
       {
         "indexed": true,
         "internalType": "address",
+        "name": "newAddress",
+        "type": "address"
+      }
+    ],
+    "name": "LibraryBookContractUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newAddress",
+        "type": "address"
+      }
+    ],
+    "name": "LibraryOwnerContractUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "previousOwner",
         "type": "address"
       },
@@ -94,6 +120,31 @@ export const LibraryProtocolABI = [
       {
         "indexed": true,
         "internalType": "address",
+        "name": "user",
+        "type": "address"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "amount",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
+        "name": "action",
+        "type": "string"
+      }
+    ],
+    "name": "Staked",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "newTreasury",
         "type": "address"
       }
@@ -115,26 +166,6 @@ export const LibraryProtocolABI = [
       },
       {
         "internalType": "string",
-        "name": "_publisher",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "_publishDate",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "_pagination",
-        "type": "uint256"
-      },
-      {
-        "internalType": "string",
-        "name": "_additionalNotes",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
         "name": "_libraryOwnerId",
         "type": "string"
       },
@@ -152,6 +183,16 @@ export const LibraryProtocolABI = [
         "internalType": "string",
         "name": "_metadataCID",
         "type": "string"
+      },
+      {
+        "internalType": "bool",
+        "name": "_isStakable",
+        "type": "bool"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_stakingAmount",
+        "type": "uint256"
       }
     ],
     "name": "addBook",
@@ -173,17 +214,7 @@ export const LibraryProtocolABI = [
       },
       {
         "internalType": "string",
-        "name": "_additionalNotes",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
         "name": "_libraryOwnerId",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "_status",
         "type": "string"
       },
       {
@@ -193,29 +224,6 @@ export const LibraryProtocolABI = [
       }
     ],
     "name": "addBookRequest",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "string",
-        "name": "_requestId",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "_status",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "_message",
-        "type": "string"
-      }
-    ],
-    "name": "addBookRequestLog",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -240,7 +248,7 @@ export const LibraryProtocolABI = [
     ],
     "name": "addBorrowBook",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "payable",
     "type": "function"
   },
   {
@@ -254,11 +262,6 @@ export const LibraryProtocolABI = [
         "internalType": "string",
         "name": "_status",
         "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "_message",
-        "type": "string"
       }
     ],
     "name": "addBorrowBookLog",
@@ -267,29 +270,55 @@ export const LibraryProtocolABI = [
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getLibraryBookContract",
-    "outputs": [
+    "inputs": [
       {
-        "internalType": "contract LibraryBookContract",
-        "name": "",
-        "type": "address"
+        "internalType": "string",
+        "name": "_borrowingId",
+        "type": "string"
       }
     ],
-    "stateMutability": "view",
+    "name": "approveBorrowRequest",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "getLibraryOwnerContract",
-    "outputs": [
+    "inputs": [
       {
-        "internalType": "contract LibraryOwnerContract",
-        "name": "",
-        "type": "address"
+        "internalType": "string",
+        "name": "_borrowingId",
+        "type": "string"
       }
     ],
-    "stateMutability": "view",
+    "name": "confirmReceipt",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_borrowingId",
+        "type": "string"
+      }
+    ],
+    "name": "confirmReturn",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "_borrowingId",
+        "type": "string"
+      }
+    ],
+    "name": "declineBorrowRequest",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -343,7 +372,33 @@ export const LibraryProtocolABI = [
   },
   {
     "inputs": [],
-    "name": "minimumCuratorFee",
+    "name": "libraryStakingAmount",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "libraryStakingRequired",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "minimumLibraryFee",
     "outputs": [
       {
         "internalType": "uint256",
@@ -380,7 +435,7 @@ export const LibraryProtocolABI = [
         "type": "string"
       }
     ],
-    "name": "registerCurator",
+    "name": "registerLibrary",
     "outputs": [],
     "stateMutability": "payable",
     "type": "function"
@@ -395,13 +450,65 @@ export const LibraryProtocolABI = [
   {
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_curatorFee",
-        "type": "uint256"
+        "internalType": "string",
+        "name": "_borrowingId",
+        "type": "string"
+      }
+    ],
+    "name": "returnBook",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_libraryBookContract",
+        "type": "address"
+      }
+    ],
+    "name": "setLibraryBookContract",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_libraryOwnerContract",
+        "type": "address"
+      }
+    ],
+    "name": "setLibraryOwnerContract",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "bool",
+        "name": "_required",
+        "type": "bool"
       },
       {
         "internalType": "uint256",
-        "name": "",
+        "name": "_amount",
+        "type": "uint256"
+      }
+    ],
+    "name": "setLibraryStaking",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "_libraryFee",
         "type": "uint256"
       }
     ],

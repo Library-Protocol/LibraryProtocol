@@ -240,6 +240,19 @@ export const libraryOwnerABI = [
       {
         "indexed": true,
         "internalType": "address",
+        "name": "newProtocol",
+        "type": "address"
+      }
+    ],
+    "name": "LibraryProtocolUpdated",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
         "name": "previousOwner",
         "type": "address"
       },
@@ -362,11 +375,6 @@ export const libraryOwnerABI = [
             "type": "string"
           },
           {
-            "internalType": "bool",
-            "name": "isVerified",
-            "type": "bool"
-          },
-          {
             "internalType": "uint256",
             "name": "libraryTokenId",
             "type": "uint256"
@@ -386,7 +394,13 @@ export const libraryOwnerABI = [
     "type": "function"
   },
   {
-    "inputs": [],
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_libraryProtocol",
+        "type": "address"
+      }
+    ],
     "name": "initialize",
     "outputs": [],
     "stateMutability": "nonpayable",
@@ -442,11 +456,6 @@ export const libraryOwnerABI = [
         "type": "string"
       },
       {
-        "internalType": "bool",
-        "name": "isVerified",
-        "type": "bool"
-      },
-      {
         "internalType": "uint256",
         "name": "libraryTokenId",
         "type": "uint256"
@@ -455,6 +464,19 @@ export const libraryOwnerABI = [
         "internalType": "string",
         "name": "metadataCID",
         "type": "string"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "libraryProtocol",
+    "outputs": [
+      {
+        "internalType": "address",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -507,6 +529,11 @@ export const libraryOwnerABI = [
   },
   {
     "inputs": [
+      {
+        "internalType": "address",
+        "name": "_sender",
+        "type": "address"
+      },
       {
         "internalType": "string",
         "name": "_name",
@@ -608,6 +635,19 @@ export const libraryOwnerABI = [
       }
     ],
     "name": "setBaseURI",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address payable",
+        "name": "_libraryProtocol",
+        "type": "address"
+      }
+    ],
+    "name": "setLibraryProtocol",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"

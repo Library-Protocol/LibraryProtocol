@@ -100,7 +100,7 @@ const getProviderAndSigner = async () => {
 
     const signer = await provider.getSigner();
 
-    
+
 return { provider, signer };
   } catch (error) {
     const errorMessage = handleWalletError(error);
