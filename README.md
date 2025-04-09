@@ -1,2 +1,2 @@
 # LibraryProtocol
-An Onchain Library Protocol
+Bringing libraries onchain, connecting minds🧠
